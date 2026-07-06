@@ -1,61 +1,75 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Booking Legacy — Laravel Skeleton (Compatibilità 1:1)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Questo pacchetto contiene **model, controller, servizi e viste** già mappati sul tuo **schema MySQL esistente**
+(senza rinominare tabelle o colonne), così il nuovo sistema in **Laravel 11 + PHP 8.2/8.3** potrà leggere/scrivere
+direttamente sul DB legacy **senza perdere dati**.
 
-## About Laravel
+## Come usare
+1. Crea un nuovo progetto Laravel 11 (o usa un progetto esistente):
+   ```bash
+   composer create-project laravel/laravel booking-app
+   cd booking-app
+   ```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+2. Copia il contenuto di questa cartella **dentro** il tuo progetto Laravel, rispettando le directory.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+3. Installa i pacchetti consigliati:
+   ```bash
+   composer require barryvdh/laravel-dompdf:^2.0 bacon/bacon-qr-code:^2.0
+   composer require srmklive/paypal:^4.0
+   composer require spatie/laravel-permission:^6.0
+   composer require maatwebsite/excel:^3.1
+   ```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+4. Configura la connessione DB in `.env` (mantieni lo **schema esistente**):
+   - Forza charset/collezione a `utf8mb4`
+   - Imposta `DB_*` con le credenziali del DB legacy
+   - Disattiva la modalità strict per tollerare `0000-00-00` se presenti
 
-## Learning Laravel
+   **Esempio** di override in `config/database.php`:
+   ```php
+   'mysql' => [
+       'driver' => 'mysql',
+       'host' => env('DB_HOST'),
+       'port' => env('DB_PORT', '3306'),
+       'database' => env('DB_DATABASE'),
+       'username' => env('DB_USERNAME'),
+       'password' => env('DB_PASSWORD'),
+       'charset' => 'utf8mb4',
+       'collation' => 'utf8mb4_general_ci',
+       'prefix' => '',
+       'strict' => false, // IMPORTANTE per compatibilità legacy
+       'engine' => null,
+   ],
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+5. Configura le **email** in `.env` usando **la stessa identica casella** che usavi prima (SMTP SiteGround o altro):
+   ```env
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp.siteground.net
+   MAIL_PORT=465
+   MAIL_USERNAME=LA_TUA_USERNAME
+   MAIL_PASSWORD=LA_TUA_PASSWORD
+   MAIL_ENCRYPTION=ssl
+   MAIL_FROM_ADDRESS=la_tua_email@tuodominio.it
+   MAIL_FROM_NAME="Booking"
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+6. Registra le **routes** (questo pacchetto fornisce `routes/web.php` completo). Se hai già un file `routes/web.php`,
+   **unisci** i contenuti.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+7. Esegui l'app in **staging** puntando a un **clone del DB**, poi al Go-Live cambia solo la connessione `.env`.
 
-## Laravel Sponsors
+## Flussi inclusi
+- **Booking**: selezione ingressi → carrello → ordine (pending)
+- **Pagamento PayPal** (stub pronto, con webhook)
+- **Conferma ordine** + **invio email** con **allegato voucher PDF** (service + mailable)
+- **Voucher PDF + QR** (template Blade + service)
+- **Model Eloquent** mappati sullo schema esistente (es. join su `numeroOrdine`)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Note
+- Le classi sono **stub pronte** da completare con la logica specifica (prezzi, disponibilità, capienza, ecc.).
+- Non abbiamo modificato **nomi tabella** o **colonne**: i Model fanno riferimento diretto al legacy.
+- Se alcune password utenti non sono hashate, implementa un meccanismo di **rehash on login**.
 
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Buon lavoro! 🚀

@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'partner_loghi' => [
+            'driver' => 'local',
+            'root' => public_path('partner/loghi'),
+            'url' => '/partner/loghi',
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
     ],
 
     /*

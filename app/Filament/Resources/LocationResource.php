@@ -1,0 +1,177 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\LocationResource\Pages;
+use App\Filament\Resources\LocationResource\RelationManagers;
+use App\Models\Location;
+use App\Models\CategoriaLocation;
+use App\Models\TipologiaLocation;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class LocationResource extends Resource
+{
+    protected static ?string $model = Location::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
+    
+    protected static ?string $navigationLabel = 'Locations';
+    
+    protected static ?string $modelLabel = 'Location';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Informazioni Generali')
+                    ->schema([
+                        Forms\Components\TextInput::make('nomeLocation')
+                            ->label('Nome Location')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpan(2),
+                        
+                        Forms\Components\Toggle::make('attivaLocation')
+                            ->label('Attiva')
+                            ->default(true),
+                        
+                        Forms\Components\TextInput::make('indirizzoLocation')
+                            ->label('Indirizzo')
+                            ->maxLength(255)
+                            ->columnSpan(2),
+                        
+                        Forms\Components\TextInput::make('telefonoLocation')
+                            ->label('Telefono')
+                            ->tel()
+                            ->maxLength(50),
+                        
+                        Forms\Components\TextInput::make('emailLocation')
+                            ->label('Email')
+                            ->email()
+                            ->maxLength(100),
+                    ])
+                    ->columns(3),
+
+                Forms\Components\Section::make('Media')
+                    ->schema([
+                        Forms\Components\FileUpload::make('immagineLocation')
+                            ->label('Immagine/Locandina')
+                            ->image()
+                            ->directory('locations')
+                            ->visibility('public'),
+                    ]),
+                
+                Forms\Components\Section::make('Riferimento')
+                    ->schema([
+                        Forms\Components\TextInput::make('riferimentoLocation')
+                            ->label('Nome Riferimento')
+                            ->maxLength(100),
+                        
+                        Forms\Components\TextInput::make('telefonoRifLocation')
+                            ->label('Telefono Riferimento')
+                            ->tel()
+                            ->maxLength(50),
+                        
+                        Forms\Components\TextInput::make('emailRifLocation')
+                            ->label('Email Riferimento')
+                            ->email()
+                            ->maxLength(100),
+                    ])
+                    ->columns(3)
+                    ->collapsible(),
+                
+                /*
+                Forms\Components\Section::make('Classificazione')
+                    ->schema([
+                        Forms\Components\Select::make('categorie')
+                            ->label('Categorie')
+                            ->multiple()
+                            ->relationship('categorie', 'nomeCatLocation')
+                            ->preload(),
+                        
+                        Forms\Components\Select::make('tipologie')
+                            ->label('Tipologie')
+                            ->multiple()
+                            ->relationship('tipologie', 'nomeTipLocation')
+                            ->preload(),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+                */
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\IconColumn::make('attivaLocation')
+                    ->label('Attiva')
+                    ->boolean(),
+                
+                Tables\Columns\TextColumn::make('nomeLocation')
+                    ->label('Nome')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
+                
+                Tables\Columns\TextColumn::make('indirizzoLocation')
+                    ->label('Indirizzo')
+                    ->searchable()
+                    ->limit(30)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                
+                Tables\Columns\TextColumn::make('telefonoLocation')
+                    ->label('Telefono')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                
+                Tables\Columns\TextColumn::make('emailLocation')
+                    ->label('Email')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                
+                Tables\Columns\TextColumn::make('ingressi_count')
+                    ->label('Ingressi')
+                    ->counts('ingressi')
+                    ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('attivaLocation')
+                    ->label('Attiva')
+                    ->boolean(),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\IngressiRelationManager::class,
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListLocations::route('/'),
+            'create' => Pages\CreateLocation::route('/create'),
+            'edit' => Pages\EditLocation::route('/{record}/edit'),
+            'stampa-lista-nomi' => Pages\StampaListaNomi::route('/stampa-lista-nomi'),
+            'stampa-entrate-uscite' => Pages\StampaEntrateUscite::route('/stampa-entrate-uscite'),
+        ];
+    }
+}

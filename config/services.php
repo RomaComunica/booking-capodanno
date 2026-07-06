@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'), // 'sandbox' or 'live'
+        'nvp_username' => env('PAYPAL_NVP_USERNAME'),
+        'nvp_password' => env('PAYPAL_NVP_PASSWORD'),
+        'nvp_signature' => env('PAYPAL_NVP_SIGNATURE'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+    ],
+
+    'nexi' => [
+        'mode' => env('NEXI_MODE', 'test'), // 'test' or 'prod'
+        'alias' => env('NEXI_ALIAS'),
+        'secret' => env('NEXI_SECRET'),
+        'endpoint' => env('NEXI_ENDPOINT'),
+    ],
+
 ];

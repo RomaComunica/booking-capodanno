@@ -1,0 +1,529 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Ordine;
+use App\Models\RigaOrdine;
+use App\Models\Location;
+use App\Models\Partner;
+use Illuminate\Support\Facades\DB;
+
+class StatisticsService
+{
+    const MONTHS_IT = [
+        1 => 'Gen', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mag', 6 => 'Giu',
+        7 => 'Lug', 8 => 'Ago', 9 => 'Set', 10 => 'Ott', 11 => 'Nov', 12 => 'Dic'
+    ];
+    /**
+     * Get dashboard statistics for current year
+     */
+    public function getDashboardStats($year = null)
+    {
+        $year = $year ?? \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+
+        return [
+            'total_revenue' => $this->getTotalRevenue($year),
+            'total_orders' => $this->getTotalOrders($year),
+            'total_tickets' => $this->getTotalTickets($year),
+            'total_commissions' => $this->getTotalCommissions($year),
+            'total_margin' => $this->getTotalMargin($year),
+            'total_profit' => $this->getTotalProfit($year),
+            'locations_count' => Location::count(),
+            'active_locations' => Location::where('attivaLocation', true)->count(),
+            'partners_count' => Partner::count(),
+            'pending_orders' => Ordine::where('statoOrdine', 0)->count(), // 0 = In corso
+        ];
+    }
+
+    /**
+     * Get total revenue for year
+     */
+    public function getTotalRevenue($year)
+    {
+        return Ordine::whereYear('dataOrdine', $year)
+            ->where('statoOrdine', 2)
+            ->sum('totaleOrdine');
+    }
+
+    /**
+     * Get total orders for year
+     */
+    public function getTotalOrders($year)
+    {
+        return Ordine::whereYear('dataOrdine', $year)->count();
+    }
+
+    /**
+     * Get total tickets sold for year
+     */
+    public function getTotalTickets($year)
+    {
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->sum('righe_ordine.quantitaIngressoOrdine');
+    }
+
+    /**
+     * Calculate total commissions to partners/locations
+     */
+    public function getTotalCommissions($year)
+    {
+        $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->join('tipologia_ingresso', 'righe_ordine.idIngressoOrdine', '=', 'tipologia_ingresso.idIngressoCont')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                'righe_ordine.prezzoIngressoOrdine',
+                'righe_ordine.quantitaIngressoOrdine',
+                'tipologia_ingresso.tipoProvvigione',
+                'tipologia_ingresso.valoreProvvigione',
+            ])
+            ->get();
+
+        $totalCommissions = 0;
+        foreach ($righe as $riga) {
+            $subtotal = $riga->prezzoIngressoOrdine * $riga->quantitaIngressoOrdine;
+            
+            if ($riga->tipoProvvigione == 1) {
+                // Percentage
+                $commission = ($subtotal / 100) * $riga->valoreProvvigione;
+            } else {
+                // Fixed
+                $commission = $riga->valoreProvvigione * $riga->quantitaIngressoOrdine;
+            }
+            
+            $totalCommissions += $commission;
+        }
+
+        return round($totalCommissions, 2);
+    }
+
+    /**
+     * Calculate total margin (revenue - commissions) without external ledger
+     */
+    public function getTotalMargin($year)
+    {
+        return round($this->getTotalRevenue($year) - $this->getTotalCommissions($year), 2);
+    }
+
+    /**
+     * Calculate total net profit (margin + entrate - uscite)
+     */
+    public function getTotalProfit($year)
+    {
+        $margin = $this->getTotalMargin($year);
+
+        // Add Entrate and subtract Uscite from the new ledger table
+        $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'E')
+            ->sum('importo');
+
+        $uscite = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'U')
+            ->sum('importo');
+
+        return round($margin + $entrate - $uscite, 2);
+    }
+
+    /**
+     * Get monthly revenue data for charts
+     */
+    public function getMonthlyRevenue($year)
+    {
+        $data = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $revenue = Ordine::whereYear('dataOrdine', $year)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+            
+            $data[] = [
+                'month' => self::MONTHS_IT[$month],
+                'revenue' => round($revenue, 2),
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get daily revenue for current month
+     */
+    public function getDailyRevenue($year, $month)
+    {
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $data = [];
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+            
+            $revenue = Ordine::whereDate('dataOrdine', $date)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+            
+            $orders = Ordine::whereDate('dataOrdine', $date)
+                ->where('statoOrdine', 2)
+                ->count();
+
+            $tickets = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+                ->whereDate('ordini.dataOrdine', $date)
+                ->where('ordini.statoOrdine', 2)
+                ->sum('righe_ordine.quantitaIngressoOrdine');
+
+            $data[] = [
+                'day' => $day,
+                'date' => $date,
+                'revenue' => round($revenue, 2),
+                'orders' => $orders,
+                'tickets' => (int)$tickets,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get top selling locations
+     */
+    public function getTopLocations($year, $limit = 10)
+    {
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                'location.idLocation',
+                'location.nomeLocation',
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as total_tickets'),
+                DB::raw('SUM(righe_ordine.prezzoIngressoOrdine * righe_ordine.quantitaIngressoOrdine) as total_revenue'),
+            ])
+            ->groupBy('location.idLocation', 'location.nomeLocation')
+            ->orderByDesc('total_tickets')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get revenue by payment method
+     */
+    public function getRevenueByPaymentMethod($year)
+    {
+        return Ordine::join('tipo_pagamento', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamento.idTipoPagamento')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                'tipo_pagamento.nomePagamento',
+                DB::raw('COUNT(*) as orders_count'),
+                DB::raw('SUM(ordini.totaleOrdine) as total_revenue'),
+            ])
+            ->groupBy('tipo_pagamento.idTipoPagamento', 'tipo_pagamento.nomePagamento')
+            ->get();
+    }
+
+    /**
+     * Compare two years
+     */
+    public function compareYears($year1, $year2)
+    {
+        $data = [];
+        
+        for ($month = 1; $month <= 12; $month++) {
+            $revenue1 = Ordine::whereYear('dataOrdine', $year1)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+            
+            $revenue2 = Ordine::whereYear('dataOrdine', $year2)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+            
+            $data[] = [
+                'month' => self::MONTHS_IT[$month],
+                'year1' => round($revenue1, 2),
+                'year2' => round($revenue2, 2),
+            ];
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Get revenue for the last N years
+     */
+    public function getRevenueLastNYears($years = 4)
+    {
+        $currentYear = date('Y');
+        $data = [];
+        for ($i = $years - 1; $i >= 0; $i--) {
+            $year = $currentYear - $i;
+            $revenue = $this->getTotalRevenue($year);
+            $data[] = [
+                'year' => (string)$year,
+                'revenue' => $revenue,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get Year-To-Date (YTD) Revenue for a specific year
+     */
+    public function getYtdRevenue($year)
+    {
+        $currentYear = date('Y');
+        $dateLimit = $year == $currentYear ? now() : now()->subYears($currentYear - $year);
+        
+        return Ordine::whereYear('dataOrdine', $year)
+            ->where('dataOrdine', '<=', $dateLimit)
+            ->where('statoOrdine', 2)
+            ->sum('totaleOrdine');
+    }
+
+    /**
+     * Get Year-To-Date (YTD) Tickets for a specific year
+     */
+    public function getYtdTickets($year)
+    {
+        $currentYear = date('Y');
+        $dateLimit = $year == $currentYear ? now() : now()->subYears($currentYear - $year);
+        
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.dataOrdine', '<=', $dateLimit)
+            ->where('ordini.statoOrdine', 2)
+            ->sum('righe_ordine.quantitaIngressoOrdine');
+    }
+
+    /**
+     * Get standalone cash flow summary for year
+     */
+    public function getCashFlowStats($year = null)
+    {
+        $year = $year ?? date('Y');
+        
+        $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'E')
+            ->sum('importo');
+
+        $uscite = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'U')
+            ->sum('importo');
+            
+        return [
+            'entrate' => round($entrate, 2),
+            'uscite' => round($uscite, 2),
+            'saldo' => round($entrate - $uscite, 2),
+        ];
+    }
+
+    /**
+     * Get stats for a custom date range period
+     */
+    public function getPeriodStats($from, $to)
+    {
+        $revenue = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2)
+            ->sum('totaleOrdine');
+
+        $orders = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2)
+            ->count();
+
+        $tickets = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('ordini.statoOrdine', 2)
+            ->sum('righe_ordine.quantitaIngressoOrdine');
+
+        return [
+            'revenue' => round($revenue, 2),
+            'orders' => $orders,
+            'tickets' => (int)$tickets,
+        ];
+    }
+
+    /**
+     * Get daily stats for a date range period
+     */
+    public function getPeriodDailyStats($from, $to)
+    {
+        $dates = [];
+        $current = strtotime($from);
+        $last = strtotime($to);
+
+        while ($current <= $last) {
+            $dates[] = date('Y-m-d', $current);
+            $current = strtotime('+1 day', $current);
+        }
+
+        $orders = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2)
+            ->select([
+                DB::raw('DATE(dataOrdine) as date'),
+                DB::raw('SUM(totaleOrdine) as revenue'),
+                DB::raw('COUNT(*) as orders_count')
+            ])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $tickets = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                DB::raw('DATE(ordini.dataOrdine) as date'),
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as tickets_count')
+            ])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $data = [];
+        foreach ($dates as $date) {
+            $orderData = $orders->get($date);
+            $ticketData = $tickets->get($date);
+
+            $data[$date] = [
+                'revenue' => $orderData ? round($orderData->revenue, 2) : 0.0,
+                'orders' => $orderData ? $orderData->orders_count : 0,
+                'tickets' => $ticketData ? (int)$ticketData->tickets_count : 0,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get location sales breakdown for a custom period
+     */
+    public function getPeriodLocationStats($from, $to)
+    {
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
+            ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                'location.idLocation',
+                'location.nomeLocation',
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as total_tickets'),
+                DB::raw('SUM(righe_ordine.prezzoIngressoOrdine * righe_ordine.quantitaIngressoOrdine) as total_revenue'),
+            ])
+            ->groupBy('location.idLocation', 'location.nomeLocation')
+            ->get()
+            ->keyBy('idLocation');
+    }
+
+    /**
+     * Get detailed monthly revenue and ticket count comparison for two years
+     */
+    public function compareYearsDetailed($year1, $year2)
+    {
+        $data = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $revenue1 = Ordine::whereYear('dataOrdine', $year1)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+                
+            $tickets1 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+                ->whereYear('ordini.dataOrdine', $year1)
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2)
+                ->sum('righe_ordine.quantitaIngressoOrdine');
+
+            $revenue2 = Ordine::whereYear('dataOrdine', $year2)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+                
+            $tickets2 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+                ->whereYear('ordini.dataOrdine', $year2)
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2)
+                ->sum('righe_ordine.quantitaIngressoOrdine');
+
+            $data[] = [
+                'month' => self::MONTHS_IT[$month],
+                'revenue_year1' => round($revenue1, 2),
+                'tickets_year1' => (int)$tickets1,
+                'revenue_year2' => round($revenue2, 2),
+                'tickets_year2' => (int)$tickets2,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get monthly financials for ReportFinanziari page graphs
+     */
+    public function getMonthlyFinancials($year)
+    {
+        $data = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $revenue = Ordine::whereYear('dataOrdine', $year)
+                ->whereMonth('dataOrdine', $month)
+                ->where('statoOrdine', 2)
+                ->sum('totaleOrdine');
+
+            $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+                ->whereYear('ordini.dataOrdine', $year)
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2)
+                ->select([
+                    'righe_ordine.prezzoIngressoOrdine',
+                    'righe_ordine.quantitaIngressoOrdine',
+                    'righe_ordine.idIngressoOrdine',
+                ])
+                ->get();
+
+            $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
+            $tipologie = [];
+            if (!empty($idIngressoOrdini)) {
+                $tipologie = DB::table('tipologia_ingresso')
+                    ->whereIn('idIngressoCont', $idIngressoOrdini)
+                    ->get()
+                    ->keyBy('idIngressoCont')
+                    ->toArray();
+            }
+
+            $commissions = 0;
+            foreach ($righe as $riga) {
+                $subtotal = $riga->prezzoIngressoOrdine * $riga->quantitaIngressoOrdine;
+                $tipologia = $tipologie[$riga->idIngressoOrdine] ?? null;
+                $tipoProvvigione = $tipologia ? ($tipologia->tipoProvvigione ?? 0) : 0;
+                $valoreProvvigione = $tipologia ? ($tipologia->valoreProvvigione ?? 0) : 0;
+
+                if ($tipoProvvigione == 1) {
+                    $commissions += ($subtotal / 100) * $valoreProvvigione;
+                } else {
+                    $commissions += $valoreProvvigione * $riga->quantitaIngressoOrdine;
+                }
+            }
+
+            $margin = $revenue - $commissions;
+
+            $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+                ->whereMonth('dataOperazione', $month)
+                ->where('tipoOperazione', 'E')
+                ->sum('importo');
+
+            $uscite = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+                ->whereMonth('dataOperazione', $month)
+                ->where('tipoOperazione', 'U')
+                ->sum('importo');
+
+            $profit = $margin + $entrate - $uscite;
+
+            $data[] = [
+                'month' => self::MONTHS_IT[$month],
+                'revenue' => round($revenue, 2),
+                'commissions' => round($commissions, 2),
+                'margin' => round($margin, 2),
+                'entrate' => round($entrate, 2),
+                'uscite' => round($uscite, 2),
+                'profit' => round($profit, 2),
+            ];
+        }
+        return $data;
+    }
+}

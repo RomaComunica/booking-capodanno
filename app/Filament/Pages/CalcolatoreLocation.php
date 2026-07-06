@@ -1,0 +1,446 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Models\Location;
+use App\Models\RigaOrdine;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
+use Illuminate\Support\Facades\DB;
+
+class CalcolatoreLocation extends Page implements HasForms
+{
+    use InteractsWithForms;
+
+    protected static ?string $navigationIcon = 'heroicon-o-calculator';
+    
+    protected static ?string $navigationLabel = 'Calcolatore Location';
+    
+    protected static ?string $navigationGroup = 'Gestione';
+
+    protected static string $view = 'filament.pages.calcolatore-location';
+
+    public ?array $data = [];
+    
+    public ?array $risultati = null;
+
+    // Array matching row index to assigned table name
+    public array $tavoli = [];
+
+    public function mount(): void
+    {
+        $this->form->fill([
+            'data_da' => now()->startOfYear(),
+            'data_a' => now(),
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Select::make('idLocation')
+                    ->label('Location')
+                    ->options(Location::pluck('nomeLocation', 'idLocation'))
+                    ->required()
+                    ->searchable(),
+                
+                DatePicker::make('data_da')
+                    ->label('Dal')
+                    ->required(),
+                
+                DatePicker::make('data_a')
+                    ->label('Al')
+                    ->required(),
+                
+                Select::make('stato_pagamento')
+                    ->label('Stato Pagamento Location')
+                    ->options([
+                        'tutti' => 'Tutti',
+                        'da_pagare' => 'Da Pagare (Debito Residuo)',
+                        'pagati' => 'Già Pagati',
+                    ])
+                    ->default('tutti'),
+            ])
+            ->columns(4)
+            ->statePath('data');
+    }
+
+    public function calcola()
+    {
+        $data = $this->form->getState();
+        
+        // Query per recuperare righe ordine con provvigioni
+        // LEFT JOIN is removed to prevent row duplication in case of multiple tipologia_ingresso records matching idIngressoCont.
+        // We load them separately in memory.
+        $query = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->where('ordini.idLocationOrdine', $data['idLocation'])
+            ->where('ordini.statoOrdine', 2)
+            ->whereDate('ordini.dataOrdine', '>=', $data['data_da'])
+            ->whereDate('ordini.dataOrdine', '<=', $data['data_a']);
+            
+        if (($data['stato_pagamento'] ?? 'tutti') === 'da_pagare') {
+            $query->where(function($q) {
+                $q->whereNull('ordini.dataPagamentoOrdineFornitore')
+                  ->orWhere('ordini.dataPagamentoOrdineFornitore', '=', '')
+                  ->orWhere('ordini.dataPagamentoOrdineFornitore', '=', '0000-00-00 00:00:00');
+            });
+        } elseif (($data['stato_pagamento'] ?? 'tutti') === 'pagati') {
+            $query->whereNotNull('ordini.dataPagamentoOrdineFornitore')
+                  ->where('ordini.dataPagamentoOrdineFornitore', '!=', '')
+                  ->where('ordini.dataPagamentoOrdineFornitore', '!=', '0000-00-00 00:00:00');
+        }
+            
+        $righe = $query->select([
+                'righe_ordine.idRigaOrdine',
+                'righe_ordine.idIngressoOrdine',
+                'righe_ordine.nomeIngressoOrdine',
+                'righe_ordine.quantitaIngressoOrdine',
+                DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
+                DB::raw('(righe_ordine.quantitaIngressoOrdine * COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0)) as venduto'),
+                'ordini.nomeClienteOrdine',
+                'ordini.cognomeClienteOrdine',
+                'ordini.noteOrdine',
+                'ordini.numeroOrdine',
+                'ordini.tavolo'
+            ])
+            ->get();
+
+        // Load tipologie in memory to prevent duplicate rows
+        $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
+        $tipologie = [];
+        if (!empty($idIngressoOrdini)) {
+            $tipologie = DB::table('tipologia_ingresso')
+                ->whereIn('idIngressoCont', $idIngressoOrdini)
+                ->get()
+                ->keyBy('idIngressoCont')
+                ->toArray();
+        }
+
+        $totaleVenduto = 0;
+        $totaleDare = 0;
+        $totaleQuantita = 0;
+        $dettagli = [];
+        
+        // Reset tavoli array
+        $this->tavoli = [];
+
+        foreach ($righe as $index => $riga) {
+            $venduto = $riga->venduto;
+            
+            $tipologia = $tipologie[$riga->idIngressoOrdine] ?? null;
+            $tipoProvvigione = $tipologia ? ($tipologia->tipoProvvigione ?? 0) : 0;
+            $valoreProvvigione = $tipologia ? ($tipologia->valoreProvvigione ?? 0) : 0;
+            
+            // Calcola provvigione
+            if ($tipoProvvigione == 1) {
+                // Percentuale
+                $provvigione = ($venduto / 100) * $valoreProvvigione;
+            } else {
+                // Fissa per biglietto
+                $provvigione = $valoreProvvigione * $riga->quantitaIngressoOrdine;
+            }
+            
+            $dare = $venduto - $provvigione;
+            
+            $totaleVenduto += $venduto;
+            $totaleDare += $dare;
+            $totaleQuantita += $riga->quantitaIngressoOrdine;
+            
+            $tavoloAssegnato = $riga->tavolo ?: $this->extractTavoloName($riga->noteOrdine, (int)$riga->numeroOrdine);
+            $dettagli[] = [
+                'index' => $index,
+                'cliente' => $riga->nomeClienteOrdine . ' ' . $riga->cognomeClienteOrdine,
+                'nome' => $riga->nomeClienteOrdine,
+                'cognome' => $riga->cognomeClienteOrdine,
+                'biglietto' => $riga->nomeIngressoOrdine,
+                'quantita' => $riga->quantitaIngressoOrdine,
+                'prezzo' => $riga->prezzoIngressoOrdine,
+                'venduto' => $venduto,
+                'dare' => $dare,
+                'note' => $riga->noteOrdine,
+                'numeroOrdine' => $riga->numeroOrdine,
+                'tavolo' => $tavoloAssegnato,
+                'tavolo_manuale' => $riga->tavolo,
+            ];
+
+            // Pre-fill tavoli using database or note extraction fallback
+            $this->tavoli[$index] = $tavoloAssegnato;
+        }
+
+        $location = Location::find($data['idLocation']);
+
+        $this->risultati = [
+            'location' => $location->nomeLocation,
+            'periodo' => date('d/m/Y', strtotime($data['data_da'])) . ' - ' . date('d/m/Y', strtotime($data['data_a'])),
+            'dettagli' => $dettagli,
+            'totaleQuantita' => $totaleQuantita,
+            'totaleVenduto' => $totaleVenduto,
+            'totaleDare' => $totaleDare,
+        ];
+    }
+
+    private function isBlacklistedTableWord(string $word): bool
+    {
+        $word = strtolower(trim($word));
+        $blacklist = [
+            'vegano', 'vegani', 'pesce', 'carne', 'glutine', 'celiaco', 'ciliaco', 
+            'intollerante', 'intolleranze', 'allergico', 'allergie', 'bambini', 
+            'bambino', 'seggiolone', 'persone', 'persona', 'posto', 'posti', 
+            'favore', 'grazie', 'prego', 'richiesta', 'da', 'di', 'con', 'per',
+            'cena', 'cenone', 'servita', 'tavolo', 'tavoli', 'ingresso', 'ingressi',
+            'menu', 'menù', 'buffet', 'salato', 'dolce', 'bottiglia', 'bottiglie'
+        ];
+        
+        if (in_array($word, $blacklist)) {
+            return true;
+        }
+        
+        if (preg_match('/^(?:da|di|per)?\s*\d+\s*(?:persone|posti|pax|adulti|bambini)?$/i', $word)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private function noteHasTableRequest(?string $note): bool
+    {
+        if (empty($note)) return false;
+        $extracted = $this->extractTavoloName($note);
+        return !empty($extracted);
+    }
+
+    private function tokenizeKey(string $key): array
+    {
+        $key = strtolower(trim($key));
+        if (empty($key)) return [];
+        
+        if (is_numeric($key)) {
+            return [$key];
+        }
+        
+        // Separiamo per spazi o punteggiatura comune
+        $words = preg_split('/[\s,\.\-\'\"]+/', $key);
+        $tokens = [];
+        foreach ($words as $word) {
+            $word = trim($word);
+            if (strlen($word) >= 3 && !$this->isBlacklistedTableWord($word)) {
+                $tokens[] = $word;
+            }
+        }
+        
+        return $tokens;
+    }
+
+    public function getTavoliAggregati(): array
+    {
+        if (!$this->risultati) return [];
+
+        $dettagli = $this->risultati['dettagli'];
+        $groups = [];
+
+        // 1. Inizializza i gruppi con le righe che hanno richieste esplicite o tavoli assegnati
+        foreach ($dettagli as $dettaglio) {
+            $idx = $dettaglio['index'];
+            $tavolo = trim($this->tavoli[$idx] ?? '');
+            
+            $hasRequest = !empty($dettaglio['tavolo_manuale']) || $this->noteHasTableRequest($dettaglio['note']);
+            
+            if ($hasRequest || !empty($tavolo)) {
+                $keys = [(string)$dettaglio['numeroOrdine']];
+                if (!empty($dettaglio['cognome'])) {
+                    $keys = array_merge($keys, $this->tokenizeKey($dettaglio['cognome']));
+                }
+                if (!empty($tavolo)) {
+                    $keys = array_merge($keys, $this->tokenizeKey($tavolo));
+                }
+                
+                $groups[] = [
+                    'orders' => [$dettaglio],
+                    'keys' => array_values(array_unique(array_filter($keys)))
+                ];
+            }
+        }
+
+        // 2. Unisci ricorsivamente i gruppi che condividono chiavi/token comuni (transitive links)
+        $merged = true;
+        while ($merged) {
+            $merged = false;
+            for ($i = 0; $i < count($groups); $i++) {
+                for ($j = $i + 1; $j < count($groups); $j++) {
+                    $intersect = array_intersect($groups[$i]['keys'], $groups[$j]['keys']);
+                    if (!empty($intersect)) {
+                        $groups[$i]['orders'] = array_merge($groups[$i]['orders'], $groups[$j]['orders']);
+                        $groups[$i]['keys'] = array_values(array_unique(array_merge($groups[$i]['keys'], $groups[$j]['keys'])));
+                        array_splice($groups, $j, 1);
+                        $merged = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // 3. Associa ordini senza richiesta esplicita che però appartengono a chiavi esistenti (es. l'originale Corridore)
+        foreach ($dettagli as $dettaglio) {
+            $alreadyGrouped = false;
+            foreach ($groups as $gVal) {
+                foreach ($gVal['orders'] as $gOrd) {
+                    if ($gOrd['numeroOrdine'] === $dettaglio['numeroOrdine']) {
+                        $alreadyGrouped = true;
+                        break 2;
+                    }
+                }
+            }
+
+            if (!$alreadyGrouped) {
+                $searchTokens = [(string)$dettaglio['numeroOrdine']];
+                if (!empty($dettaglio['cognome'])) {
+                    $searchTokens = array_merge($searchTokens, $this->tokenizeKey($dettaglio['cognome']));
+                }
+                $searchTokens = array_values(array_unique(array_filter($searchTokens)));
+
+                foreach ($groups as &$gRef) {
+                    $intersect = array_intersect($searchTokens, $gRef['keys']);
+                    if (!empty($intersect)) {
+                        $gRef['orders'][] = $dettaglio;
+                        $gRef['keys'] = array_values(array_unique(array_merge($gRef['keys'], $searchTokens)));
+                        break;
+                    }
+                }
+                unset($gRef);
+            }
+        }
+
+        // 4. Formatta il risultato finale per ciascun gruppo
+        $formattedGroups = [];
+        foreach ($groups as $group) {
+            $clientiList = [];
+            $totalePersone = 0;
+            $totaleVoucher = 0;
+            $orderProcessed = [];
+
+            // Determina il nome ottimale per il tavolo
+            $nameCandidate = '';
+            foreach ($group['orders'] as $ord) {
+                $t = trim($this->tavoli[$ord['index']] ?? '');
+                if (!empty($t) && !is_numeric($t) && !$this->isBlacklistedTableWord($t)) {
+                    $nameCandidate = $t;
+                    break;
+                }
+            }
+
+            if (empty($nameCandidate)) {
+                $surnames = [];
+                foreach ($group['orders'] as $ord) {
+                    if (!empty($ord['cognome'])) {
+                        $surnames[] = ucfirst(strtolower($ord['cognome']));
+                    }
+                }
+                $surnames = array_unique($surnames);
+                $nameCandidate = !empty($surnames) ? implode(' / ', $surnames) : 'Tavolo ' . $group['keys'][0];
+            } else {
+                $nameCandidate = ucfirst(strtolower($nameCandidate));
+            }
+
+            foreach ($group['orders'] as $ord) {
+                $ordNum = $ord['numeroOrdine'];
+                if (!in_array($ordNum, $orderProcessed)) {
+                    $clientiList[] = $ord['cliente'] . ' (Ord. #' . $ordNum . ')';
+                    $orderProcessed[] = $ordNum;
+                    $totaleVoucher++;
+                }
+                $totalePersone += $ord['quantita'];
+            }
+
+            $formattedGroups[] = [
+                'nome' => $nameCandidate,
+                'clienti' => $clientiList,
+                'totaleVoucher' => $totaleVoucher,
+                'totalePersone' => $totalePersone,
+            ];
+        }
+
+        usort($formattedGroups, fn($a, $b) => strcasecmp($a['nome'], $b['nome']));
+
+        return $formattedGroups;
+    }
+
+    private function extractTavoloName(?string $note, ?int $currentOrderNum = null, array $visited = []): string
+    {
+        if (empty($note)) return '';
+        
+        if ($currentOrderNum !== null) {
+            $visited[] = $currentOrderNum;
+        }
+        
+        // 1. Cerca prima se c'è un riferimento a un altro numero di voucher/ordine (da 4 a 6 cifre)
+        if (preg_match('/(?:voucher|ordine|ord\.?|vouch\.?|n\.?|n°|vicino\s+a|vicino|con|tavolo)\s*#?\s*(\d{4,6})\b/i', $note, $matches)) {
+            $linkedNum = (int)$matches[1];
+            
+            if ($linkedNum !== $currentOrderNum && !in_array($linkedNum, $visited)) {
+                $visited[] = $linkedNum;
+                $linkedOrder = DB::table('ordini')
+                    ->where('numeroOrdine', $linkedNum)
+                    ->select('tavolo', 'noteOrdine', 'cognomeClienteOrdine')
+                    ->first();
+                
+                if ($linkedOrder) {
+                    if (!empty($linkedOrder->tavolo)) {
+                        return trim($linkedOrder->tavolo);
+                    }
+                    
+                    if (!empty($linkedOrder->noteOrdine)) {
+                        $extractedFromLinked = $this->extractTavoloName($linkedOrder->noteOrdine, $linkedNum, $visited);
+                        if (!empty($extractedFromLinked) && !$this->isBlacklistedTableWord($extractedFromLinked)) {
+                            return $extractedFromLinked;
+                        }
+                    }
+                    
+                    if (!empty($linkedOrder->cognomeClienteOrdine) && !$this->isBlacklistedTableWord($linkedOrder->cognomeClienteOrdine)) {
+                        return trim($linkedOrder->cognomeClienteOrdine);
+                    }
+                    
+                    return (string)$linkedNum;
+                }
+            }
+        }
+
+        // 2. Cerca pattern come "tavolo [Nome]", "gruppo [Nome]", "vicino a [Nome]", "con [Nome]"
+        if (preg_match('/(?:tavolo|tavoli|gruppo|vicino\s+a|vicino|per|nome|con)\s+([a-zA-Z0-9\s]{2,30})/i', $note, $matches)) {
+            $val = trim($matches[1]);
+            $val = preg_replace('/\s+(?:per\s+favore|favore|grazie|prego|per|vorrei|richiesta|vicino|tavolo|tavoli)\b.*/i', '', $val);
+            $val = trim($val);
+            
+            if (!$this->isBlacklistedTableWord($val) && strlen($val) >= 2) {
+                return $val;
+            }
+        }
+        
+        return '';
+    }
+
+    public function updatedTavoli($value, $key)
+    {
+        if ($this->risultati && isset($this->risultati['dettagli'][$key])) {
+            $numeroOrdine = $this->risultati['dettagli'][$key]['numeroOrdine'];
+            
+            // Persist to the database
+            DB::table('ordini')
+                ->where('numeroOrdine', $numeroOrdine)
+                ->update(['tavolo' => trim($value)]);
+            
+            // Keep all rows of the same order in sync
+            foreach ($this->risultati['dettagli'] as &$dettaglio) {
+                if ($dettaglio['numeroOrdine'] === $numeroOrdine) {
+                    $idx = $dettaglio['index'];
+                    $this->tavoli[$idx] = $value;
+                    $dettaglio['tavolo'] = $value;
+                }
+            }
+        }
+    }
+}
