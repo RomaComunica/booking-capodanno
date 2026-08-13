@@ -18,7 +18,33 @@
                         icon="heroicon-o-printer"
                         icon-position="before"
                         class="hidden-print"
-                        x-on:click="window.print()"
+                        x-on:click="
+                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                            printWindow.document.write('<html><head><title>Stampa Calcolatore Partner</title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 24px; font-weight: bold; }');
+                            printWindow.document.write('p { margin: 0 0 20px 0; color: #555; font-size: 14px; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }');
+                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                            printWindow.document.write('.text-center { text-align: center; }');
+                            printWindow.document.write('.text-right { text-align: right; }');
+                            printWindow.document.write('.font-bold { font-weight: bold; }');
+                            printWindow.document.write('.text-lg { font-size: 15px; }');
+                            printWindow.document.write('.text-xs { font-size: 11px; }');
+                            printWindow.document.write('.text-green-600 { color: #16a34a; }');
+                            printWindow.document.write('.bg-green-50 { background-color: #f0fdf4; }');
+                            printWindow.document.write('tfoot tr { background-color: #f0fdf4; font-weight: bold; }');
+                            printWindow.document.write('.hidden-print { display: none !important; }');
+                            printWindow.document.write('</style>');
+                            printWindow.document.write('</head><body>');
+                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                            printWindow.document.write('</body></html>');
+                            printWindow.document.close();
+                            printWindow.focus();
+                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                        "
                     >
                         Stampa / PDF
                     </x-filament::button>
@@ -29,7 +55,7 @@
 
         {{-- Risultati --}}
         @if($risultati)
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" id="risultati-calcolatore">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" id="risultati-calcolatore-stampa">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
