@@ -77,16 +77,16 @@ class AdminPanelProvider extends PanelProvider
             fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
         );
 
-        // Register topbar glossy action buttons with inline style fallbacks for Filament rendering
+        // Register topbar glossy action buttons with brighter frosted glass background fallbacks
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::user-menu.before',
             fn (): string => \Illuminate\Support\Facades\Blade::render('
                 <div style="display: flex; align-items: center; gap: 8px; margin-right: 12px;">
-                    <a href="/" target="_blank" class="glossy-nav-btn glossy-btn-site" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(12, 82, 137, 0.3); background-color: rgba(12, 82, 137, 0.1); color: #0c5289; text-decoration: none; backdrop-filter: blur(10px); box-shadow: 0 2px 6px rgba(12, 82, 137, 0.08); transition: all 0.2s;">
+                    <a href="/" target="_blank" class="glossy-nav-btn glossy-btn-site" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.16); color: inherit; text-decoration: none; backdrop-filter: blur(12px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3); transition: all 0.2s;">
                         <x-heroicon-o-globe-alt style="width: 14px; height: 14px; flex-shrink: 0; color: inherit;" />
                         <span style="font-size: 12px; line-height: 1; color: inherit; font-weight: 600;">Visita il Sito</span>
                     </a>
-                    <a href="/clear-cache" class="glossy-nav-btn glossy-btn-cache" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(221, 7, 109, 0.3); background-color: rgba(221, 7, 109, 0.1); color: #DD076D; text-decoration: none; backdrop-filter: blur(10px); box-shadow: 0 2px 6px rgba(221, 7, 109, 0.08); transition: all 0.2s;">
+                    <a href="/clear-cache" class="glossy-nav-btn glossy-btn-cache" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(221, 7, 109, 0.4); background: rgba(221, 7, 109, 0.18); color: inherit; text-decoration: none; backdrop-filter: blur(12px); box-shadow: 0 4px 12px rgba(221, 7, 109, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2); transition: all 0.2s;">
                         <x-heroicon-o-arrow-path style="width: 14px; height: 14px; flex-shrink: 0; color: inherit;" />
                         <span style="font-size: 12px; line-height: 1; color: inherit; font-weight: 600;">Svuota Cache</span>
                     </a>
