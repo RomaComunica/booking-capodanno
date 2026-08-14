@@ -11,11 +11,8 @@
     /* Light Theme Glass Variables */
     --glass-bg: #ffffff;
     --glass-bg-hover: #ffffff;
-    --glass-border: rgba(12, 82, 137, 0.18);
-    --glass-border-hover: rgba(12, 82, 137, 0.35);
-    --glass-shine: inset 0 1px 0 0 rgba(255, 255, 255, 1);
-    --glass-shadow: 0 4px 16px rgba(12, 82, 137, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
-
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     --bg-canvas: #f8fafc;
 }
 
@@ -23,11 +20,8 @@
     /* Dark Theme High Contrast Glass Variables */
     --glass-bg: #0f172a;
     --glass-bg-hover: #1e293b;
-    --glass-border: rgba(255, 255, 255, 0.15);
-    --glass-border-hover: rgba(41, 244, 143, 0.4);
-    --glass-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-    --glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
     --bg-canvas: #090d16;
 }
 
@@ -78,19 +72,17 @@ body.fi-body {
     height: 30px !important;
 }
 
-/* All Cards, Panels, Sections, Modals in Dark Mode */
+/* Clean, Light Cards & Sections (NO borders on field wrappers) */
 .fi-section,
 .fi-card,
 .fi-widget,
 .fi-ta-content,
-.fi-fo-field-wrp,
 .fi-modal-window,
-.fi-sidebar-nav,
 .glossy-card {
     background-color: var(--glass-bg) !important;
     border: 1px solid var(--glass-border) !important;
     box-shadow: var(--glass-shadow) !important;
-    border-radius: 16px !important;
+    border-radius: 12px !important;
     transition: all 0.2s ease;
 }
 
@@ -98,27 +90,63 @@ body.fi-body {
 .dark .fi-card,
 .dark .fi-widget,
 .dark .fi-ta-content,
-.dark .fi-sidebar,
-.dark .fi-topbar,
-.dark .fi-fo-field-wrp,
-.dark .glossy-card,
-.dark [class*="fi-section"],
-.dark [class*="fi-card"] {
+.dark .fi-modal-window,
+.dark .glossy-card {
     background-color: #0f172a !important;
-    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: #f8fafc !important;
 }
 
-/* Inner Card Containers */
-.dark .bg-white\/60,
-.dark .bg-gray-50,
-.dark [class*="bg-gray-800"],
-.dark [class*="bg-slate-800"] {
-    background-color: #1e293b !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+/* REMOVE ALL HEAVY BORDERS FROM FORM FIELD WRAPPERS */
+.fi-fo-field-wrp,
+.dark .fi-fo-field-wrp {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
 }
 
-/* Text & Typography Overrides for Dark Mode */
+/* Inner Card Containers */
+.dark .bg-white\/60 {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.dark .bg-gray-50 {
+    background-color: #1e293b !important;
+}
+
+/* Form Inputs, Selects & Option Dropdowns */
+.dark select,
+.dark select option,
+.dark input,
+.dark textarea,
+.dark .fi-input,
+.dark .fi-input-wrp,
+.dark .fi-select-input {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+    box-shadow: none !important;
+}
+
+.dark select option {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+}
+
+html:not(.dark) select,
+html:not(.dark) select option,
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) .fi-input-wrp,
+html:not(.dark) .fi-select-input {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+}
+
+/* Text & Typography Contrast */
 .dark p,
 .dark span,
 .dark div,
@@ -135,44 +163,11 @@ body.fi-body {
 .dark .text-gray-900,
 .dark .text-gray-950,
 .dark .font-bold,
-.dark .font-semibold,
-.dark [class*="text-2xl"],
-.dark [class*="text-xl"],
-.dark [class*="text-lg"] {
+.dark .font-semibold {
     color: #ffffff !important;
 }
 
-/* Form Inputs, Selects & Option Dropdowns (Cross-Browser Bulletproof Fix) */
-.dark input,
-.dark select,
-.dark select option,
-.dark textarea,
-.dark .fi-input,
-.dark .fi-input-wrp,
-.dark .fi-select-input,
-.dark [class*="fi-input"] {
-    background-color: #1e293b !important;
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
-}
-
-.dark select option {
-    background-color: #0f172a !important;
-    color: #ffffff !important;
-}
-
-html:not(.dark) select,
-html:not(.dark) select option,
-html:not(.dark) input,
-html:not(.dark) textarea,
-html:not(.dark) .fi-input-wrp,
-html:not(.dark) .fi-select-input {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-color: rgba(12, 82, 137, 0.2) !important;
-}
-
-/* Sidebar Styling */
+/* Sidebar & Topbar Clean Styling */
 .fi-sidebar {
     background-color: var(--glass-bg) !important;
     border-right: 1px solid var(--glass-border) !important;
@@ -180,12 +175,27 @@ html:not(.dark) .fi-select-input {
 
 .dark .fi-sidebar {
     background-color: #0f172a !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .fi-sidebar-header {
     border-bottom: 1px solid var(--glass-border) !important;
     padding-top: 1rem;
     padding-bottom: 1rem;
+}
+
+.dark .fi-sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-topbar {
+    background-color: var(--glass-bg) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.dark .fi-topbar {
+    background-color: #0f172a !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Active Navigation Items */
@@ -201,17 +211,7 @@ html:not(.dark) .fi-select-input {
     color: #ffffff !important;
 }
 
-/* Topbar Header */
-.fi-topbar {
-    background-color: var(--glass-bg) !important;
-    border-bottom: 1px solid var(--glass-border) !important;
-}
-
-.dark .fi-topbar {
-    background-color: #0f172a !important;
-}
-
-/* Glossy Topbar Action Buttons */
+/* Topbar Action Buttons */
 .glossy-nav-btn {
     display: inline-flex !important;
     align-items: center !important;
@@ -223,37 +223,24 @@ html:not(.dark) .fi-select-input {
     padding: 0 14px !important;
     height: 32px !important;
     text-decoration: none !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
 }
 
-/* Button 1: Visita il Sito (Blue/Mint) */
 .glossy-btn-site {
     background: rgba(12, 82, 137, 0.1) !important;
-    border: 1px solid rgba(12, 82, 137, 0.28) !important;
+    border: 1px solid rgba(12, 82, 137, 0.25) !important;
     color: #0c5289 !important;
-    box-shadow: 0 2px 6px rgba(12, 82, 137, 0.08) !important;
 }
 
 .glossy-btn-site:hover {
     background: rgba(12, 82, 137, 0.18) !important;
     border-color: #0c5289 !important;
-    color: #083b63 !important;
-    box-shadow: 0 4px 12px rgba(12, 82, 137, 0.2) !important;
-    transform: translateY(-1px) !important;
 }
 
 .dark .glossy-btn-site {
     background: rgba(255, 255, 255, 0.18) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    color: #ffffff !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-}
-
-.dark .glossy-btn-site span,
-.dark .glossy-btn-site svg {
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: #ffffff !important;
 }
 
@@ -261,42 +248,22 @@ html:not(.dark) .fi-select-input {
     background: rgba(41, 244, 143, 0.22) !important;
     border-color: #29f48f !important;
     color: #29f48f !important;
-    box-shadow: 0 0 16px rgba(41, 244, 143, 0.4) !important;
-    transform: translateY(-1px) !important;
 }
 
-.dark .glossy-btn-site:hover span,
-.dark .glossy-btn-site:hover svg {
-    color: #29f48f !important;
-}
-
-/* Button 2: Svuota Cache (Fuchsia) */
 .glossy-btn-cache {
     background: rgba(221, 7, 109, 0.1) !important;
-    border: 1px solid rgba(221, 7, 109, 0.28) !important;
+    border: 1px solid rgba(221, 7, 109, 0.25) !important;
     color: #DD076D !important;
-    box-shadow: 0 2px 6px rgba(221, 7, 109, 0.08) !important;
 }
 
 .glossy-btn-cache:hover {
     background: rgba(221, 7, 109, 0.18) !important;
     border-color: #DD076D !important;
-    color: #a80553 !important;
-    box-shadow: 0 4px 12px rgba(221, 7, 109, 0.25) !important;
-    transform: translateY(-1px) !important;
 }
 
 .dark .glossy-btn-cache {
     background: rgba(221, 7, 109, 0.22) !important;
-    border: 1px solid rgba(221, 7, 109, 0.45) !important;
-    color: #ffffff !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    box-shadow: 0 4px 12px rgba(221, 7, 109, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-
-.dark .glossy-btn-cache span,
-.dark .glossy-btn-cache svg {
+    border: 1px solid rgba(221, 7, 109, 0.4) !important;
     color: #ffffff !important;
 }
 
@@ -304,20 +271,12 @@ html:not(.dark) .fi-select-input {
     background: rgba(221, 7, 109, 0.35) !important;
     border-color: #ff3b9a !important;
     color: #ffffff !important;
-    box-shadow: 0 0 18px rgba(221, 7, 109, 0.5) !important;
-    transform: translateY(-1px) !important;
 }
 
-.dark .glossy-btn-cache:hover span,
-.dark .glossy-btn-cache:hover svg {
-    color: #ffffff !important;
-}
-
-/* Tables & Headings High Contrast */
+/* Table Clean Borders */
 .fi-ta-header-cell {
     background-color: rgba(12, 82, 137, 0.05) !important;
     font-weight: 700 !important;
-    letter-spacing: 0.025em;
 }
 
 .dark .fi-ta-header-cell {
@@ -325,76 +284,28 @@ html:not(.dark) .fi-select-input {
     color: #f8fafc !important;
 }
 
-.fi-ta-row {
-    transition: background-color 0.15s ease;
-}
-
 .dark .fi-ta-row {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .fi-ta-row:hover {
-    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 .dark .fi-ta-cell * {
     color: #f8fafc !important;
 }
 
-/* Custom Buttons Glossy Shine */
+/* Primary Action Buttons */
 .fi-btn-primary {
     background: linear-gradient(135deg, #0c5289 0%, #0f64a7 100%) !important;
-    box-shadow: 0 4px 14px rgba(12, 82, 137, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
     border: none !important;
     border-radius: 10px !important;
-    transition: all 0.2s ease !important;
     color: #ffffff !important;
 }
 
 .fi-btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(12, 82, 137, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(12, 82, 137, 0.3) !important;
 }
 
-/* Success Badges & Buttons */
-.fi-badge-success,
-.fi-color-success {
-    background-color: rgba(41, 244, 143, 0.15) !important;
-    color: #047857 !important;
-    border: 1px solid rgba(41, 244, 143, 0.3) !important;
-}
-
-.dark .fi-badge-success,
-.dark .fi-color-success,
-.dark .text-green-600,
-.dark .text-green-500,
-.dark .text-green-400 {
-    color: #29f48f !important;
-}
-
-.dark .text-danger-600,
-.dark .text-danger-500,
-.dark .text-danger-400 {
-    color: #f472b6 !important;
-}
-
-/* Custom Glossy KPI Highlights */
+/* KPI Highlights */
 .glossy-kpi-card {
     position: relative;
     overflow: hidden;
-}
-
-.glossy-kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, rgba(41, 244, 143, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.dark .glossy-kpi-card::before {
-    background: radial-gradient(circle, rgba(221, 7, 109, 0.2) 0%, transparent 70%);
 }
