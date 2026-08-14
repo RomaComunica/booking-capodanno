@@ -13,6 +13,16 @@ class Ordine extends Model
 
     protected static function booted()
     {
+        static::creating(function ($model) {
+            if (!$model->numeroOrdine) {
+                $maxNum = static::max('numeroOrdine') ?? 0;
+                $model->numeroOrdine = $maxNum + 1;
+            }
+            if (!$model->dataOrdine) {
+                $model->dataOrdine = now();
+            }
+        });
+
         static::saving(function ($model) {
             $notNullFields = ['noteOrdine', 'emailClienteOrdine', 'nomeClienteOrdine', 'cognomeClienteOrdine', 'telefonoClienteOrdine'];
             foreach ($notNullFields as $field) {

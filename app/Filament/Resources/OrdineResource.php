@@ -63,16 +63,30 @@ class OrdineResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('numeroOrdine')
                             ->label('Numero Ordine')
-                            ->disabled(),
+                            ->placeholder('Auto-generato')
+                            ->disabled()
+                            ->dehydrated(false),
+                        
+                        Forms\Components\DateTimePicker::make('dataOrdine')
+                            ->label('Data Ordine')
+                            ->default(now())
+                            ->required(),
                         
                         Forms\Components\Select::make('idLocationOrdine')
                             ->label('Location')
-                            ->relationship('location', 'nomeLocation')
+                            ->options(function () {
+                                return \App\Models\Location::orderBy('nomeLocation')->get()->mapWithKeys(function ($loc) {
+                                    $suffix = $loc->attivaLocation ? '' : ' (Non attiva)';
+                                    return [$loc->idLocation => $loc->nomeLocation . $suffix];
+                                });
+                            })
+                            ->searchable()
                             ->required(),
                         
                         Forms\Components\Select::make('idPartnerOrdine')
                             ->label('Partner')
-                            ->relationship('partner', 'nomePartner'),
+                            ->relationship('partner', 'nomePartner')
+                            ->searchable(),
                         
                         Forms\Components\Select::make('statoOrdine')
                             ->label('Stato')
@@ -82,7 +96,7 @@ class OrdineResource extends Resource
                                 2 => 'Completato',
                             ])
                             ->required()
-                            ->default(0),
+                            ->default(2),
                         
                         Forms\Components\TextInput::make('totaleOrdine')
                             ->label('Totale')
@@ -108,25 +122,20 @@ class OrdineResource extends Resource
                             ->schema([
                                 Forms\Components\TextInput::make('nomeIngressoOrdine')
                                     ->label('Descrizione Ticket/Servizio')
-                                    ->disabled()
+                                    ->required()
                                     ->columnSpan(2),
                                 Forms\Components\TextInput::make('quantitaIngressoOrdine')
                                     ->label('Quantità')
-                                    ->disabled()
-                                    ->numeric(),
+                                    ->numeric()
+                                    ->default(1)
+                                    ->required(),
                                 Forms\Components\TextInput::make('prezzoIngressoOrdine')
                                     ->label('Prezzo Unit.')
+                                    ->numeric()
                                     ->prefix('€')
-                                    ->disabled(),
-                                Forms\Components\TextInput::make('totaleRiga')
-                                    ->label('Totale Riga')
-                                    ->prefix('€')
-                                    ->disabled(),
+                                    ->required(),
                             ])
-                            ->columns(5)
-                            ->disableItemCreation()
-                            ->disableItemDeletion()
-                            ->disableItemMovement()
+                            ->columns(4)
                     ])
                     ->collapsible(),
                 
@@ -209,9 +218,15 @@ class OrdineResource extends Resource
                     ->label('Totale')
                     ->money('EUR')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('tipoPagamento.nomePagamento')
+                    ->label('Metodo Pagamento')
+                    ->badge()
+                    ->placeholder('—')
+                    ->sortable(),
                 
                 Tables\Columns\IconColumn::make('dataPagamentoOrdineFornitore')
-                    ->label('Pag. Location')
+                    ->label('Pagata Location')
                     ->boolean()
                     ->getStateUsing(fn ($record) => 
                         $record->dataPagamentoOrdineFornitore && $record->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00'
@@ -220,7 +235,17 @@ class OrdineResource extends Resource
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->action(function ($record) {
+                        $isPaid = $record->dataPagamentoOrdineFornitore && $record->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00';
+                        $record->update([
+                            'dataPagamentoOrdineFornitore' => $isPaid ? null : now(),
+                        ]);
+                        Notification::make()
+                            ->title($isPaid ? 'Pagamento Location contrassegnato come DA PAGARE' : 'Pagamento Location contrassegnato come PAGATO')
+                            ->success()
+                            ->send();
+                    })
+                    ->tooltip('Clicca per cambiare lo stato di pagamento alla location'),
                 
                 Tables\Columns\TextColumn::make('noteOrdine')
                     ->label('Note')

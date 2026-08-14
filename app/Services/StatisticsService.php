@@ -14,24 +14,59 @@ class StatisticsService
         1 => 'Gen', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mag', 6 => 'Giu',
         7 => 'Lug', 8 => 'Ago', 9 => 'Set', 10 => 'Ott', 11 => 'Nov', 12 => 'Dic'
     ];
-    /**
-     * Get dashboard statistics for current year
-     */
     public function getDashboardStats($year = null)
     {
         $year = $year ?? \App\Models\Setting::getVal('anno_riferimento', date('Y'));
 
+        $completedOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 2)->count();
+        $pendingOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 0)->count();
+        $cancelledOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 1)->count();
+        $totalOrders = $completedOrders + $pendingOrders + $cancelledOrders;
+
+        // Biglietti venduti raggruppati per metodo di pagamento
+        $ticketsByPayment = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->leftJoin('tipo_pagamenti', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamenti.idTipoPagamento')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                DB::raw("COALESCE(tipo_pagamenti.nomePagamento, 'Non specificato') as nome_pagamento"),
+                DB::raw("SUM(righe_ordine.quantitaIngressoOrdine) as totale_biglietti")
+            ])
+            ->groupBy('nome_pagamento')
+            ->orderByDesc('totale_biglietti')
+            ->pluck('totale_biglietti', 'nome_pagamento')
+            ->toArray();
+
+        $totalRevenue = $this->getTotalRevenue($year);
+        $totalTickets = $this->getTotalTickets($year);
+        $netProfitTickets = $this->getTotalCommissions($year);
+
+        $extraIncomes = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'E')
+            ->sum('importo');
+
+        $extraExpenses = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            ->where('tipoOperazione', 'U')
+            ->sum('importo');
+
+        $profitAfterExpenses = round($netProfitTickets + $extraIncomes - $extraExpenses, 2);
+
         return [
-            'total_revenue' => $this->getTotalRevenue($year),
-            'total_orders' => $this->getTotalOrders($year),
-            'total_tickets' => $this->getTotalTickets($year),
-            'total_commissions' => $this->getTotalCommissions($year),
-            'total_margin' => $this->getTotalMargin($year),
-            'total_profit' => $this->getTotalProfit($year),
+            'total_revenue' => $totalRevenue,
+            'total_orders' => $totalOrders,
+            'completed_orders' => $completedOrders,
+            'pending_orders' => $pendingOrders,
+            'cancelled_orders' => $cancelledOrders,
+            'total_tickets' => $totalTickets,
+            'tickets_by_payment' => $ticketsByPayment,
+            'net_profit_tickets' => $netProfitTickets,
+            'extra_incomes' => $extraIncomes,
+            'extra_expenses' => $extraExpenses,
+            'profit_after_expenses' => $profitAfterExpenses,
+            'total_profit' => $profitAfterExpenses,
             'locations_count' => Location::count(),
             'active_locations' => Location::where('attivaLocation', true)->count(),
             'partners_count' => Partner::count(),
-            'pending_orders' => Ordine::where('statoOrdine', 0)->count(), // 0 = In corso
         ];
     }
 

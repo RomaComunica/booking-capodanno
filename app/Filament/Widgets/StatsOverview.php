@@ -3,12 +3,15 @@
 namespace App\Filament\Widgets;
 
 use App\Services\StatisticsService;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 
-class StatsOverview extends BaseWidget
+class StatsOverview extends Widget
 {
+    protected static string $view = 'filament.widgets.stats-overview';
+
     protected static ?string $pollingInterval = null;
+
+    protected int | string | array $columnSpan = 'full';
 
     public ?int $year = null;
 
@@ -22,41 +25,14 @@ class StatsOverview extends BaseWidget
         $this->year = $year;
     }
 
-    protected function getStats(): array
+    public function getViewData(): array
     {
-        $year = $this->year ?? date('Y');
+        $year = $this->year ?? \App\Models\Setting::getVal('anno_riferimento', date('Y'));
         $stats = app(StatisticsService::class)->getDashboardStats($year);
 
         return [
-            Stat::make('Fatturato Totale', '€ ' . number_format($stats['total_revenue'], 2, ',', '.'))
-                ->description('Anno corrente')
-                ->descriptionIcon('heroicon-m-currency-euro')
-                ->color('success'),
-
-            Stat::make('Ordini Totali', number_format($stats['total_orders'], 0, ',', '.'))
-                ->description($stats['pending_orders'] . ' in attesa')
-                ->descriptionIcon('heroicon-m-shopping-cart')
-                ->color('warning'),
-
-            Stat::make('Biglietti Venduti', number_format($stats['total_tickets'], 0, ',', '.'))
-                ->description('Anno corrente')
-                ->descriptionIcon('heroicon-m-ticket')
-                ->color('info'),
-
-            Stat::make('Utile Netto', '€ ' . number_format($stats['total_profit'], 2, ',', '.'))
-                ->description('Commissioni incassate')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color('success'),
-
-            Stat::make('Location Attive', $stats['active_locations'] . ' / ' . $stats['locations_count'])
-                ->description('Totale location')
-                ->descriptionIcon('heroicon-m-map-pin')
-                ->color('primary'),
-
-            Stat::make('Partner', number_format($stats['partners_count'], 0, ',', '.'))
-                ->description('Partner attivi')
-                ->descriptionIcon('heroicon-m-user-group')
-                ->color('primary'),
+            'stats' => $stats,
+            'year' => $year,
         ];
     }
 }

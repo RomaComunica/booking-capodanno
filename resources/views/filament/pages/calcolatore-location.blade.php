@@ -1,13 +1,13 @@
 <x-filament-panels::page>
     <div class="space-y-6">
-        {{-- Form --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        {{-- Form di Selezione --}}
+        <div class="glossy-card bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60">
             <form wire:submit="calcola">
                 {{ $this->form }}
                 
                 <div class="mt-6 flex items-center gap-3">
                     <x-filament::button type="submit" size="lg" icon="heroicon-o-calculator" icon-position="before">
-                        Calcola
+                        Calcola Report
                     </x-filament::button>
 
                     @if($risultati)
@@ -25,7 +25,7 @@
                             printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 24px; font-weight: bold; }');
                             printWindow.document.write('h3 { margin-top: 30px; margin-bottom: 15px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; }');
                             printWindow.document.write('p { margin: 0 0 20px 0; color: #555; font-size: 14px; }');
-                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
                             printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
                             printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
                             printWindow.document.write('.text-center { text-align: center; }');
@@ -53,153 +53,230 @@
 
         {{-- Risultati --}}
         @if($risultati)
-        <div id="risultati-calcolatore-stampa" class="space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div id="risultati-calcolatore-stampa" class="space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60">
             
-            {{-- Header Location --}}
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    Report Location: {{ $risultati['location'] }}
-                </h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Periodo: {{ $risultati['periodo'] }}
-                </p>
-            </div>
-
-            {{-- Tabella Dettagli --}}
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 hidden-print" style="display: none;">
-                    Elenco Biglietti Venduti
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Cliente
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Tavolo
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Biglietto
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Quantità
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Prezzo
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Venduto
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Da Dare
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach($risultati['dettagli'] as $dettaglio)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ $dettaglio['cliente'] }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <span class="visible-print" style="display: none; font-weight: bold; color: #111;">
-                                        {{ $tavoli[$dettaglio['index']] ?: '—' }}
-                                    </span>
-                                    <input 
-                                        type="text" 
-                                        wire:model.live.debounce.500ms="tavoli.{{ $dettaglio['index'] }}" 
-                                        class="block w-full max-w-[120px] mx-auto rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm hidden-print"
-                                        placeholder="Tavolo..."
-                                    >
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                    {{ $dettaglio['biglietto'] }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    {{ $dettaglio['quantita'] }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    €{{ number_format($dettaglio['prezzo'], 2, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    €{{ number_format($dettaglio['venduto'], 2, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-semibold text-green-600 dark:text-green-400">
-                                    €{{ number_format($dettaglio['dare'], 2, ',', '.') }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="bg-green-50 dark:bg-green-950/30">
-                            <tr class="bg-green-light">
-                                <td colspan="3" class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
-                                    TOTALI:
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">
-                                    {{ $risultati['totaleQuantita'] }}
-                                </td>
-                                <td class="px-6 py-4"></td>
-                                <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">
-                                    €{{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-green-600 dark:text-green-400 text-lg">
-                                    €{{ number_format($risultati['totaleDare'], 2, ',', '.') }}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+            {{-- Header Report --}}
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-slate-700 pb-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                        <x-heroicon-o-map-pin class="h-6 w-6 text-primary-500" />
+                        <span>Report: {{ $risultati['location'] }}</span>
+                    </h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Periodo: <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo'] }}</span>
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 font-bold rounded-lg text-xs border border-primary-200 dark:border-primary-800">
+                        {{ count($risultati['dettagli']) }} righe ordine trovate
+                    </span>
                 </div>
             </div>
 
-            {{-- Tavoli List --}}
-            @php
-                $tavoliAggregati = $this->getTavoliAggregati();
-            @endphp
+            {{-- Financial Summary KPI Cards Grid --}}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <!-- Totale Venduto -->
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Totale Venduto</span>
+                    <div class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
+                        € {{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
+                    </div>
+                    <span class="text-[11px] text-gray-500 mt-1">{{ $risultati['totaleQuantita'] }} biglietti totali</span>
+                </div>
 
-            @if(count($tavoliAggregati) > 0)
-            <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                    Aggregazione Tavoli
+                <!-- Ns Provvigioni -->
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400">Ns Provvigione</span>
+                    <div class="text-xl font-extrabold text-primary-600 dark:text-primary-400 mt-1">
+                        € {{ number_format($risultati['totaleProvvigioni'], 2, ',', '.') }}
+                    </div>
+                    <span class="text-[11px] text-gray-500 mt-1">Nostro utile lordo</span>
+                </div>
+
+                <!-- Totale Spettante Location -->
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Spettante Location</span>
+                    <div class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
+                        € {{ number_format($risultati['totaleDare'], 2, ',', '.') }}
+                    </div>
+                    <span class="text-[11px] text-gray-500 mt-1">Venduto meno provvigioni</span>
+                </div>
+
+                <!-- Già Pagato Location -->
+                <div class="bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800/60 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400">Già Pagato</span>
+                    <div class="text-xl font-extrabold text-green-700 dark:text-green-400 mt-1">
+                        € {{ number_format($risultati['totaleGiaPagato'], 2, ',', '.') }}
+                    </div>
+                    <span class="text-[11px] text-green-600/80 mt-1">Saldato alla location</span>
+                </div>
+
+                <!-- Debito Residuo da Pagare -->
+                <div class="bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Da Pagare (Residuo)</span>
+                    <div class="text-xl font-extrabold text-amber-700 dark:text-amber-400 mt-1">
+                        € {{ number_format($risultati['totaleDaPagareResiduo'], 2, ',', '.') }}
+                    </div>
+                    <span class="text-[11px] text-amber-600/80 mt-1">Ancora da saldare</span>
+                </div>
+            </div>
+
+            {{-- Tabella Dettagli --}}
+            <div class="overflow-x-auto mt-6">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
+                    <thead class="bg-gray-100 dark:bg-slate-900">
+                        <tr>
+                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Ordine / Cliente
+                            </th>
+                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Location
+                            </th>
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Metodo Pag.
+                            </th>
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Tavolo
+                            </th>
+                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Biglietto
+                            </th>
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Q.tà
+                            </th>
+                            <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Prezzo
+                            </th>
+                            <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                Venduto
+                            </th>
+                            <th class="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 uppercase">
+                                Provv.
+                            </th>
+                            <th class="px-3 py-3 text-right font-bold text-gray-900 dark:text-white uppercase">
+                                Quota Loc.
+                            </th>
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase hidden-print">
+                                Pagata Location
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach($risultati['dettagli'] as $dettaglio)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-3 py-3 whitespace-nowrap text-gray-900 dark:text-white">
+                                <div class="font-bold">#{{ $dettaglio['numeroOrdine'] }}</div>
+                                <div class="text-[11px] text-gray-600 dark:text-gray-300">{{ $dettaglio['cliente'] }}</div>
+                            </td>
+                            <td class="px-3 py-3 text-gray-900 dark:text-white font-medium">
+                                {{ $dettaglio['location'] }}
+                            </td>
+                            <td class="px-3 py-3 text-center whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-slate-600">
+                                    {{ $dettaglio['metodo_pagamento'] }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-center">
+                                <span class="visible-print" style="display: none; font-weight: bold; color: #111;">
+                                    {{ $tavoli[$dettaglio['index']] ?: '—' }}
+                                </span>
+                                <input 
+                                    type="text" 
+                                    wire:model.live.debounce.500ms="tavoli.{{ $dettaglio['index'] }}" 
+                                    class="block w-full max-w-[100px] mx-auto rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs hidden-print"
+                                    placeholder="Tavolo..."
+                                >
+                            </td>
+                            <td class="px-3 py-3 text-gray-900 dark:text-white">
+                                {{ $dettaglio['biglietto'] }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white">
+                                {{ $dettaglio['quantita'] }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-right text-gray-700 dark:text-gray-300">
+                                € {{ number_format($dettaglio['prezzo'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-gray-900 dark:text-white">
+                                € {{ number_format($dettaglio['venduto'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-primary-600 dark:text-primary-400">
+                                € {{ number_format($dettaglio['provvigione'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-right font-extrabold text-gray-900 dark:text-white">
+                                € {{ number_format($dettaglio['dare'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-3 whitespace-nowrap text-center hidden-print">
+                                <button 
+                                    type="button" 
+                                    wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all cursor-pointer {{ $dettaglio['is_pagata_location'] ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 hover:bg-green-200' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200' }}"
+                                    title="Clicca per cambiare lo stato di pagamento alla location"
+                                >
+                                    @if($dettaglio['is_pagata_location'])
+                                        <x-heroicon-s-check-circle class="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                                        <span>Pagata</span>
+                                    @else
+                                        <x-heroicon-s-clock class="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                        <span>Da Pagare</span>
+                                    @endif
+                                </button>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-100 dark:bg-slate-900 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700">
+                        <tr>
+                            <td colspan="5" class="px-3 py-4 text-right">
+                                TOTALI COMPLESSIVI:
+                            </td>
+                            <td class="px-3 py-4 text-center font-extrabold">
+                                {{ $risultati['totaleQuantita'] }}
+                            </td>
+                            <td class="px-3 py-4"></td>
+                            <td class="px-3 py-4 text-right font-extrabold">
+                                € {{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-4 text-right font-extrabold text-primary-600 dark:text-primary-400">
+                                € {{ number_format($risultati['totaleProvvigioni'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-4 text-right font-extrabold text-green-600 dark:text-green-400 text-sm">
+                                € {{ number_format($risultati['totaleDare'], 2, ',', '.') }}
+                            </td>
+                            <td class="px-3 py-4 hidden-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            {{-- Tavoli Aggregati --}}
+            @php $tavoliAggregati = $this->getTavoliAggregati(); @endphp
+            @if(!empty($tavoliAggregati))
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <x-heroicon-o-user-group class="h-5 w-5 text-primary-500" />
+                    <span>Raggruppamento Tavoli Richiesti / Assegnati</span>
                 </h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Tavolo
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Clienti
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Totale Voucher
-                                </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Totale Persone
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach($tavoliAggregati as $tavolo)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
-                                    {{ $tavolo['nome'] }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                    {{ implode(', ', $tavolo['clienti']) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
-                                    {{ $tavolo['totaleVoucher'] }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-900 dark:text-white">
-                                    {{ $tavolo['totalePersone'] }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($tavoliAggregati as $tavoloGroup)
+                    <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700/60 pb-2 mb-2">
+                                <span class="font-extrabold text-sm text-gray-900 dark:text-white">
+                                    {{ $tavoloGroup['nome'] }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-primary-100 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300">
+                                    {{ $tavoloGroup['totalePersone'] }} persone
+                                </span>
+                            </div>
+                            <ul class="text-xs space-y-1 text-gray-600 dark:text-gray-300 mt-2">
+                                @foreach($tavoloGroup['clienti'] as $cl)
+                                <li>• {{ $cl }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             </div>
             @endif

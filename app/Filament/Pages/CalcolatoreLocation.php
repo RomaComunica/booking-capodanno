@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Location;
+use App\Models\Ordine;
 use App\Models\RigaOrdine;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -10,6 +11,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 
 class CalcolatoreLocation extends Page implements HasForms
@@ -36,6 +38,7 @@ class CalcolatoreLocation extends Page implements HasForms
         $this->form->fill([
             'data_da' => now()->startOfYear(),
             'data_a' => now(),
+            'stato_pagamento' => 'tutti',
         ]);
     }
 
@@ -45,8 +48,8 @@ class CalcolatoreLocation extends Page implements HasForms
             ->schema([
                 Select::make('idLocation')
                     ->label('Location')
-                    ->options(Location::pluck('nomeLocation', 'idLocation'))
-                    ->required()
+                    ->placeholder('Tutte le Location')
+                    ->options(Location::orderBy('nomeLocation')->pluck('nomeLocation', 'idLocation'))
                     ->searchable(),
                 
                 DatePicker::make('data_da')
@@ -74,14 +77,16 @@ class CalcolatoreLocation extends Page implements HasForms
     {
         $data = $this->form->getState();
         
-        // Query per recuperare righe ordine con provvigioni
-        // LEFT JOIN is removed to prevent row duplication in case of multiple tipologia_ingresso records matching idIngressoCont.
-        // We load them separately in memory.
         $query = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->where('ordini.idLocationOrdine', $data['idLocation'])
+            ->leftJoin('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
+            ->leftJoin('tipo_pagamenti', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamenti.idTipoPagamento')
             ->where('ordini.statoOrdine', 2)
             ->whereDate('ordini.dataOrdine', '>=', $data['data_da'])
             ->whereDate('ordini.dataOrdine', '<=', $data['data_a']);
+
+        if (!empty($data['idLocation'])) {
+            $query->where('ordini.idLocationOrdine', $data['idLocation']);
+        }
             
         if (($data['stato_pagamento'] ?? 'tutti') === 'da_pagare') {
             $query->where(function($q) {
@@ -106,8 +111,13 @@ class CalcolatoreLocation extends Page implements HasForms
                 'ordini.cognomeClienteOrdine',
                 'ordini.noteOrdine',
                 'ordini.numeroOrdine',
-                'ordini.tavolo'
+                'ordini.tavolo',
+                'ordini.dataPagamentoOrdineFornitore',
+                'location.nomeLocation',
+                'location.idLocation',
+                'tipo_pagamenti.nomePagamento',
             ])
+            ->orderBy('ordini.dataOrdine', 'desc')
             ->get();
 
         // Load tipologie in memory to prevent duplicate rows
@@ -122,7 +132,10 @@ class CalcolatoreLocation extends Page implements HasForms
         }
 
         $totaleVenduto = 0;
+        $totaleProvvigioni = 0;
         $totaleDare = 0;
+        $totaleGiaPagato = 0;
+        $totaleDaPagareResiduo = 0;
         $totaleQuantita = 0;
         $dettagli = [];
         
@@ -130,13 +143,13 @@ class CalcolatoreLocation extends Page implements HasForms
         $this->tavoli = [];
 
         foreach ($righe as $index => $riga) {
-            $venduto = $riga->venduto;
+            $venduto = (float)$riga->venduto;
             
             $tipologia = $tipologie[$riga->idIngressoOrdine] ?? null;
             $tipoProvvigione = $tipologia ? ($tipologia->tipoProvvigione ?? 0) : 0;
             $valoreProvvigione = $tipologia ? ($tipologia->valoreProvvigione ?? 0) : 0;
             
-            // Calcola provvigione
+            // Calcola provvigione (nostro guadagno)
             if ($tipoProvvigione == 1) {
                 // Percentuale
                 $provvigione = ($venduto / 100) * $valoreProvvigione;
@@ -145,11 +158,21 @@ class CalcolatoreLocation extends Page implements HasForms
                 $provvigione = $valoreProvvigione * $riga->quantitaIngressoOrdine;
             }
             
+            // Quota spettante alla location
             $dare = $venduto - $provvigione;
             
+            $isPaid = !empty($riga->dataPagamentoOrdineFornitore) && $riga->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00';
+
             $totaleVenduto += $venduto;
+            $totaleProvvigioni += $provvigione;
             $totaleDare += $dare;
             $totaleQuantita += $riga->quantitaIngressoOrdine;
+
+            if ($isPaid) {
+                $totaleGiaPagato += $dare;
+            } else {
+                $totaleDaPagareResiduo += $dare;
+            }
             
             $tavoloAssegnato = $riga->tavolo ?: $this->extractTavoloName($riga->noteOrdine, (int)$riga->numeroOrdine);
             $dettagli[] = [
@@ -157,11 +180,16 @@ class CalcolatoreLocation extends Page implements HasForms
                 'cliente' => $riga->nomeClienteOrdine . ' ' . $riga->cognomeClienteOrdine,
                 'nome' => $riga->nomeClienteOrdine,
                 'cognome' => $riga->cognomeClienteOrdine,
+                'location' => $riga->nomeLocation ?: 'Location #' . $riga->idLocation,
                 'biglietto' => $riga->nomeIngressoOrdine,
                 'quantita' => $riga->quantitaIngressoOrdine,
-                'prezzo' => $riga->prezzoIngressoOrdine,
+                'prezzo' => (float)$riga->prezzoIngressoOrdine,
                 'venduto' => $venduto,
+                'provvigione' => $provvigione,
                 'dare' => $dare,
+                'metodo_pagamento' => $riga->nomePagamento ?: 'Non specificato',
+                'is_pagata_location' => $isPaid,
+                'data_pagamento_location' => $riga->dataPagamentoOrdineFornitore,
                 'note' => $riga->noteOrdine,
                 'numeroOrdine' => $riga->numeroOrdine,
                 'tavolo' => $tavoloAssegnato,
@@ -172,16 +200,40 @@ class CalcolatoreLocation extends Page implements HasForms
             $this->tavoli[$index] = $tavoloAssegnato;
         }
 
-        $location = Location::find($data['idLocation']);
+        $locationName = !empty($data['idLocation']) 
+            ? (Location::find($data['idLocation'])?->nomeLocation ?? 'Location #' . $data['idLocation']) 
+            : 'Tutte le Location';
 
         $this->risultati = [
-            'location' => $location->nomeLocation,
+            'location' => $locationName,
+            'is_tutte_le_location' => empty($data['idLocation']),
             'periodo' => date('d/m/Y', strtotime($data['data_da'])) . ' - ' . date('d/m/Y', strtotime($data['data_a'])),
             'dettagli' => $dettagli,
             'totaleQuantita' => $totaleQuantita,
             'totaleVenduto' => $totaleVenduto,
+            'totaleProvvigioni' => $totaleProvvigioni,
             'totaleDare' => $totaleDare,
+            'totaleGiaPagato' => $totaleGiaPagato,
+            'totaleDaPagareResiduo' => $totaleDaPagareResiduo,
         ];
+    }
+
+    public function togglePagamentoLocation(int $numeroOrdine): void
+    {
+        $ordine = Ordine::find($numeroOrdine);
+        if ($ordine) {
+            $isPaid = !empty($ordine->dataPagamentoOrdineFornitore) && $ordine->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00';
+            $ordine->update([
+                'dataPagamentoOrdineFornitore' => $isPaid ? null : now(),
+            ]);
+            
+            $this->calcola();
+            
+            Notification::make()
+                ->title($isPaid ? 'Ordine #' . $numeroOrdine . ': Pagamento Location rimosso (Da Pagare)' : 'Ordine #' . $numeroOrdine . ': Pagamento Location registrato (PAGATO)')
+                ->success()
+                ->send();
+        }
     }
 
     private function isBlacklistedTableWord(string $word): bool
