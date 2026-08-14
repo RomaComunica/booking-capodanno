@@ -439,13 +439,44 @@
                     let p1Tick = (data.chartData1 || []).map(function(i) { return i.tickets || 0; });
                     let p2Tick = (data.chartData2 || []).map(function(i) { return i.tickets || 0; });
 
-                    if (this.filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[this.filterMonth]) {
-                        const indices = data.monthlyMap[this.filterMonth];
-                        labels = indices.map(function(i) { return data.chartLabels[i]; });
-                        p1Rev = indices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].revenue : 0; });
-                        p2Rev = indices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].revenue : 0; });
-                        p1Tick = indices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].tickets : 0; });
-                        p2Tick = indices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].tickets : 0; });
+                    if (this.filterMonth !== 'all') {
+                        const targetMonth = this.filterMonth; // e.g. "12"
+                        const filteredIndices = [];
+
+                        (data.chartLabels || []).forEach(function(lbl, idx) {
+                            const item2 = (data.chartData2 || [])[idx];
+                            const item1 = (data.chartData1 || [])[idx];
+                            let m = null;
+
+                            if (item2 && item2.date) {
+                                const parts = item2.date.split('-');
+                                if (parts.length >= 2) m = parts[1];
+                            } else if (item1 && item1.date) {
+                                const parts = item1.date.split('-');
+                                if (parts.length >= 2) m = parts[1];
+                            }
+
+                            if (m === targetMonth) {
+                                filteredIndices.push(idx);
+                            }
+                        });
+
+                        if (filteredIndices.length > 0) {
+                            labels = filteredIndices.map(function(i) {
+                                const d2 = data.chartData2[i] && data.chartData2[i].date;
+                                const d1 = data.chartData1[i] && data.chartData1[i].date;
+                                const d = d2 || d1;
+                                if (d) {
+                                    const p = d.split('-');
+                                    return p[2] + '/' + p[1]; // e.g. "15/12"
+                                }
+                                return data.chartLabels[i];
+                            });
+                            p1Rev = filteredIndices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].revenue : 0; });
+                            p2Rev = filteredIndices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].revenue : 0; });
+                            p1Tick = filteredIndices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].tickets : 0; });
+                            p2Tick = filteredIndices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].tickets : 0; });
+                        }
                     }
 
                     const label1 = data.periodo_1_label || 'Periodo 1';
