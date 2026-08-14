@@ -297,58 +297,58 @@
             <x-slot name="heading">Dettaglio Vendite per Location</x-slot>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                    <thead class="bg-gray-50 dark:bg-gray-900/50">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
+                    <thead class="bg-gray-100 dark:bg-slate-800">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Location</th>
-                            <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-300">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-300">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-300">Delta Biglietti</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-300">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-300">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-300">Delta Fatturato</th>
+                            <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-200">Location</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Delta Biglietti</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Delta Fatturato</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
                         @forelse($risultati['locationBreakdown'] as $loc)
-                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors">
+                                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                                     {{ $loc['nomeLocation'] }}
                                 </td>
-                                <td class="px-4 py-3 text-center text-gray-500">
+                                <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-300">
                                     {{ number_format($loc['tickets_1'], 0, ',', '.') }}
                                 </td>
-                                <td class="px-4 py-3 text-center font-semibold text-gray-800 dark:text-gray-200">
+                                <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">
                                     {{ number_format($loc['tickets_2'], 0, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     @if($loc['tickets_diff'] > 0)
-                                        <span class="text-green-600 font-semibold">+{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
+                                        <span class="text-green-600 dark:text-green-400 font-bold">+{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
                                     @elseif($loc['tickets_diff'] < 0)
-                                        <span class="text-danger-600 font-semibold">{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
+                                        <span class="text-danger-600 dark:text-danger-400 font-bold">{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
                                     @else
-                                        <span class="text-gray-400">=</span>
+                                        <span class="text-gray-400 dark:text-gray-500">=</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right text-gray-500">
+                                <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300">
                                     € {{ number_format($loc['revenue_1'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">
+                                <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">
                                     € {{ number_format($loc['revenue_2'], 2, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     @if($loc['revenue_diff'] > 0)
-                                        <span class="text-green-600 font-semibold">+€{{ number_format($loc['revenue_diff'], 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
+                                        <span class="text-green-600 dark:text-green-400 font-bold">+€{{ number_format($loc['revenue_diff'], 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
                                     @elseif($loc['revenue_diff'] < 0)
-                                        <span class="text-danger-600 font-semibold">-€{{ number_format(abs($loc['revenue_diff']), 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
+                                        <span class="text-danger-600 dark:text-danger-400 font-bold">-€{{ number_format(abs($loc['revenue_diff']), 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
                                     @else
-                                        <span class="text-gray-400">=</span>
+                                        <span class="text-gray-400 dark:text-gray-500">=</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                     Nessuna vendita registrata nei periodi selezionati.
                                 </td>
                             </tr>
@@ -370,6 +370,10 @@
                 const drawCharts = (data, filterMonth = 'all') => {
                     if (!data) return;
                     currentChartData = data;
+
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const textColor = isDark ? '#cbd5e1' : '#475569';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
 
                     let labels = data.chartLabels;
                     const p1Label = data.periodo_1_label;
@@ -433,15 +437,15 @@
                                     label: p1Label,
                                     data: r1,
                                     borderColor: '#94a3b8',
-                                    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                                    backgroundColor: 'rgba(148, 163, 184, 0.15)',
                                     fill: true,
                                     tension: 0.3
                                 },
                                 {
                                     label: p2Label,
                                     data: r2,
-                                    borderColor: '#0c5289',
-                                    backgroundColor: 'rgba(12, 82, 137, 0.2)',
+                                    borderColor: '#38bdf8',
+                                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
                                     fill: true,
                                     tension: 0.3
                                 }
@@ -455,13 +459,22 @@
                                 intersect: false,
                             },
                             plugins: {
-                                legend: { position: 'top' },
+                                legend: {
+                                    position: 'top',
+                                    labels: { color: textColor, font: { weight: 'bold' } }
+                                },
                             },
                             scales: {
+                                x: {
+                                    ticks: { color: textColor },
+                                    grid: { color: gridColor }
+                                },
                                 y: {
                                     ticks: {
+                                        color: textColor,
                                         callback: function(value) { return '€ ' + value.toLocaleString('it-IT'); }
-                                    }
+                                    },
+                                    grid: { color: gridColor }
                                 }
                             }
                         }
@@ -496,7 +509,20 @@
                                 intersect: false,
                             },
                             plugins: {
-                                legend: { position: 'top' },
+                                legend: {
+                                    position: 'top',
+                                    labels: { color: textColor, font: { weight: 'bold' } }
+                                },
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: textColor },
+                                    grid: { color: gridColor }
+                                },
+                                y: {
+                                    ticks: { color: textColor },
+                                    grid: { color: gridColor }
+                                }
                             }
                         }
                     });
