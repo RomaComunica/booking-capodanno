@@ -39,6 +39,11 @@ class CheckoutController extends Controller
             $q->where('idLocationPagamento', $idLocation)
               ->where('pagamentoLocationAttivo', 1);
         })->get();
+
+        // Fallback: if no location cross entries exist yet, load all standard payment methods
+        if ($paymentMethods->isEmpty()) {
+            $paymentMethods = TipoPagamento::whereIn('idTipoPagamento', [1, 2, 4, 5])->get();
+        }
         
         // Filter out globally disabled methods
         $paymentMethods = $paymentMethods->filter(function ($method) {
