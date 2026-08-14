@@ -318,7 +318,7 @@
                             <span>Andamento temporale del Fatturato</span>
                         </div>
                     </x-slot>
-                    <div class="h-[300px] relative w-full" id="revenueChartContainer">
+                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;" id="revenueChartContainer">
                         <canvas id="revenueComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
@@ -331,7 +331,7 @@
                             <span>Andamento temporale dei Biglietti Venduti</span>
                         </div>
                     </x-slot>
-                    <div class="h-[300px] relative w-full" id="ticketsChartContainer">
+                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;" id="ticketsChartContainer">
                         <canvas id="ticketsComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
@@ -423,29 +423,23 @@
                     return canvas ? canvas.getContext('2d') : null;
                 };
 
-                const drawCharts = (data, filterMonth = 'all') => {
-                    if (!data || !data.labels || typeof Chart === 'undefined') return;
+                const drawCharts = (res, filterMonth = 'all') => {
+                    if (!res || !res.chartLabels || typeof Chart === 'undefined') return;
 
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#cbd5e1' : '#334155';
                     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
 
-                    let labels = data.labels;
-                    let p1DataRev = data.p1.revenue;
-                    let p2DataRev = data.p2.revenue;
-                    let p1DataTick = data.p1.tickets;
-                    let p2DataTick = data.p2.tickets;
+                    let labels = res.chartLabels;
+                    let p1DataRev = (res.chartData1 || []).map(item => item.revenue || 0);
+                    let p2DataRev = (res.chartData2 || []).map(item => item.revenue || 0);
+                    let p1DataTick = (res.chartData1 || []).map(item => item.tickets || 0);
+                    let p2DataTick = (res.chartData2 || []).map(item => item.tickets || 0);
 
-                    if (filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[filterMonth]) {
-                        const indices = data.monthlyMap[filterMonth];
-                        labels = indices.map(i => data.labels[i]);
-                        p1DataRev = indices.map(i => data.p1.revenue[i]);
-                        p2DataRev = indices.map(i => data.p2.revenue[i]);
-                        p1DataTick = indices.map(i => data.p1.tickets[i]);
-                        p2DataTick = indices.map(i => data.p2.tickets[i]);
-                    }
+                    const label1 = res.periodo_1_label || 'Periodo 1';
+                    const label2 = res.periodo_2_label || 'Periodo 2';
 
-                    // Destruggi istanze esistenti
+                    // Destruggi istanze esistenti per evitare sovrapposizioni
                     if (revenueChartInstance) {
                         try { revenueChartInstance.destroy(); } catch(e) {}
                         revenueChartInstance = null;
@@ -464,7 +458,7 @@
                                 labels: labels,
                                 datasets: [
                                     {
-                                        label: data.periodo_1_label,
+                                        label: label1,
                                         data: p1DataRev,
                                         borderColor: '#94a3b8',
                                         backgroundColor: 'rgba(148, 163, 184, 0.15)',
@@ -474,7 +468,7 @@
                                         pointHoverRadius: 5
                                     },
                                     {
-                                        label: data.periodo_2_label,
+                                        label: label2,
                                         data: p2DataRev,
                                         borderColor: '#0c5289',
                                         backgroundColor: 'rgba(12, 82, 137, 0.2)',
@@ -498,12 +492,12 @@
                                         intersect: false,
                                         callbacks: {
                                             label: function(context) {
-                                                let label = context.dataset.label || '';
-                                                if (label) label += ': ';
+                                                let l = context.dataset.label || '';
+                                                if (l) l += ': ';
                                                 if (context.parsed.y !== null) {
-                                                    label += new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                                                    l += new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
                                                 }
-                                                return label;
+                                                return l;
                                             }
                                         }
                                     }
@@ -536,7 +530,7 @@
                                 labels: labels,
                                 datasets: [
                                     {
-                                        label: data.periodo_1_label,
+                                        label: label1,
                                         data: p1DataTick,
                                         borderColor: '#94a3b8',
                                         backgroundColor: 'rgba(148, 163, 184, 0.15)',
@@ -546,7 +540,7 @@
                                         pointHoverRadius: 5
                                     },
                                     {
-                                        label: data.periodo_2_label,
+                                        label: label2,
                                         data: p2DataTick,
                                         borderColor: '#29f48f',
                                         backgroundColor: 'rgba(41, 244, 143, 0.2)',
@@ -586,7 +580,7 @@
                 };
 
                 const startCharts = () => {
-                    const initData = @json($risultati['chartData'] ?? null);
+                    const initData = @json($risultati ?? null);
                     if (initData) {
                         currentChartData = initData;
                         drawCharts(currentChartData, currentFilterMonth);
@@ -598,10 +592,10 @@
                 setTimeout(startCharts, 300);
 
                 if (typeof Livewire !== 'undefined') {
-                    Livewire.on('update-charts', (data) => {
-                        const chartData = Array.isArray(data) ? data[0] : data;
-                        if (chartData) {
-                            currentChartData = chartData;
+                    Livewire.on('draw-comparison-charts', (data) => {
+                        const res = Array.isArray(data) ? (data[0]?.resultados || data[0]) : data;
+                        if (res) {
+                            currentChartData = res;
                             drawCharts(currentChartData, currentFilterMonth);
                         }
                     });
