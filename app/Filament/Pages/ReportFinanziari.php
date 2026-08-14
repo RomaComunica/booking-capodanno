@@ -65,12 +65,12 @@ class ReportFinanziari extends Page implements HasForms
         $cashFlowStats = $service->getCashFlowStats($year);
         
         $this->stats = [
-            'fatturato_lordo' => $dashboardStats['total_revenue'],
-            'provvigioni_trattenute' => $dashboardStats['total_commissions'],
-            'margine_operativo' => $dashboardStats['total_margin'],
-            'entrate_extra' => $cashFlowStats['entrate'],
-            'uscite_extra' => $cashFlowStats['uscite'],
-            'utile_netto' => $dashboardStats['total_profit'], // Already includes E/U
+            'fatturato_lordo' => $dashboardStats['total_revenue'] ?? 0,
+            'provvigioni_trattenute' => $dashboardStats['total_commissions'] ?? $dashboardStats['net_profit_tickets'] ?? 0,
+            'margine_operativo' => $dashboardStats['total_margin'] ?? (($dashboardStats['total_revenue'] ?? 0) - ($dashboardStats['net_profit_tickets'] ?? 0)),
+            'entrate_extra' => $cashFlowStats['entrate'] ?? 0,
+            'uscite_extra' => $cashFlowStats['uscite'] ?? 0,
+            'utile_netto' => $dashboardStats['total_profit'] ?? $dashboardStats['profit_after_expenses'] ?? 0,
         ];
 
         $this->monthlyFinancials = $service->getMonthlyFinancials($year);

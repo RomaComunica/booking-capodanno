@@ -74,6 +74,8 @@ class StatisticsService
             'cancelled_orders' => $cancelledOrders,
             'total_tickets' => $totalTickets,
             'tickets_by_payment' => $ticketsByPayment,
+            'total_commissions' => $netProfitTickets,
+            'total_margin' => round($totalRevenue - $netProfitTickets, 2),
             'net_profit_tickets' => $netProfitTickets,
             'extra_incomes' => $extraIncomes,
             'extra_expenses' => $extraExpenses,
@@ -678,30 +680,58 @@ class StatisticsService
                     'righe_ordine.prezzoIngressoOrdine',
                     'righe_ordine.quantitaIngressoOrdine',
                     'righe_ordine.idIngressoOrdine',
+                    'righe_ordine.nomeIngressoOrdine',
+                    'ordini.idLocationOrdine',
                 ])
                 ->get();
 
             $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
-            $tipologie = [];
-            if (!empty($idIngressoOrdini)) {
-                $tipologie = DB::table('tipologia_ingresso')
-                    ->whereIn('idIngressoCont', $idIngressoOrdini)
-                    ->get()
-                    ->keyBy('idIngressoCont')
-                    ->toArray();
-            }
+            $ticketNames = $righe->pluck('nomeIngressoOrdine')->unique()->filter()->toArray();
+
+            $tipologieByCont = DB::table('tipologia_ingresso')
+                ->whereIn('idIngressoCont', $idIngressoOrdini)
+                ->get()
+                ->keyBy('idIngressoCont')
+                ->toArray();
+
+            $tipologieById = DB::table('tipologia_ingresso')
+                ->whereIn('idIngresso', $idIngressoOrdini)
+                ->get()
+                ->keyBy('idIngresso')
+                ->toArray();
+
+            $tipologieByNameLoc = DB::table('tipologia_ingresso')
+                ->whereIn('nomeIngresso', $ticketNames)
+                ->get()
+                ->keyBy(function ($item) {
+                    return trim($item->nomeIngresso) . '_' . $item->idLocation;
+                })
+                ->toArray();
+
+            $tipologieByName = DB::table('tipologia_ingresso')
+                ->whereIn('nomeIngresso', $ticketNames)
+                ->get()
+                ->keyBy(function ($item) {
+                    return trim($item->nomeIngresso);
+                })
+                ->toArray();
 
             $commissions = 0;
             foreach ($righe as $riga) {
-                $subtotal = $riga->prezzoIngressoOrdine * $riga->quantitaIngressoOrdine;
-                $tipologia = $tipologie[$riga->idIngressoOrdine] ?? null;
-                $tipoProvvigione = $tipologia ? ($tipologia->tipoProvvigione ?? 0) : 0;
-                $valoreProvvigione = $tipologia ? ($tipologia->valoreProvvigione ?? 0) : 0;
+                $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
+                
+                $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                    ?? $tipologieById[$riga->idIngressoOrdine]
+                    ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocationOrdine] ?? null)
+                    ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+                $tipoProvvigione = $tipologia ? (int)$tipologia->tipoProvvigione : 0;
+                $valoreProvvigione = $tipologia ? (float)$tipologia->valoreProvvigione : 0.0;
 
                 if ($tipoProvvigione == 1) {
                     $commissions += ($subtotal / 100) * $valoreProvvigione;
                 } else {
-                    $commissions += $valoreProvvigione * $riga->quantitaIngressoOrdine;
+                    $commissions += $valoreProvvigione * (int)$riga->quantitaIngressoOrdine;
                 }
             }
 
