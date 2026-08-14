@@ -127,6 +127,100 @@ class StatisticsService
     }
 
     /**
+     * Get monthly revenue comparison for all available years in the database
+     */
+    public function getAllYearsMonthlyRevenue(): array
+    {
+        $palette = [
+            '#0c5289', // Primary Brand Blue
+            '#29f48f', // Vibrant Neon Mint Green
+            '#DD076D', // Electric Fuchsia / Magenta
+            '#f59e0b', // Vibrant Amber / Gold
+            '#8b5cf6', // Violet
+            '#06b6d4', // Cyan
+            '#ec4899', // Pink
+            '#10b981', // Emerald
+            '#6366f1', // Indigo
+            '#f97316', // Orange
+            '#64748b', // Slate
+            '#14b8a6', // Teal
+        ];
+
+        $orders = Ordine::where('statoOrdine', 2)
+            ->whereNotNull('dataOrdine')
+            ->select(['dataOrdine', 'totaleOrdine'])
+            ->get();
+
+        $yearsSet = [];
+        $matrix = [];
+        $yearlyTotals = [];
+
+        foreach ($orders as $order) {
+            $time = strtotime($order->dataOrdine);
+            if (!$time) continue;
+            $y = (int)date('Y', $time);
+            $m = (int)date('n', $time);
+            
+            $yearsSet[$y] = true;
+            if (!isset($matrix[$y])) {
+                $matrix[$y] = array_fill(1, 12, 0.0);
+                $yearlyTotals[$y] = 0.0;
+            }
+            $matrix[$y][$m] += (float)$order->totaleOrdine;
+            $yearlyTotals[$y] += (float)$order->totaleOrdine;
+        }
+
+        $currentYear = (int)date('Y');
+        $yearsSet[$currentYear] = true;
+        if (!isset($matrix[$currentYear])) {
+            $matrix[$currentYear] = array_fill(1, 12, 0.0);
+            $yearlyTotals[$currentYear] = 0.0;
+        }
+
+        $years = array_keys($yearsSet);
+        sort($years);
+
+        $monthsLabels = array_values(self::MONTHS_IT);
+
+        $datasets = [];
+        $colorIndex = 0;
+        $prevTotal = null;
+
+        foreach ($years as $y) {
+            $monthlyData = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $monthlyData[] = round($matrix[$y][$m] ?? 0.0, 2);
+            }
+
+            $color = $palette[$colorIndex % count($palette)];
+            $colorIndex++;
+
+            $currentTotal = round($yearlyTotals[$y] ?? 0.0, 2);
+            $growthPct = null;
+            if ($prevTotal !== null && $prevTotal > 0) {
+                $growthPct = round((($currentTotal - $prevTotal) / $prevTotal) * 100, 1);
+            }
+            $prevTotal = $currentTotal;
+
+            $datasets[] = [
+                'year' => (string)$y,
+                'label' => 'Anno ' . $y,
+                'data' => $monthlyData,
+                'total' => $currentTotal,
+                'growth_pct' => $growthPct,
+                'color' => $color,
+            ];
+        }
+
+        return [
+            'labels' => $monthsLabels,
+            'years' => $years,
+            'datasets' => $datasets,
+            'yearly_totals' => $yearlyTotals,
+        ];
+    }
+
+    /**
      * Get monthly revenue data for charts
      */
     public function getMonthlyRevenue($year)

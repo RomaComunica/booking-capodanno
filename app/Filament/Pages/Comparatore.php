@@ -40,6 +40,7 @@ class Comparatore extends Page implements HasForms
     public ?array $data = [];
     public ?array $risultati = null;
     public ?array $oggiStats = null;
+    public array $allYearsStats = [];
 
     public function mount(): void
     {
@@ -55,7 +56,14 @@ class Comparatore extends Page implements HasForms
         ]);
 
         $this->calcolaOggiStats();
+        $this->caricaAllYearsStats();
         $this->confronta();
+    }
+
+    protected function caricaAllYearsStats()
+    {
+        $service = app(StatisticsService::class);
+        $this->allYearsStats = $service->getAllYearsMonthlyRevenue();
     }
 
     protected function calcolaOggiStats()

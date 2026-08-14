@@ -413,11 +413,67 @@
         </x-filament::section>
     @endif
 
+    <!-- Sezione Fissa: Panoramica Storica Multianno di Tutti i Fatturati -->
+    @if(!empty($allYearsStats) && !empty($allYearsStats['datasets']))
+        <div class="mt-8 border-t border-gray-200 dark:border-slate-800 pt-6">
+            <x-filament::section>
+                <x-slot name="heading">
+                    <div class="flex items-center gap-2 text-gray-900 dark:text-white">
+                        <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
+                        <span class="text-lg font-bold">Confronto Storico Fatturati: Tutti gli Anni</span>
+                    </div>
+                </x-slot>
+
+                <!-- Box Riepilogativo Totali per Anno con Badge e Delta % -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                    @foreach($allYearsStats['datasets'] as $ds)
+                        <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                    {{ $ds['year'] }}
+                                </span>
+                                <span class="inline-block w-3 h-3 rounded-full shadow-sm" style="background-color: {{ $ds['color'] }};"></span>
+                            </div>
+                            <div class="text-base font-extrabold text-gray-900 dark:text-white mt-1">
+                                € {{ number_format($ds['total'], 2, ',', '.') }}
+                            </div>
+                            <div class="text-[11px] mt-1 pt-1 border-t border-gray-200 dark:border-slate-700/60 font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-between">
+                                <span>vs prec.</span>
+                                @if($ds['growth_pct'] !== null)
+                                    @if($ds['growth_pct'] > 0)
+                                        <span class="text-green-600 dark:text-green-400 font-bold">
+                                            +{{ $ds['growth_pct'] }}%
+                                        </span>
+                                    @elseif($ds['growth_pct'] < 0)
+                                        <span class="text-danger-600 dark:text-danger-400 font-bold">
+                                            {{ $ds['growth_pct'] }}%
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500">= 0%</span>
+                                    @endif
+                                @else
+                                    <span class="text-gray-400 dark:text-gray-500">-</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Grafico Multi-Linea Tutti gli Anni -->
+                <div style="height: 380px; min-height: 380px; position: relative; width: 100%;" id="allYearsChartContainer">
+                    <canvas id="allYearsRevenueChart"></canvas>
+                </div>
+            </x-filament::section>
+        </div>
+    @endif
+
     <script>
         (function() {
             let revenueChartInstance = null;
             let ticketsChartInstance = null;
+            let allYearsChartInstance = null;
             let currentChartData = @json($risultati ?? null);
+            const allYearsData = @json($allYearsStats ?? null);
             let currentFilterMonth = 'all';
 
             const getContext = function(containerId, canvasId) {
@@ -625,6 +681,97 @@
                 }
             };
 
+            // Draw Multi-Year Comparison Chart
+            const drawAllYearsChart = function() {
+                if (!allYearsData || !allYearsData.datasets || !allYearsData.labels || typeof Chart === 'undefined') return;
+
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#cbd5e1' : '#334155';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+
+                const ctxAllYears = getContext('allYearsChartContainer', 'allYearsRevenueChart');
+                if (!ctxAllYears) return;
+
+                if (allYearsChartInstance) {
+                    try { allYearsChartInstance.destroy(); } catch(e) {}
+                    allYearsChartInstance = null;
+                }
+
+                const datasets = allYearsData.datasets.map(function(ds) {
+                    return {
+                        label: ds.label + ' (€ ' + Number(ds.total).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ')',
+                        data: ds.data,
+                        borderColor: ds.color,
+                        backgroundColor: ds.color + '18',
+                        fill: false,
+                        tension: 0.35,
+                        pointRadius: 3.5,
+                        pointHoverRadius: 6.5,
+                        borderWidth: 2.5
+                    };
+                });
+
+                allYearsChartInstance = new Chart(ctxAllYears, {
+                    type: 'line',
+                    data: {
+                        labels: allYearsData.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: textColor,
+                                    font: { weight: '600', size: 11 },
+                                    boxWidth: 14,
+                                    padding: 10,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label.indexOf('(') !== -1) {
+                                            label = label.split('(')[0].trim();
+                                        }
+                                        if (label) label += ': ';
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: textColor, font: { weight: '600' } },
+                                grid: { color: gridColor }
+                            },
+                            y: {
+                                ticks: {
+                                    color: textColor,
+                                    callback: function(value) {
+                                        return '€ ' + value.toLocaleString('it-IT');
+                                    }
+                                },
+                                grid: { color: gridColor }
+                            }
+                        }
+                    }
+                });
+            };
+
             // Global month filter listener callable directly by the select
             window.onMonthFilterChanged = function(month) {
                 currentFilterMonth = month;
@@ -636,6 +783,7 @@
                 if (currentChartData) {
                     drawCharts(currentChartData, currentFilterMonth);
                 }
+                drawAllYearsChart();
             };
 
             init();
@@ -650,6 +798,7 @@
                         currentChartData = res;
                         setTimeout(function() {
                             drawCharts(currentChartData, currentFilterMonth);
+                            drawAllYearsChart();
                         }, 100);
                     }
                 });
@@ -661,6 +810,7 @@
                     currentChartData = data;
                     setTimeout(function() {
                         drawCharts(currentChartData, currentFilterMonth);
+                        drawAllYearsChart();
                     }, 100);
                 }
             });
