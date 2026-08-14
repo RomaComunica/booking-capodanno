@@ -735,28 +735,30 @@ class StatisticsService
                 }
             }
 
-            $margin = $revenue - $commissions;
+            $spettanteLocation = round(max(0, $revenue - $commissions), 2);
 
-            $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            $entrate = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
                 ->whereMonth('dataOperazione', $month)
                 ->where('tipoOperazione', 'E')
                 ->sum('importo');
 
-            $uscite = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+            $uscite = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
                 ->whereMonth('dataOperazione', $month)
                 ->where('tipoOperazione', 'U')
                 ->sum('importo');
 
-            $profit = $margin + $entrate - $uscite;
+            // Utile Netto Reale = Nostra Provvigione Biglietti + Entrate Extra - Uscite Extra
+            $profit = round($commissions + $entrate - $uscite, 2);
 
             $data[] = [
                 'month' => self::MONTHS_IT[$month],
                 'revenue' => round($revenue, 2),
                 'commissions' => round($commissions, 2),
-                'margin' => round($margin, 2),
+                'spettante_location' => $spettanteLocation,
+                'margin' => round($commissions, 2), // Margine della nostra attività = Provvigione
                 'entrate' => round($entrate, 2),
                 'uscite' => round($uscite, 2),
-                'profit' => round($profit, 2),
+                'profit' => $profit,
             ];
         }
         return $data;

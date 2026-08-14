@@ -64,13 +64,22 @@ class ReportFinanziari extends Page implements HasForms
         $dashboardStats = $service->getDashboardStats($year);
         $cashFlowStats = $service->getCashFlowStats($year);
         
+        $fatturatoLordo = (float)($dashboardStats['total_revenue'] ?? 0);
+        $provvigioniNostre = (float)($dashboardStats['net_profit_tickets'] ?? $dashboardStats['total_commissions'] ?? 0);
+        $spettanteLocation = round(max(0, $fatturatoLordo - $provvigioniNostre), 2);
+        $entrateExtra = (float)($cashFlowStats['entrate'] ?? $dashboardStats['extra_incomes'] ?? 0);
+        $usciteExtra = (float)($cashFlowStats['uscite'] ?? $dashboardStats['extra_expenses'] ?? 0);
+        $utileNetto = round($provvigioniNostre + $entrateExtra - $usciteExtra, 2);
+
         $this->stats = [
-            'fatturato_lordo' => $dashboardStats['total_revenue'] ?? 0,
-            'provvigioni_trattenute' => $dashboardStats['total_commissions'] ?? $dashboardStats['net_profit_tickets'] ?? 0,
-            'margine_operativo' => $dashboardStats['total_margin'] ?? (($dashboardStats['total_revenue'] ?? 0) - ($dashboardStats['net_profit_tickets'] ?? 0)),
-            'entrate_extra' => $cashFlowStats['entrate'] ?? 0,
-            'uscite_extra' => $cashFlowStats['uscite'] ?? 0,
-            'utile_netto' => $dashboardStats['total_profit'] ?? $dashboardStats['profit_after_expenses'] ?? 0,
+            'fatturato_lordo' => $fatturatoLordo,
+            'spettante_location' => $spettanteLocation,
+            'provvigioni_nostre' => $provvigioniNostre,
+            'provvigioni_trattenute' => $provvigioniNostre,
+            'margine_operativo' => $provvigioniNostre,
+            'entrate_extra' => $entrateExtra,
+            'uscite_extra' => $usciteExtra,
+            'utile_netto' => $utileNetto,
         ];
 
         $this->monthlyFinancials = $service->getMonthlyFinancials($year);
