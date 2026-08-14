@@ -412,6 +412,23 @@
                 let currentChartData = null;
                 let currentFilterMonth = 'all';
 
+                const extractResults = (eventData) => {
+                    if (!eventData) return null;
+                    if (eventData.chartLabels) return eventData;
+                    if (eventData.resultados && eventData.resultados.chartLabels) return eventData.resultados;
+                    if (Array.isArray(eventData) && eventData[0]) {
+                        if (eventData[0].chartLabels) return eventData[0];
+                        if (eventData[0].resultados && eventData[0].resultados.chartLabels) return eventData[0].resultados;
+                    }
+                    if (typeof eventData === 'object') {
+                        for (let key in eventData) {
+                            if (eventData[key] && eventData[key].chartLabels) return eventData[key];
+                            if (eventData[key] && eventData[key].resultados && eventData[key].resultados.chartLabels) return eventData[key].resultados;
+                        }
+                    }
+                    return null;
+                };
+
                 const getCanvasContext = (containerId, canvasId) => {
                     const container = document.getElementById(containerId);
                     if (!container) return null;
@@ -591,14 +608,17 @@
                 setTimeout(startCharts, 100);
                 setTimeout(startCharts, 300);
 
+                const handleLivewireEvent = (eventData) => {
+                    const res = extractResults(eventData);
+                    if (res) {
+                        currentChartData = res;
+                        setTimeout(() => drawCharts(currentChartData, currentFilterMonth), 150);
+                    }
+                };
+
                 if (typeof Livewire !== 'undefined') {
-                    Livewire.on('draw-comparison-charts', (data) => {
-                        const res = Array.isArray(data) ? (data[0]?.resultados || data[0]) : data;
-                        if (res) {
-                            currentChartData = res;
-                            drawCharts(currentChartData, currentFilterMonth);
-                        }
-                    });
+                    Livewire.on('draw-comparison-charts', handleLivewireEvent);
+                    Livewire.on('update-charts', handleLivewireEvent);
                 }
 
                 window.addEventListener('filter-charts-month', (e) => {
@@ -609,7 +629,7 @@
                 });
 
                 document.addEventListener('livewire:navigated', () => {
-                    startCharts();
+                    setTimeout(startCharts, 150);
                 });
             })();
         </script>
