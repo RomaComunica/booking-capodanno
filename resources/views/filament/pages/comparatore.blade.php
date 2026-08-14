@@ -43,6 +43,90 @@
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
         }
+
+        /* Year Filter Controls - High Contrast Dark/Light Styles */
+        .year-preset-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .dark .year-preset-btn {
+            color: #cbd5e1;
+            background-color: transparent;
+        }
+        html:not(.dark) .year-preset-btn {
+            color: #475569;
+            background-color: transparent;
+        }
+        .dark .year-preset-btn:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        html:not(.dark) .year-preset-btn:hover {
+            color: #0f172a;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .year-preset-btn.is-active {
+            background-color: #0c5289 !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .year-chip-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .dark .year-chip-btn {
+            background-color: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        html:not(.dark) .year-chip-btn {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+        }
+        .dark .year-chip-btn.is-active {
+            background-color: #0f172a;
+            border: 2px solid #0c5289;
+            color: #ffffff;
+            box-shadow: 0 0 0 1px #0c5289;
+            opacity: 1;
+        }
+        html:not(.dark) .year-chip-btn.is-active {
+            background-color: #ffffff;
+            border: 2px solid #0c5289;
+            color: #0c5289;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 1;
+        }
+        .year-chip-btn.is-inactive {
+            opacity: 0.45;
+        }
+        .year-chip-btn.is-inactive:hover {
+            opacity: 0.8;
+        }
+
+        .dark .filter-toolbar-box {
+            background-color: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        html:not(.dark) .filter-toolbar-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
     </style>
 
     <!-- Sezione Fissa: Confronto del Giorno di Oggi con lo Scorso Anno -->
@@ -468,14 +552,14 @@
                         <!-- Controlli: Focus Mese & Preset Anni -->
                         <div class="flex flex-wrap items-center gap-3">
                             <!-- Preset Rapidi -->
-                            <div class="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg border border-gray-200 dark:border-slate-700">
-                                <button type="button" @click="selectAll()" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === allAvailableYears.length ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                            <div class="flex items-center gap-1 p-1 rounded-lg filter-toolbar-box">
+                                <button type="button" @click="selectAll()" class="year-preset-btn" :class="activeYears.length === allAvailableYears.length ? 'is-active' : ''">
                                     Tutti
                                 </button>
-                                <button type="button" @click="selectRecent(3)" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === 3 ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                                <button type="button" @click="selectRecent(3)" class="year-preset-btn" :class="activeYears.length === 3 ? 'is-active' : ''">
                                     Ultimi 3 Anni
                                 </button>
-                                <button type="button" @click="selectRecent(2)" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === 2 ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                                <button type="button" @click="selectRecent(2)" class="year-preset-btn" :class="activeYears.length === 2 ? 'is-active' : ''">
                                     Ultimi 2 Anni
                                 </button>
                             </div>
@@ -483,7 +567,7 @@
                             <!-- Selettore Zoom per Mese -->
                             <div class="flex items-center gap-2">
                                 <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-4 w-4 text-primary-500" />
-                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Focus Mese:</span>
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Focus Mese:</span>
                                 <select x-model="selectedMonth" @change="onMonthChange($event.target.value)" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm cursor-pointer">
                                     <option value="all">Tutto l'anno (12 Mesi)</option>
                                     <option value="12">Dicembre (Focus Vendite)</option>
@@ -506,14 +590,14 @@
 
                 <!-- Chips Interattivi Filtro Anni -->
                 <div class="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-gray-200 dark:border-slate-700/60">
-                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 mr-1">Filtra Anni:</span>
+                    <span class="text-xs font-bold text-gray-700 dark:text-gray-200 mr-1">Filtra Anni:</span>
                     @foreach($allYearsStats['datasets'] as $ds)
                         <button type="button" 
                                 @click="toggleYear('{{ $ds['year'] }}')"
-                                :class="isYearActive('{{ $ds['year'] }}') ? 'bg-white dark:bg-slate-800 border-2 border-primary-500 shadow-sm opacity-100 font-bold' : 'bg-gray-100 dark:bg-slate-800/40 border border-gray-300 dark:border-slate-700 opacity-40 hover:opacity-75'"
-                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all cursor-pointer">
-                            <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: {{ $ds['color'] }};"></span>
-                            <span class="text-gray-900 dark:text-white font-bold">{{ $ds['year'] }}</span>
+                                class="year-chip-btn"
+                                :class="isYearActive('{{ $ds['year'] }}') ? 'is-active' : 'is-inactive'">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: {{ $ds['color'] }};"></span>
+                            <span>{{ $ds['year'] }}</span>
                         </button>
                     @endforeach
                 </div>
