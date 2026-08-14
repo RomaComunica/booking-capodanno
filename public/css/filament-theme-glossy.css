@@ -98,22 +98,54 @@ body.fi-body {
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
 }
 
-/* Labels and Texts High Contrast */
+/* Form Inputs, Selects & Option Dropdowns (Cross-Browser Fix) */
+.dark select,
+.dark select option,
+.dark input,
+.dark textarea,
+.dark .fi-input-wrp,
+.dark .fi-select-input,
+.dark [class*="fi-input"] {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark select option {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+}
+
+html:not(.dark) select,
+html:not(.dark) select option,
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) .fi-input-wrp,
+html:not(.dark) .fi-select-input {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: rgba(12, 82, 137, 0.2) !important;
+}
+
+/* Labels, Helper Text & Headings High Contrast */
 .dark .fi-section-header-heading,
 .dark .fi-header-heading,
-.dark h1, .dark h2, .dark h3, .dark h4 {
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5 {
     color: #ffffff !important;
 }
 
 .dark label,
+.dark .fi-fo-field-wrp-label,
 .dark .fi-fo-field-wrp-label span {
-    color: #cbd5e1 !important;
+    color: #f1f5f9 !important;
     font-weight: 600 !important;
 }
 
 .dark p,
-.dark .fi-section-header-description {
-    color: #94a3b8 !important;
+.dark .fi-section-header-description,
+.dark .fi-fo-field-wrp-helper-text,
+.dark .fi-fo-field-wrp-hint {
+    color: #cbd5e1 !important;
 }
 
 /* Sidebar Styling */
@@ -279,6 +311,10 @@ body.fi-body {
 
 .dark .fi-ta-row:hover {
     background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark .fi-ta-cell * {
+    color: #f8fafc !important;
 }
 
 /* Custom Buttons Glossy Shine */

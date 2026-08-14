@@ -244,20 +244,20 @@
                         <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-5 w-5 text-primary-500" />
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
                     </div>
-                    <select x-model="filterMonth" class="text-xs bg-white dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-700 rounded-lg p-2 min-w-[160px] shadow-sm">
-                        <option value="all">Tutto il periodo</option>
-                        <option value="01">Gennaio</option>
-                        <option value="02">Febbraio</option>
-                        <option value="03">Marzo</option>
-                        <option value="04">Aprile</option>
-                        <option value="05">Maggio</option>
-                        <option value="06">Giugno</option>
-                        <option value="07">Luglio</option>
-                        <option value="08">Agosto</option>
-                        <option value="09">Settembre</option>
-                        <option value="10">Ottobre</option>
-                        <option value="11">Novembre</option>
-                        <option value="12">Dicembre</option>
+                    <select x-model="filterMonth" class="text-xs bg-white dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-700 rounded-lg p-2 min-w-[160px] shadow-sm cursor-pointer">
+                        <option value="all" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Tutto il periodo</option>
+                        <option value="01" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Gennaio</option>
+                        <option value="02" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Febbraio</option>
+                        <option value="03" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Marzo</option>
+                        <option value="04" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Aprile</option>
+                        <option value="05" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Maggio</option>
+                        <option value="06" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Giugno</option>
+                        <option value="07" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Luglio</option>
+                        <option value="08" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Agosto</option>
+                        <option value="09" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Settembre</option>
+                        <option value="10" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Ottobre</option>
+                        <option value="11" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Novembre</option>
+                        <option value="12" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Dicembre</option>
                     </select>
                 </div>
             @endif
