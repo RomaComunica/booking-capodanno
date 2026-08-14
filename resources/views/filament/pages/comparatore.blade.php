@@ -415,29 +415,60 @@
 
     <!-- Sezione Fissa: Panoramica Storica Multianno di Tutti i Fatturati -->
     @if(!empty($allYearsStats) && !empty($allYearsStats['datasets']))
-        <div class="mt-8 border-t border-gray-200 dark:border-slate-800 pt-6">
+        <div class="mt-8 border-t border-gray-200 dark:border-slate-800 pt-6" x-data="{
+            selectedMonth: 'all',
+            onMonthChange(m) {
+                this.selectedMonth = m;
+                if (window.onAllYearsMonthFilterChanged) {
+                    window.onAllYearsMonthFilterChanged(m);
+                }
+            }
+        }">
             <x-filament::section>
                 <x-slot name="heading">
-                    <div class="flex items-center gap-2 text-gray-900 dark:text-white">
-                        <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
-                        <span class="text-lg font-bold">Confronto Storico Fatturati: Tutti gli Anni</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+                        <div class="flex items-center gap-2 text-gray-900 dark:text-white">
+                            <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
+                            <span class="text-lg font-bold">Confronto Storico Fatturati: Tutti gli Anni</span>
+                        </div>
+                        
+                        <!-- Selettore Zoom per Mese (es. Dicembre) -->
+                        <div class="flex items-center gap-2">
+                            <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-4 w-4 text-primary-500" />
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Focus Mese:</span>
+                            <select x-model="selectedMonth" @change="onMonthChange($event.target.value)" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm cursor-pointer">
+                                <option value="all">Tutto l'anno (12 Mesi)</option>
+                                <option value="12">Dicembre (Focus Vendite)</option>
+                                <option value="11">Novembre</option>
+                                <option value="10">Ottobre</option>
+                                <option value="09">Settembre</option>
+                                <option value="08">Agosto</option>
+                                <option value="07">Luglio</option>
+                                <option value="06">Giugno</option>
+                                <option value="05">Maggio</option>
+                                <option value="04">Aprile</option>
+                                <option value="03">Marzo</option>
+                                <option value="02">Febbraio</option>
+                                <option value="01">Gennaio</option>
+                            </select>
+                        </div>
                     </div>
                 </x-slot>
 
                 <!-- Box Riepilogativo Totali per Anno con Badge e Delta % -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6" id="allYearsCardsContainer">
                     @foreach($allYearsStats['datasets'] as $ds)
-                        <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                        <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm" id="year-card-{{ $ds['year'] }}">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                                     {{ $ds['year'] }}
                                 </span>
                                 <span class="inline-block w-3 h-3 rounded-full shadow-sm" style="background-color: {{ $ds['color'] }};"></span>
                             </div>
-                            <div class="text-base font-extrabold text-gray-900 dark:text-white mt-1">
+                            <div class="text-base font-extrabold text-gray-900 dark:text-white mt-1 year-total-value">
                                 € {{ number_format($ds['total'], 2, ',', '.') }}
                             </div>
-                            <div class="text-[11px] mt-1 pt-1 border-t border-gray-200 dark:border-slate-700/60 font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-between">
+                            <div class="text-[11px] mt-1 pt-1 border-t border-gray-200 dark:border-slate-700/60 font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-between year-growth-value">
                                 <span>vs prec.</span>
                                 @if($ds['growth_pct'] !== null)
                                     @if($ds['growth_pct'] > 0)
@@ -475,6 +506,7 @@
             let currentChartData = @json($risultati ?? null);
             const allYearsData = @json($allYearsStats ?? null);
             let currentFilterMonth = 'all';
+            let currentAllYearsMonth = 'all';
 
             const getContext = function(containerId, canvasId) {
                 const container = document.getElementById(containerId);
@@ -681,8 +713,8 @@
                 }
             };
 
-            // Draw Multi-Year Comparison Chart
-            const drawAllYearsChart = function() {
+            // Draw Multi-Year Comparison Chart with Month Zoom
+            const drawAllYearsChart = function(filterMonth = 'all') {
                 if (!allYearsData || !allYearsData.datasets || !allYearsData.labels || typeof Chart === 'undefined') return;
 
                 const isDark = document.documentElement.classList.contains('dark');
@@ -697,16 +729,66 @@
                     allYearsChartInstance = null;
                 }
 
+                let chartLabels = allYearsData.labels;
+                const isSingleMonth = filterMonth !== 'all';
+
+                if (isSingleMonth) {
+                    const mNum = parseInt(filterMonth);
+                    const daysInMonth = (mNum === 2) ? 29 : ([4, 6, 9, 11].includes(mNum) ? 30 : 31);
+                    chartLabels = [];
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        chartLabels.push('G. ' + d);
+                    }
+                }
+
+                let prevYearTotal = null;
                 const datasets = allYearsData.datasets.map(function(ds) {
+                    let seriesData = ds.data;
+                    let displayTotal = ds.total;
+
+                    if (isSingleMonth && ds.daily && ds.daily[filterMonth]) {
+                        const daysInMonth = chartLabels.length;
+                        seriesData = ds.daily[filterMonth].slice(0, daysInMonth);
+                        const mNum = parseInt(filterMonth);
+                        displayTotal = (ds.monthly_totals && ds.monthly_totals[mNum] !== undefined)
+                            ? Number(ds.monthly_totals[mNum])
+                            : seriesData.reduce((acc, val) => acc + val, 0);
+                    }
+
+                    // Update Card in the UI for this year
+                    const cardEl = document.getElementById('year-card-' + ds.year);
+                    if (cardEl) {
+                        const totalValEl = cardEl.querySelector('.year-total-value');
+                        const growthValEl = cardEl.querySelector('.year-growth-value');
+                        if (totalValEl) {
+                            totalValEl.innerText = '€ ' + Number(displayTotal).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                        if (growthValEl) {
+                            if (prevYearTotal !== null && prevYearTotal > 0) {
+                                const diffPct = Math.round(((displayTotal - prevYearTotal) / prevYearTotal) * 1000) / 10;
+                                if (diffPct > 0) {
+                                    growthValEl.innerHTML = '<span>vs prec.</span><span class="text-green-600 dark:text-green-400 font-bold">+' + diffPct + '%</span>';
+                                } else if (diffPct < 0) {
+                                    growthValEl.innerHTML = '<span>vs prec.</span><span class="text-danger-600 dark:text-danger-400 font-bold">' + diffPct + '%</span>';
+                                } else {
+                                    growthValEl.innerHTML = '<span>vs prec.</span><span class="text-gray-400 dark:text-gray-500">= 0%</span>';
+                                }
+                            } else {
+                                growthValEl.innerHTML = '<span>vs prec.</span><span class="text-gray-400 dark:text-gray-500">-</span>';
+                            }
+                        }
+                    }
+                    prevYearTotal = displayTotal;
+
                     return {
-                        label: ds.label + ' (€ ' + Number(ds.total).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ')',
-                        data: ds.data,
+                        label: ds.label + ' (€ ' + Number(displayTotal).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ')',
+                        data: seriesData,
                         borderColor: ds.color,
                         backgroundColor: ds.color + '18',
                         fill: false,
                         tension: 0.35,
-                        pointRadius: 3.5,
-                        pointHoverRadius: 6.5,
+                        pointRadius: isSingleMonth ? 2 : 3.5,
+                        pointHoverRadius: isSingleMonth ? 5 : 6.5,
                         borderWidth: 2.5
                     };
                 });
@@ -714,7 +796,7 @@
                 allYearsChartInstance = new Chart(ctxAllYears, {
                     type: 'line',
                     data: {
-                        labels: allYearsData.labels,
+                        labels: chartLabels,
                         datasets: datasets
                     },
                     options: {
@@ -755,7 +837,7 @@
                         },
                         scales: {
                             x: {
-                                ticks: { color: textColor, font: { weight: '600' } },
+                                ticks: { color: textColor, font: { weight: '600' }, maxRotation: 45 },
                                 grid: { color: gridColor }
                             },
                             y: {
@@ -772,7 +854,13 @@
                 });
             };
 
-            // Global month filter listener callable directly by the select
+            // Global month filter listener for multi-year historical chart
+            window.onAllYearsMonthFilterChanged = function(month) {
+                currentAllYearsMonth = month;
+                drawAllYearsChart(currentAllYearsMonth);
+            };
+
+            // Global month filter listener for top comparison charts
             window.onMonthFilterChanged = function(month) {
                 currentFilterMonth = month;
                 drawCharts(currentChartData, currentFilterMonth);
@@ -783,7 +871,7 @@
                 if (currentChartData) {
                     drawCharts(currentChartData, currentFilterMonth);
                 }
-                drawAllYearsChart();
+                drawAllYearsChart(currentAllYearsMonth);
             };
 
             init();
@@ -798,7 +886,7 @@
                         currentChartData = res;
                         setTimeout(function() {
                             drawCharts(currentChartData, currentFilterMonth);
-                            drawAllYearsChart();
+                            drawAllYearsChart(currentAllYearsMonth);
                         }, 100);
                     }
                 });
@@ -810,7 +898,7 @@
                     currentChartData = data;
                     setTimeout(function() {
                         drawCharts(currentChartData, currentFilterMonth);
-                        drawAllYearsChart();
+                        drawAllYearsChart(currentAllYearsMonth);
                     }, 100);
                 }
             });

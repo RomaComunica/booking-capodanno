@@ -153,6 +153,7 @@ class StatisticsService
 
         $yearsSet = [];
         $matrix = [];
+        $dailyMatrix = [];
         $yearlyTotals = [];
 
         foreach ($orders as $order) {
@@ -160,13 +161,19 @@ class StatisticsService
             if (!$time) continue;
             $y = (int)date('Y', $time);
             $m = (int)date('n', $time);
+            $d = (int)date('j', $time);
             
             $yearsSet[$y] = true;
             if (!isset($matrix[$y])) {
                 $matrix[$y] = array_fill(1, 12, 0.0);
+                $dailyMatrix[$y] = [];
+                for ($mon = 1; $mon <= 12; $mon++) {
+                    $dailyMatrix[$y][$mon] = array_fill(1, 31, 0.0);
+                }
                 $yearlyTotals[$y] = 0.0;
             }
             $matrix[$y][$m] += (float)$order->totaleOrdine;
+            $dailyMatrix[$y][$m][$d] += (float)$order->totaleOrdine;
             $yearlyTotals[$y] += (float)$order->totaleOrdine;
         }
 
@@ -174,6 +181,10 @@ class StatisticsService
         $yearsSet[$currentYear] = true;
         if (!isset($matrix[$currentYear])) {
             $matrix[$currentYear] = array_fill(1, 12, 0.0);
+            $dailyMatrix[$currentYear] = [];
+            for ($mon = 1; $mon <= 12; $mon++) {
+                $dailyMatrix[$currentYear][$mon] = array_fill(1, 31, 0.0);
+            }
             $yearlyTotals[$currentYear] = 0.0;
         }
 
@@ -192,6 +203,15 @@ class StatisticsService
                 $monthlyData[] = round($matrix[$y][$m] ?? 0.0, 2);
             }
 
+            $formattedDaily = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $mKey = str_pad((string)$m, 2, '0', STR_PAD_LEFT);
+                $formattedDaily[$mKey] = [];
+                for ($d = 1; $d <= 31; $d++) {
+                    $formattedDaily[$mKey][] = round($dailyMatrix[$y][$m][$d] ?? 0.0, 2);
+                }
+            }
+
             $color = $palette[$colorIndex % count($palette)];
             $colorIndex++;
 
@@ -206,6 +226,8 @@ class StatisticsService
                 'year' => (string)$y,
                 'label' => 'Anno ' . $y,
                 'data' => $monthlyData,
+                'daily' => $formattedDaily,
+                'monthly_totals' => $matrix[$y],
                 'total' => $currentTotal,
                 'growth_pct' => $growthPct,
                 'color' => $color,
