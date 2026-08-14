@@ -34,7 +34,13 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->darkMode(true)
-            ->brandLogo(new \Illuminate\Support\HtmlString('<div class="glossy-brand-logo"><img src="' . asset('img/logo-rc-scuro.png') . '" alt="Capodanno Roma" /></div>'))
+            ->brandLogo(asset('img/logo-rc-scuro.png'))
+            ->darkModeBrandLogo(new \Illuminate\Support\HtmlString('
+                <div style="background-color: rgba(255, 255, 255, 0.95); padding: 5px 12px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.4);">
+                    <img src="' . asset('img/logo-rc-scuro.png') . '" alt="Capodanno Roma" style="height: 26px; width: auto; display: block;" />
+                </div>
+            '))
+            ->brandLogoHeight('2.5rem')
             ->favicon(asset('img/favicon-rc.png'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
