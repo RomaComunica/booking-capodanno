@@ -43,50 +43,40 @@ body.fi-body {
     min-height: 100vh;
 }
 
-/* Sleek Glossy White Glass Pill for Logo in Dark Mode */
-.dark .fi-logo,
-.dark .fi-sidebar-header a,
-.dark a.fi-logo,
-.dark [class*="fi-logo"] {
-    background: rgba(255, 255, 255, 0.94) !important;
-    padding: 6px 14px !important;
-    border-radius: 12px !important;
-    backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+/* Glossy Brand Logo Badge */
+.glossy-brand-logo {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    transition: all 0.2s ease !important;
+    padding: 4px 8px !important;
+    border-radius: 12px !important;
+    transition: all 0.25s ease !important;
+}
+
+.glossy-brand-logo img {
+    max-height: 32px !important;
+    height: 32px !important;
+    width: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+/* In Dark Mode: Crisp White Glass Pill Container Behind Logo */
+.dark .glossy-brand-logo {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    padding: 6px 14px !important;
     margin-top: 2px;
     margin-bottom: 2px;
 }
 
-.dark .fi-logo img,
-.dark .fi-sidebar-header img,
-.dark [class*="fi-logo"] img,
-.dark img[src*="logo"] {
+.dark .glossy-brand-logo img {
     filter: none !important;
-    max-height: 32px !important;
-    width: auto !important;
-    object-fit: contain !important;
-}
-
-/* Light Mode Logo container */
-.fi-logo,
-.fi-sidebar-header a,
-a.fi-logo {
-    display: inline-flex !important;
-    align-items: center !important;
-    transition: all 0.2s ease !important;
-}
-
-.fi-logo img,
-.fi-sidebar-header img,
-img[src*="logo"] {
-    max-height: 34px !important;
-    width: auto !important;
-    object-fit: contain !important;
+    max-height: 30px !important;
+    height: 30px !important;
 }
 
 /* Glass Cards, Sections & Widgets */
