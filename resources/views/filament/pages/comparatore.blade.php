@@ -149,86 +149,8 @@
     </div>
 
     @if($risultati)
-        <!-- Contenitore Risultati con Alpine.js per Inizializzazione Automatica Grafici -->
-        <div x-data="{
-            filterMonth: 'all',
-            renderCharts() {
-                const data = @json($risultati ?? null);
-                if (!data || !data.chartLabels || typeof Chart === 'undefined') return;
-
-                const isDark = document.documentElement.classList.contains('dark');
-                const textColor = isDark ? '#cbd5e1' : '#334155';
-                const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
-
-                let labels = data.chartLabels;
-                let p1Rev = (data.chartData1 || []).map(i => i.revenue || 0);
-                let p2Rev = (data.chartData2 || []).map(i => i.revenue || 0);
-                let p1Tick = (data.chartData1 || []).map(i => i.tickets || 0);
-                let p2Tick = (data.chartData2 || []).map(i => i.tickets || 0);
-
-                if (this.filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[this.filterMonth]) {
-                    const indices = data.monthlyMap[this.filterMonth];
-                    labels = indices.map(i => data.chartLabels[i]);
-                    p1Rev = indices.map(i => data.chartData1[i] ? data.chartData1[i].revenue : 0);
-                    p2Rev = indices.map(i => data.chartData2[i] ? data.chartData2[i].revenue : 0);
-                    p1Tick = indices.map(i => data.chartData1[i] ? data.chartData1[i].tickets : 0);
-                    p2Tick = indices.map(i => data.chartData2[i] ? data.chartData2[i].tickets : 0);
-                }
-
-                const label1 = data.periodo_1_label || 'Periodo 1';
-                const label2 = data.periodo_2_label || 'Periodo 2';
-
-                this.$nextTick(() => {
-                    const canvasRev = document.getElementById('revenueComparisonChart');
-                    if (canvasRev) {
-                        const ctxRev = canvasRev.getContext('2d');
-                        if (window.revenueChartInstance) {
-                            try { window.revenueChartInstance.destroy(); } catch(e) {}
-                        }
-                        window.revenueChartInstance = new Chart(ctxRev, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    { label: label1, data: p1Rev, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
-                                    { label: label2, data: p2Rev, borderColor: '#0c5289', backgroundColor: 'rgba(12, 82, 137, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
-                                scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
-                            }
-                        });
-                    }
-
-                    const canvasTick = document.getElementById('ticketsComparisonChart');
-                    if (canvasTick) {
-                        const ctxTick = canvasTick.getContext('2d');
-                        if (window.ticketsChartInstance) {
-                            try { window.ticketsChartInstance.destroy(); } catch(e) {}
-                        }
-                        window.ticketsChartInstance = new Chart(ctxTick, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    { label: label1, data: p1Tick, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
-                                    { label: label2, data: p2Tick, borderColor: '#29f48f', backgroundColor: 'rgba(41, 244, 143, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
-                                scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
-                            }
-                        });
-                    }
-                });
-            }
-        }" x-init="renderCharts(); $watch('filterMonth', () => renderCharts())">
+        <!-- Contenitore Risultati con Alpine.js gestito da componente pulito -->
+        <div x-data="comparatoreChartsManager(@js($risultati))">
             <!-- Intestazione Risultati -->
             <div class="mt-4 mb-2">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -483,4 +405,103 @@
             </x-filament::section>
         </div>
     @endif
+
+    <script>
+        function comparatoreChartsManager(initialData) {
+            return {
+                filterMonth: 'all',
+                currentData: initialData,
+                init() {
+                    this.renderCharts();
+                    this.$watch('filterMonth', () => this.renderCharts());
+                    
+                    if (typeof Livewire !== 'undefined') {
+                        Livewire.on('draw-comparison-charts', (payload) => {
+                            const res = Array.isArray(payload) ? (payload[0]?.resultados || payload[0]) : payload;
+                            if (res) {
+                                this.currentData = res;
+                                this.renderCharts();
+                            }
+                        });
+                    }
+                },
+                renderCharts() {
+                    const data = this.currentData;
+                    if (!data || !data.chartLabels || typeof Chart === 'undefined') return;
+
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const textColor = isDark ? '#cbd5e1' : '#334155';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+
+                    let labels = data.chartLabels;
+                    let p1Rev = (data.chartData1 || []).map(function(i) { return i.revenue || 0; });
+                    let p2Rev = (data.chartData2 || []).map(function(i) { return i.revenue || 0; });
+                    let p1Tick = (data.chartData1 || []).map(function(i) { return i.tickets || 0; });
+                    let p2Tick = (data.chartData2 || []).map(function(i) { return i.tickets || 0; });
+
+                    if (this.filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[this.filterMonth]) {
+                        const indices = data.monthlyMap[this.filterMonth];
+                        labels = indices.map(function(i) { return data.chartLabels[i]; });
+                        p1Rev = indices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].revenue : 0; });
+                        p2Rev = indices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].revenue : 0; });
+                        p1Tick = indices.map(function(i) { return data.chartData1[i] ? data.chartData1[i].tickets : 0; });
+                        p2Tick = indices.map(function(i) { return data.chartData2[i] ? data.chartData2[i].tickets : 0; });
+                    }
+
+                    const label1 = data.periodo_1_label || 'Periodo 1';
+                    const label2 = data.periodo_2_label || 'Periodo 2';
+
+                    this.$nextTick(() => {
+                        const canvasRev = document.getElementById('revenueComparisonChart');
+                        if (canvasRev) {
+                            const ctxRev = canvasRev.getContext('2d');
+                            if (window.revenueChartInstance) {
+                                try { window.revenueChartInstance.destroy(); } catch(e) {}
+                            }
+                            window.revenueChartInstance = new Chart(ctxRev, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [
+                                        { label: label1, data: p1Rev, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
+                                        { label: label2, data: p2Rev, borderColor: '#0c5289', backgroundColor: 'rgba(12, 82, 137, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
+                                    scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
+                                }
+                            });
+                        }
+
+                        const canvasTick = document.getElementById('ticketsComparisonChart');
+                        if (canvasTick) {
+                            const ctxTick = canvasTick.getContext('2d');
+                            if (window.ticketsChartInstance) {
+                                try { window.ticketsChartInstance.destroy(); } catch(e) {}
+                            }
+                            window.ticketsChartInstance = new Chart(ctxTick, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [
+                                        { label: label1, data: p1Tick, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
+                                        { label: label2, data: p2Tick, borderColor: '#29f48f', backgroundColor: 'rgba(41, 244, 143, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
+                                    scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
+                                }
+                            });
+                        }
+                    });
+                }
+            };
+        }
+    </script>
 </x-filament-panels::page>
