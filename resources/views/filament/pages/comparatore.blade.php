@@ -415,8 +415,41 @@
 
     <!-- Sezione Fissa: Panoramica Storica Multianno di Tutti i Fatturati -->
     @if(!empty($allYearsStats) && !empty($allYearsStats['datasets']))
+        @php
+            $availableYears = array_map('strval', $allYearsStats['years'] ?? []);
+        @endphp
         <div class="mt-8 border-t border-gray-200 dark:border-slate-800 pt-6" x-data="{
             selectedMonth: 'all',
+            activeYears: @js($availableYears),
+            allAvailableYears: @js($availableYears),
+            toggleYear(y) {
+                const strY = String(y);
+                if (this.activeYears.includes(strY)) {
+                    if (this.activeYears.length > 1) {
+                        this.activeYears = this.activeYears.filter(item => item !== strY);
+                    }
+                } else {
+                    this.activeYears.push(strY);
+                }
+                if (window.onAllYearsSelectionChanged) {
+                    window.onAllYearsSelectionChanged(this.activeYears);
+                }
+            },
+            isYearActive(y) {
+                return this.activeYears.includes(String(y));
+            },
+            selectAll() {
+                this.activeYears = [...this.allAvailableYears];
+                if (window.onAllYearsSelectionChanged) {
+                    window.onAllYearsSelectionChanged(this.activeYears);
+                }
+            },
+            selectRecent(count) {
+                this.activeYears = this.allAvailableYears.slice(-count);
+                if (window.onAllYearsSelectionChanged) {
+                    window.onAllYearsSelectionChanged(this.activeYears);
+                }
+            },
             onMonthChange(m) {
                 this.selectedMonth = m;
                 if (window.onAllYearsMonthFilterChanged) {
@@ -426,39 +459,72 @@
         }">
             <x-filament::section>
                 <x-slot name="heading">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                         <div class="flex items-center gap-2 text-gray-900 dark:text-white">
                             <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
                             <span class="text-lg font-bold">Confronto Storico Fatturati: Tutti gli Anni</span>
                         </div>
                         
-                        <!-- Selettore Zoom per Mese (es. Dicembre) -->
-                        <div class="flex items-center gap-2">
-                            <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-4 w-4 text-primary-500" />
-                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Focus Mese:</span>
-                            <select x-model="selectedMonth" @change="onMonthChange($event.target.value)" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm cursor-pointer">
-                                <option value="all">Tutto l'anno (12 Mesi)</option>
-                                <option value="12">Dicembre (Focus Vendite)</option>
-                                <option value="11">Novembre</option>
-                                <option value="10">Ottobre</option>
-                                <option value="09">Settembre</option>
-                                <option value="08">Agosto</option>
-                                <option value="07">Luglio</option>
-                                <option value="06">Giugno</option>
-                                <option value="05">Maggio</option>
-                                <option value="04">Aprile</option>
-                                <option value="03">Marzo</option>
-                                <option value="02">Febbraio</option>
-                                <option value="01">Gennaio</option>
-                            </select>
+                        <!-- Controlli: Focus Mese & Preset Anni -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Preset Rapidi -->
+                            <div class="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg border border-gray-200 dark:border-slate-700">
+                                <button type="button" @click="selectAll()" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === allAvailableYears.length ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                                    Tutti
+                                </button>
+                                <button type="button" @click="selectRecent(3)" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === 3 ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                                    Ultimi 3 Anni
+                                </button>
+                                <button type="button" @click="selectRecent(2)" class="px-2.5 py-1 text-xs font-bold rounded-md transition-colors" :class="activeYears.length === 2 ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'">
+                                    Ultimi 2 Anni
+                                </button>
+                            </div>
+
+                            <!-- Selettore Zoom per Mese -->
+                            <div class="flex items-center gap-2">
+                                <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-4 w-4 text-primary-500" />
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Focus Mese:</span>
+                                <select x-model="selectedMonth" @change="onMonthChange($event.target.value)" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm cursor-pointer">
+                                    <option value="all">Tutto l'anno (12 Mesi)</option>
+                                    <option value="12">Dicembre (Focus Vendite)</option>
+                                    <option value="11">Novembre</option>
+                                    <option value="10">Ottobre</option>
+                                    <option value="09">Settembre</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="07">Luglio</option>
+                                    <option value="06">Giugno</option>
+                                    <option value="05">Maggio</option>
+                                    <option value="04">Aprile</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="02">Febbraio</option>
+                                    <option value="01">Gennaio</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </x-slot>
 
+                <!-- Chips Interattivi Filtro Anni -->
+                <div class="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-gray-200 dark:border-slate-700/60">
+                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 mr-1">Filtra Anni:</span>
+                    @foreach($allYearsStats['datasets'] as $ds)
+                        <button type="button" 
+                                @click="toggleYear('{{ $ds['year'] }}')"
+                                :class="isYearActive('{{ $ds['year'] }}') ? 'bg-white dark:bg-slate-800 border-2 border-primary-500 shadow-sm opacity-100 font-bold' : 'bg-gray-100 dark:bg-slate-800/40 border border-gray-300 dark:border-slate-700 opacity-40 hover:opacity-75'"
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all cursor-pointer">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: {{ $ds['color'] }};"></span>
+                            <span class="text-gray-900 dark:text-white">{{ $ds['year'] }}</span>
+                        </button>
+                    @endforeach
+                </div>
+
                 <!-- Box Riepilogativo Totali per Anno con Badge e Delta % -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6" id="allYearsCardsContainer">
                     @foreach($allYearsStats['datasets'] as $ds)
-                        <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm" id="year-card-{{ $ds['year'] }}">
+                        <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-3 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02]" 
+                             id="year-card-{{ $ds['year'] }}"
+                             @click="toggleYear('{{ $ds['year'] }}')"
+                             :style="isYearActive('{{ $ds['year'] }}') ? 'opacity: 1;' : 'opacity: 0.35; filter: grayscale(70%);'">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                                     {{ $ds['year'] }}
@@ -507,6 +573,7 @@
             const allYearsData = @json($allYearsStats ?? null);
             let currentFilterMonth = 'all';
             let currentAllYearsMonth = 'all';
+            let currentActiveYears = (@json($allYearsStats['years'] ?? [])).map(String);
 
             const getContext = function(containerId, canvasId) {
                 const container = document.getElementById(containerId);
@@ -713,9 +780,13 @@
                 }
             };
 
-            // Draw Multi-Year Comparison Chart with Month Zoom
-            const drawAllYearsChart = function(filterMonth = 'all') {
+            // Draw Multi-Year Comparison Chart with Month Zoom and Year Filtering
+            const drawAllYearsChart = function(filterMonth = 'all', activeYears = null) {
                 if (!allYearsData || !allYearsData.datasets || !allYearsData.labels || typeof Chart === 'undefined') return;
+
+                if (activeYears) {
+                    currentActiveYears = activeYears.map(String);
+                }
 
                 const isDark = document.documentElement.classList.contains('dark');
                 const textColor = isDark ? '#cbd5e1' : '#334155';
@@ -741,8 +812,13 @@
                     }
                 }
 
+                // Filter datasets by active years
+                const filteredDatasets = allYearsData.datasets.filter(function(ds) {
+                    return currentActiveYears.includes(String(ds.year));
+                });
+
                 let prevYearTotal = null;
-                const datasets = allYearsData.datasets.map(function(ds) {
+                const datasets = filteredDatasets.map(function(ds) {
                     let seriesData = ds.data;
                     let displayTotal = ds.total;
 
@@ -787,8 +863,8 @@
                         backgroundColor: ds.color + '18',
                         fill: false,
                         tension: 0.35,
-                        pointRadius: isSingleMonth ? 2 : 3.5,
-                        pointHoverRadius: isSingleMonth ? 5 : 6.5,
+                        pointRadius: isSingleMonth ? 2.5 : 3.5,
+                        pointHoverRadius: isSingleMonth ? 5.5 : 6.5,
                         borderWidth: 2.5
                     };
                 });
@@ -854,10 +930,14 @@
                 });
             };
 
-            // Global month filter listener for multi-year historical chart
+            // Global filter listeners
+            window.onAllYearsSelectionChanged = function(activeYears) {
+                drawAllYearsChart(currentAllYearsMonth, activeYears);
+            };
+
             window.onAllYearsMonthFilterChanged = function(month) {
                 currentAllYearsMonth = month;
-                drawAllYearsChart(currentAllYearsMonth);
+                drawAllYearsChart(currentAllYearsMonth, currentActiveYears);
             };
 
             // Global month filter listener for top comparison charts
@@ -871,7 +951,7 @@
                 if (currentChartData) {
                     drawCharts(currentChartData, currentFilterMonth);
                 }
-                drawAllYearsChart(currentAllYearsMonth);
+                drawAllYearsChart(currentAllYearsMonth, currentActiveYears);
             };
 
             init();
@@ -886,7 +966,7 @@
                         currentChartData = res;
                         setTimeout(function() {
                             drawCharts(currentChartData, currentFilterMonth);
-                            drawAllYearsChart(currentAllYearsMonth);
+                            drawAllYearsChart(currentAllYearsMonth, currentActiveYears);
                         }, 100);
                     }
                 });
@@ -898,7 +978,7 @@
                     currentChartData = data;
                     setTimeout(function() {
                         drawCharts(currentChartData, currentFilterMonth);
-                        drawAllYearsChart(currentAllYearsMonth);
+                        drawAllYearsChart(currentAllYearsMonth, currentActiveYears);
                     }, 100);
                 }
             });
