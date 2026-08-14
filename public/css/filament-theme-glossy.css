@@ -279,15 +279,27 @@ html:not(.dark) .fi-select-input {
     color: #ffffff !important;
 }
 
-/* Table Clean Borders */
+/* Table Clean Borders & Header Strip High Contrast */
+table thead,
+table thead tr,
+table thead th,
 .fi-ta-header-cell {
-    background-color: rgba(12, 82, 137, 0.05) !important;
-    font-weight: 700 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
 }
 
+.dark table thead,
+.dark table thead tr,
+.dark table thead th,
 .dark .fi-ta-header-cell {
     background-color: #1e293b !important;
-    color: #f8fafc !important;
+    color: #ffffff !important;
+}
+
+.dark table thead th span,
+.dark .fi-ta-header-cell span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 
 .dark .fi-ta-row {

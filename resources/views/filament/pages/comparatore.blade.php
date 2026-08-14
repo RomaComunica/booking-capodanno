@@ -320,13 +320,13 @@
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
                     <thead class="bg-gray-100 dark:bg-slate-800">
                         <tr>
-                            <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-200">Location</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-200">Delta Biglietti</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Delta Fatturato</th>
+                            <th class="px-4 py-3 text-left font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Location</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Biglietti</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Fatturato</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
@@ -335,7 +335,7 @@
                                 <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                                     {{ $loc['nomeLocation'] }}
                                 </td>
-                                <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-300">
+                                <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">
                                     {{ number_format($loc['tickets_1'], 0, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">
@@ -350,7 +350,7 @@
                                         <span class="text-gray-400 dark:text-gray-500">=</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-300">
+                                <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-200">
                                     € {{ number_format($loc['revenue_1'], 2, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">
