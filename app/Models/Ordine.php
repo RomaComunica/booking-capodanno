@@ -32,6 +32,27 @@ class Ordine extends Model
             }
         });
 
+        static::created(function ($model) {
+            // Auto-create voucher for manual admin orders if none exists
+            if (!\App\Models\Voucher::where('numeroOrdineVoucher', $model->numeroOrdine)->exists()) {
+                $maxVoucher = \App\Models\Voucher::max('numeroVoucher') ?? 100;
+                $numVoucher = $maxVoucher + 1;
+                $codiceVoucher = 'VCH-' . strtoupper(substr(md5($numVoucher . time()), 0, 10));
+                
+                \App\Models\Voucher::create([
+                    'numeroVoucher' => $numVoucher,
+                    'codiceVoucher' => $codiceVoucher,
+                    'numeroOrdineVoucher' => $model->numeroOrdine,
+                    'idLocationVoucher' => $model->idLocationOrdine,
+                    'dataVoucher' => now(),
+                    'nomeVoucher' => $model->nomeClienteOrdine,
+                    'cognomeVoucher' => $model->cognomeClienteOrdine,
+                    'telefonoVoucher' => $model->telefonoClienteOrdine,
+                    'emailVoucher' => $model->emailClienteOrdine,
+                ]);
+            }
+        });
+
         static::updated(function ($model) {
             // Invia email automatica se lo stato passa a 2 (Completato)
             if ($model->isDirty('statoOrdine') && $model->statoOrdine == 2) {

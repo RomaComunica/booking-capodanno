@@ -38,7 +38,54 @@ class OrdineResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Informazioni Cliente')
+                Forms\Components\Section::make('Dettagli Ordine')
+                    ->schema([
+                        Forms\Components\Select::make('idLocationOrdine')
+                            ->label('Location')
+                            ->options(function () {
+                                return \App\Models\Location::orderBy('nomeLocation')->get()->mapWithKeys(function ($loc) {
+                                    $suffix = $loc->attivaLocation ? '' : ' (Non attiva)';
+                                    return [$loc->idLocation => $loc->nomeLocation . $suffix];
+                                });
+                            })
+                            ->searchable()
+                            ->required()
+                            ->live(),
+                        
+                        Forms\Components\Select::make('idPartnerOrdine')
+                            ->label('Partner')
+                            ->relationship('partner', 'nomePartner')
+                            ->searchable(),
+                        
+                        Forms\Components\Select::make('statoOrdine')
+                            ->label('Stato Ordine')
+                            ->options([
+                                0 => 'In corso (In attesa)',
+                                1 => 'Annullato',
+                                2 => 'Completato',
+                            ])
+                            ->required()
+                            ->default(2),
+                        
+                        Forms\Components\Select::make('tipoPagamentoOrdine')
+                            ->label('Metodo Pagamento')
+                            ->relationship('tipoPagamento', 'nomePagamento')
+                            ->required()
+                            ->default(2),
+                        
+                        Forms\Components\Select::make('tipoSpedizioneOrdine')
+                            ->label('Tipo Spedizione')
+                            ->relationship('tipoSpedizione', 'nomeSpedizione')
+                            ->default(1),
+
+                        Forms\Components\DateTimePicker::make('dataOrdine')
+                            ->label('Data Ordine')
+                            ->default(now())
+                            ->required(),
+                    ])
+                    ->columns(3),
+
+                Forms\Components\Section::make('Informazioni Cliente & Tavolo')
                     ->schema([
                         Forms\Components\TextInput::make('nomeClienteOrdine')
                             ->label('Nome')
@@ -56,110 +103,103 @@ class OrdineResource extends Resource
                         Forms\Components\TextInput::make('telefonoClienteOrdine')
                             ->label('Telefono')
                             ->tel(),
-                    ])
-                    ->columns(2),
-                
-                Forms\Components\Section::make('Dettagli Ordine')
-                    ->schema([
-                        Forms\Components\TextInput::make('numeroOrdine')
-                            ->label('Numero Ordine')
-                            ->placeholder('Auto-generato')
-                            ->disabled()
-                            ->dehydrated(false),
-                        
-                        Forms\Components\DateTimePicker::make('dataOrdine')
-                            ->label('Data Ordine')
-                            ->default(now())
-                            ->required(),
-                        
-                        Forms\Components\Select::make('idLocationOrdine')
-                            ->label('Location')
-                            ->options(function () {
-                                return \App\Models\Location::orderBy('nomeLocation')->get()->mapWithKeys(function ($loc) {
-                                    $suffix = $loc->attivaLocation ? '' : ' (Non attiva)';
-                                    return [$loc->idLocation => $loc->nomeLocation . $suffix];
-                                });
-                            })
-                            ->searchable()
-                            ->required(),
-                        
-                        Forms\Components\Select::make('idPartnerOrdine')
-                            ->label('Partner')
-                            ->relationship('partner', 'nomePartner')
-                            ->searchable(),
-                        
-                        Forms\Components\Select::make('statoOrdine')
-                            ->label('Stato')
-                            ->options([
-                                0 => 'In corso',
-                                1 => 'Annullato',
-                                2 => 'Completato',
-                            ])
-                            ->required()
-                            ->default(2),
-                        
-                        Forms\Components\TextInput::make('totaleOrdine')
-                            ->label('Totale')
-                            ->numeric()
-                            ->prefix('€')
-                            ->required(),
                         
                         Forms\Components\TextInput::make('tavolo')
                             ->label('Tavolo Assegnato')
+                            ->placeholder('Es. Rossi / Tavolo 5')
                             ->maxLength(100),
 
                         Forms\Components\Textarea::make('noteOrdine')
-                            ->label('Note')
-                            ->rows(3)
-                            ->columnSpanFull(),
+                            ->label('Note Ordine')
+                            ->rows(2)
+                            ->columnSpan(2),
                     ])
-                    ->columns(2),
+                    ->columns(3),
 
                 Forms\Components\Section::make('Ticket Acquistati')
+                    ->description('Seleziona i biglietti disponibili per la location scelta')
                     ->schema([
                         Forms\Components\Repeater::make('righe')
                             ->relationship('righe')
                             ->schema([
-                                Forms\Components\TextInput::make('nomeIngressoOrdine')
-                                    ->label('Descrizione Ticket/Servizio')
+                                Forms\Components\Select::make('idIngressoOrdine')
+                                    ->label('Biglietto / Ingresso')
+                                    ->options(function (Forms\Get $get) {
+                                        $locationId = $get('../../idLocationOrdine');
+                                        $query = \App\Models\TipologiaIngresso::query();
+                                        if ($locationId) {
+                                            $query->where('idLocation', $locationId);
+                                        }
+                                        return $query->orderBy('nomeIngresso')->get()->mapWithKeys(function ($t) {
+                                            return [$t->idIngressoCont => $t->nomeIngresso . ' (€' . number_format($t->prezzoIngresso, 2, ',', '.') . ')'];
+                                        });
+                                    })
+                                    ->searchable()
                                     ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                        if ($state) {
+                                            $tipologia = \App\Models\TipologiaIngresso::find($state);
+                                            if ($tipologia) {
+                                                $set('nomeIngressoOrdine', $tipologia->nomeIngresso);
+                                                $set('prezzoIngressoOrdine', (float)$tipologia->prezzoIngresso);
+                                                $qty = (int)($get('quantitaIngressoOrdine') ?: 1);
+                                                $set('totaleRiga', (float)$tipologia->prezzoIngresso * $qty);
+                                            }
+                                        }
+                                    })
                                     ->columnSpan(2),
+
+                                Forms\Components\Hidden::make('nomeIngressoOrdine')
+                                    ->required(),
+
                                 Forms\Components\TextInput::make('quantitaIngressoOrdine')
                                     ->label('Quantità')
                                     ->numeric()
                                     ->default(1)
-                                    ->required(),
+                                    ->minValue(1)
+                                    ->required()
+                                    ->live(debounce: 300)
+                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                        $price = (float)($get('prezzoIngressoOrdine') ?: 0);
+                                        $qty = (int)($state ?: 1);
+                                        $set('totaleRiga', $price * $qty);
+                                    }),
+
                                 Forms\Components\TextInput::make('prezzoIngressoOrdine')
                                     ->label('Prezzo Unit.')
                                     ->numeric()
                                     ->prefix('€')
+                                    ->disabled()
+                                    ->dehydrated()
                                     ->required(),
+
+                                Forms\Components\TextInput::make('totaleRiga')
+                                    ->label('Totale Riga')
+                                    ->numeric()
+                                    ->prefix('€')
+                                    ->disabled()
+                                    ->dehydrated(),
                             ])
-                            ->columns(4)
-                    ])
-                    ->collapsible(),
-                
-                Forms\Components\Section::make('Pagamento')
-                    ->schema([
-                        Forms\Components\Select::make('tipoPagamentoOrdine')
-                            ->label('Metodo Pagamento')
-                            ->relationship('tipoPagamento', 'nomePagamento'),
-                        
-                        Forms\Components\Select::make('tipoSpedizioneOrdine')
-                            ->label('Tipo Spedizione')
-                            ->relationship('tipoSpedizione', 'nomeSpedizione'),
-                        
-                        Forms\Components\DateTimePicker::make('dataPagamentoOrdine')
-                            ->label('Data Pagamento Cliente'),
-                        
-                        Forms\Components\DateTimePicker::make('dataPagamentoOrdineFornitore')
-                            ->label('Data Pagamento Location'),
-                        
-                        Forms\Components\DateTimePicker::make('dataPagamentoOrdinePartner')
-                            ->label('Data Pagamento Partner'),
-                    ])
-                    ->columns(2)
-                    ->collapsible(),
+                            ->columns(5)
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
+                                $righe = $get('righe') ?? [];
+                                $total = 0;
+                                foreach ($righe as $riga) {
+                                    $price = (float)($riga['prezzoIngressoOrdine'] ?? 0);
+                                    $qty = (int)($riga['quantitaIngressoOrdine'] ?? 1);
+                                    $total += ($price * $qty);
+                                }
+                                $set('totaleOrdine', $total);
+                            }),
+
+                        Forms\Components\TextInput::make('totaleOrdine')
+                            ->label('Totale Complessivo Ordine')
+                            ->numeric()
+                            ->prefix('€')
+                            ->required(),
+                    ]),
             ]);
     }
 
