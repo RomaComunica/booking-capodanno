@@ -440,8 +440,8 @@
                                 {
                                     label: p2Label,
                                     data: r2,
-                                    borderColor: '#fbbf24',
-                                    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                                    borderColor: '#0c5289',
+                                    backgroundColor: 'rgba(12, 82, 137, 0.2)',
                                     fill: true,
                                     tension: 0.3
                                 }
@@ -483,7 +483,7 @@
                                 {
                                     label: p2Label,
                                     data: t2,
-                                    backgroundColor: '#38bdf8',
+                                    backgroundColor: '#DD076D',
                                     borderRadius: 4
                                 }
                             ]

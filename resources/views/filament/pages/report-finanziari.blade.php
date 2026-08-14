@@ -146,8 +146,8 @@
                                 type: 'line',
                                 label: 'Utile Netto (€)',
                                 data: profit,
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderColor: '#29f48f',
+                                backgroundColor: 'rgba(41, 244, 143, 0.15)',
                                 borderWidth: 3,
                                 fill: false,
                                 tension: 0.3,
@@ -157,14 +157,14 @@
                                 type: 'bar',
                                 label: 'Fatturato (€)',
                                 data: revenue,
-                                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                                backgroundColor: 'rgba(12, 82, 137, 0.7)',
                                 borderRadius: 4
                             },
                             {
                                 type: 'bar',
                                 label: 'Margine (€)',
                                 data: margin,
-                                backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                                backgroundColor: 'rgba(221, 7, 109, 0.7)',
                                 borderRadius: 4
                             }
                         ]
@@ -202,9 +202,9 @@
                         datasets: [{
                             data: [totalMargin, totalEntrate, totalUscite],
                             backgroundColor: [
-                                '#f59e0b', // amber
-                                '#10b981', // emerald
-                                '#ef4444'  // red
+                                '#0c5289', // brand blue
+                                '#29f48f', // neon mint
+                                '#DD076D'  // fuchsia
                             ],
                             borderWidth: 1
                         }]

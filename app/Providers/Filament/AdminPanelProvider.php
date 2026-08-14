@@ -28,8 +28,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#0c5289'),
+                'success' => Color::hex('#29f48f'),
+                'info' => Color::hex('#DD076D'),
+                'gray' => Color::Slate,
             ])
+            ->darkMode(true)
             ->brandLogo(asset('img/logo-rc-scuro.png'))
             ->favicon(asset('img/favicon-rc.png'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -61,17 +65,24 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot(): void
     {
+        // Register custom glossy design system stylesheet
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::head.done',
+            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
+        );
+
+        // Register topbar glossy action buttons with inline style fallbacks for Filament rendering
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::user-menu.before',
             fn (): string => \Illuminate\Support\Facades\Blade::render('
-                <div style="display: flex; align-items: center; gap: 6px; margin-right: 8px;">
-                    <a href="/" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; font-size: 11px; padding: 0 10px; border: 1px solid #27272a; background-color: #09090b; color: #ffffff; text-decoration: none; height: 28px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                        <x-heroicon-o-globe-alt style="width: 14px; height: 14px; color: #a1a1aa; flex-shrink: 0;" />
-                        <span style="color: #ffffff; font-size: 11px; line-height: 1;">Visita il Sito</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-right: 12px;">
+                    <a href="/" target="_blank" class="glossy-nav-btn glossy-btn-site" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(12, 82, 137, 0.3); background-color: rgba(12, 82, 137, 0.1); color: #0c5289; text-decoration: none; backdrop-filter: blur(10px); box-shadow: 0 2px 6px rgba(12, 82, 137, 0.08); transition: all 0.2s;">
+                        <x-heroicon-o-globe-alt style="width: 14px; height: 14px; flex-shrink: 0; color: inherit;" />
+                        <span style="font-size: 12px; line-height: 1; color: inherit; font-weight: 600;">Visita il Sito</span>
                     </a>
-                    <a href="/clear-cache" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; font-size: 11px; padding: 0 10px; border: 1px solid #27272a; background-color: #09090b; color: #ffffff; text-decoration: none; height: 28px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                        <x-heroicon-o-arrow-path style="width: 14px; height: 14px; color: #a1a1aa; flex-shrink: 0;" />
-                        <span style="color: #ffffff; font-size: 11px; line-height: 1;">Svuota Cache</span>
+                    <a href="/clear-cache" class="glossy-nav-btn glossy-btn-cache" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 20px; font-size: 12px; padding: 0 14px; height: 32px; border: 1px solid rgba(221, 7, 109, 0.3); background-color: rgba(221, 7, 109, 0.1); color: #DD076D; text-decoration: none; backdrop-filter: blur(10px); box-shadow: 0 2px 6px rgba(221, 7, 109, 0.08); transition: all 0.2s;">
+                        <x-heroicon-o-arrow-path style="width: 14px; height: 14px; flex-shrink: 0; color: inherit;" />
+                        <span style="font-size: 12px; line-height: 1; color: inherit; font-weight: 600;">Svuota Cache</span>
                     </a>
                 </div>
             '),
