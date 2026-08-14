@@ -149,141 +149,220 @@
     </div>
 
     @if($risultati)
-        <!-- Intestazione Risultati -->
-        <div class="mt-4 mb-2">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                Risultati del Confronto
-            </h2>
-            <p class="text-sm mt-1 text-gray-600 dark:text-gray-300">
-                Confronto tra <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-bold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
-            </p>
-        </div>
+        <!-- Contenitore Risultati con Alpine.js per Inizializzazione Automatica Grafici -->
+        <div x-data="{
+            filterMonth: 'all',
+            renderCharts() {
+                const data = @json($risultati ?? null);
+                if (!data || !data.chartLabels || typeof Chart === 'undefined') return;
 
-        <!-- KPI Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Card Fatturato -->
-            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Fatturato Lordo</span>
-                        <x-filament::icon icon="heroicon-o-currency-euro" class="h-6 w-6 text-primary-500" />
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#cbd5e1' : '#334155';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+
+                let labels = data.chartLabels;
+                let p1Rev = (data.chartData1 || []).map(i => i.revenue || 0);
+                let p2Rev = (data.chartData2 || []).map(i => i.revenue || 0);
+                let p1Tick = (data.chartData1 || []).map(i => i.tickets || 0);
+                let p2Tick = (data.chartData2 || []).map(i => i.tickets || 0);
+
+                if (this.filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[this.filterMonth]) {
+                    const indices = data.monthlyMap[this.filterMonth];
+                    labels = indices.map(i => data.chartLabels[i]);
+                    p1Rev = indices.map(i => data.chartData1[i] ? data.chartData1[i].revenue : 0);
+                    p2Rev = indices.map(i => data.chartData2[i] ? data.chartData2[i].revenue : 0);
+                    p1Tick = indices.map(i => data.chartData1[i] ? data.chartData1[i].tickets : 0);
+                    p2Tick = indices.map(i => data.chartData2[i] ? data.chartData2[i].tickets : 0);
+                }
+
+                const label1 = data.periodo_1_label || 'Periodo 1';
+                const label2 = data.periodo_2_label || 'Periodo 2';
+
+                this.$nextTick(() => {
+                    const canvasRev = document.getElementById('revenueComparisonChart');
+                    if (canvasRev) {
+                        const ctxRev = canvasRev.getContext('2d');
+                        if (window.revenueChartInstance) {
+                            try { window.revenueChartInstance.destroy(); } catch(e) {}
+                        }
+                        window.revenueChartInstance = new Chart(ctxRev, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    { label: label1, data: p1Rev, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
+                                    { label: label2, data: p2Rev, borderColor: '#0c5289', backgroundColor: 'rgba(12, 82, 137, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
+                                scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
+                            }
+                        });
+                    }
+
+                    const canvasTick = document.getElementById('ticketsComparisonChart');
+                    if (canvasTick) {
+                        const ctxTick = canvasTick.getContext('2d');
+                        if (window.ticketsChartInstance) {
+                            try { window.ticketsChartInstance.destroy(); } catch(e) {}
+                        }
+                        window.ticketsChartInstance = new Chart(ctxTick, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    { label: label1, data: p1Tick, borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.15)', fill: true, tension: 0.35, pointRadius: 2 },
+                                    { label: label2, data: p2Tick, borderColor: '#29f48f', backgroundColor: 'rgba(41, 244, 143, 0.2)', fill: true, tension: 0.35, pointRadius: 3 }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'top', labels: { color: textColor, font: { weight: '600' } } } },
+                                scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } }
+                            }
+                        });
+                    }
+                });
+            }
+        }" x-init="renderCharts(); $watch('filterMonth', () => renderCharts())">
+            <!-- Intestazione Risultati -->
+            <div class="mt-4 mb-2">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                    Risultati del Confronto
+                </h2>
+                <p class="text-sm mt-1 text-gray-600 dark:text-gray-300">
+                    Confronto tra <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-bold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
+                </p>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card Fatturato -->
+                <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Fatturato Lordo</span>
+                            <x-filament::icon icon="heroicon-o-currency-euro" class="h-6 w-6 text-primary-500" />
+                        </div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            € {{ number_format($risultati['revenue_2'], 2, ',', '.') }}
+                        </div>
+                        <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
+                            Precedente: € {{ number_format($risultati['revenue_1'], 2, ',', '.') }}
+                        </div>
                     </div>
-                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
-                        € {{ number_format($risultati['revenue_2'], 2, ',', '.') }}
-                    </div>
-                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
-                        Precedente: € {{ number_format($risultati['revenue_1'], 2, ',', '.') }}
+                    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                        @if($risultati['revenue_diff'] > 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
+                                +€{{ number_format($risultati['revenue_diff'], 2, ',', '.') }} 
+                                @if($risultati['revenue_diff_pct'] !== null)
+                                    ({{ $risultati['revenue_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @elseif($risultati['revenue_diff'] < 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
+                                <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
+                                -€{{ number_format(abs($risultati['revenue_diff']), 2, ',', '.') }} 
+                                @if($risultati['revenue_diff_pct'] !== null)
+                                    ({{ $risultati['revenue_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
+                                = € 0,00
+                            </span>
+                        @endif
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
-                    @if($risultati['revenue_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
-                            <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
-                            +€{{ number_format($risultati['revenue_diff'], 2, ',', '.') }} 
-                            @if($risultati['revenue_diff_pct'] !== null)
-                                ({{ $risultati['revenue_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @elseif($risultati['revenue_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
-                            <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
-                            -€{{ number_format(abs($risultati['revenue_diff']), 2, ',', '.') }} 
-                            @if($risultati['revenue_diff_pct'] !== null)
-                                ({{ $risultati['revenue_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
-                            = € 0,00
-                        </span>
-                    @endif
+
+                <!-- Card Biglietti Venduti -->
+                <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Biglietti Venduti</span>
+                            <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
+                        </div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            {{ number_format($risultati['tickets_2'], 0, ',', '.') }}
+                        </div>
+                        <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
+                            Precedente: {{ number_format($risultati['tickets_1'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                        @if($risultati['tickets_diff'] > 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
+                                +{{ number_format($risultati['tickets_diff'], 0, ',', '.') }}
+                                @if($risultati['tickets_diff_pct'] !== null)
+                                    ({{ $risultati['tickets_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @elseif($risultati['tickets_diff'] < 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
+                                <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
+                                -{{ number_format(abs($risultati['tickets_diff']), 0, ',', '.') }}
+                                @if($risultati['tickets_diff_pct'] !== null)
+                                    ({{ $risultati['tickets_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
+                                = 0
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Card Ordini Totali -->
+                <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ordini Conclusi</span>
+                            <x-filament::icon icon="heroicon-o-shopping-cart" class="h-6 w-6 text-primary-500" />
+                        </div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            {{ number_format($risultati['orders_2'], 0, ',', '.') }}
+                        </div>
+                        <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
+                            Precedente: {{ number_format($risultati['orders_1'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                        @if($risultati['orders_diff'] > 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
+                                +{{ number_format($risultati['orders_diff'], 0, ',', '.') }}
+                                @if($risultati['orders_diff_pct'] !== null)
+                                    ({{ $risultati['orders_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @elseif($risultati['orders_diff'] < 0)
+                            <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
+                                <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
+                                -{{ number_format(abs($risultati['orders_diff']), 0, ',', '.') }}
+                                @if($risultati['orders_diff_pct'] !== null)
+                                    ({{ $risultati['orders_diff_pct'] }}%)
+                                @endif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
+                                = 0
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <!-- Card Biglietti Venduti -->
-            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Biglietti Venduti</span>
-                        <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
-                    </div>
-                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
-                        {{ number_format($risultati['tickets_2'], 0, ',', '.') }}
-                    </div>
-                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
-                        Precedente: {{ number_format($risultati['tickets_1'], 0, ',', '.') }}
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
-                    @if($risultati['tickets_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
-                            <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
-                            +{{ number_format($risultati['tickets_diff'], 0, ',', '.') }}
-                            @if($risultati['tickets_diff_pct'] !== null)
-                                ({{ $risultati['tickets_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @elseif($risultati['tickets_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
-                            <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
-                            -{{ number_format(abs($risultati['tickets_diff']), 0, ',', '.') }}
-                            @if($risultati['tickets_diff_pct'] !== null)
-                                ({{ $risultati['tickets_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
-                            = 0
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Card Ordini Totali -->
-            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ordini Conclusi</span>
-                        <x-filament::icon icon="heroicon-o-shopping-cart" class="h-6 w-6 text-primary-500" />
-                    </div>
-                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
-                        {{ number_format($risultati['orders_2'], 0, ',', '.') }}
-                    </div>
-                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
-                        Precedente: {{ number_format($risultati['orders_1'], 0, ',', '.') }}
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
-                    @if($risultati['orders_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
-                            <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
-                            +{{ number_format($risultati['orders_diff'], 0, ',', '.') }}
-                            @if($risultati['orders_diff_pct'] !== null)
-                                ({{ $risultati['orders_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @elseif($risultati['orders_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
-                            <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
-                            -{{ number_format(abs($risultati['orders_diff']), 0, ',', '.') }}
-                            @if($risultati['orders_diff_pct'] !== null)
-                                ({{ $risultati['orders_diff_pct'] }}%)
-                            @endif
-                        </span>
-                    @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
-                            = 0
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Focalizzazione Mese per Grafici Temporali -->
-        <div x-data="{ filterMonth: 'all' }" x-init="$watch('filterMonth', value => window.dispatchEvent(new CustomEvent('filter-charts-month', { detail: value })))">
+            <!-- Focalizzazione Mese per Grafici Temporali -->
             @if(!$risultati['isMonthly'])
                 <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center glossy-card p-4 gap-4">
                     <div class="flex items-center gap-2">
@@ -318,7 +397,7 @@
                             <span>Andamento temporale del Fatturato</span>
                         </div>
                     </x-slot>
-                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;" id="revenueChartContainer">
+                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;">
                         <canvas id="revenueComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
@@ -331,307 +410,77 @@
                             <span>Andamento temporale dei Biglietti Venduti</span>
                         </div>
                     </x-slot>
-                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;" id="ticketsChartContainer">
+                    <div style="height: 300px; min-height: 300px; position: relative; width: 100%;">
                         <canvas id="ticketsComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
             </div>
-        </div>
 
-        <!-- Dettaglio Location -->
-        <x-filament::section class="mt-6">
-            <x-slot name="heading">Dettaglio Vendite per Location</x-slot>
+            <!-- Dettaglio Location -->
+            <x-filament::section class="mt-6">
+                <x-slot name="heading">Dettaglio Vendite per Location</x-slot>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
-                    <thead class="bg-gray-100 dark:bg-slate-800">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Location</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Biglietti</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
-                            <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Fatturato</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
-                        @forelse($risultati['locationBreakdown'] as $loc)
-                            <tr class="glossy-table-row transition-colors">
-                                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                                    {{ $loc['nomeLocation'] }}
-                                </td>
-                                <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">
-                                    {{ number_format($loc['tickets_1'], 0, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">
-                                    {{ number_format($loc['tickets_2'], 0, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    @if($loc['tickets_diff'] > 0)
-                                        <span class="text-green-600 dark:text-green-400 font-bold">+{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
-                                    @elseif($loc['tickets_diff'] < 0)
-                                        <span class="text-danger-600 dark:text-danger-400 font-bold">{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500">=</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-200">
-                                    € {{ number_format($loc['revenue_1'], 2, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">
-                                    € {{ number_format($loc['revenue_2'], 2, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    @if($loc['revenue_diff'] > 0)
-                                        <span class="text-green-600 dark:text-green-400 font-bold">+€{{ number_format($loc['revenue_diff'], 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
-                                    @elseif($loc['revenue_diff'] < 0)
-                                        <span class="text-danger-600 dark:text-danger-400 font-bold">-€{{ number_format(abs($loc['revenue_diff']), 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500">=</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
+                        <thead class="bg-gray-100 dark:bg-slate-800">
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                    Nessuna vendita registrata nei periodi selezionati.
-                                </td>
+                                <th class="px-4 py-3 text-left font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Location</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Biglietti</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Fatturato</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </x-filament::section>
-
-        <!-- Chart.js Logic -->
-        <script>
-            (function() {
-                let revenueChartInstance = null;
-                let ticketsChartInstance = null;
-                let currentChartData = null;
-                let currentFilterMonth = 'all';
-
-                const extractResults = (eventData) => {
-                    if (!eventData) return null;
-                    if (eventData.chartLabels) return eventData;
-                    if (eventData.resultados && eventData.resultados.chartLabels) return eventData.resultados;
-                    if (Array.isArray(eventData) && eventData[0]) {
-                        if (eventData[0].chartLabels) return eventData[0];
-                        if (eventData[0].resultados && eventData[0].resultados.chartLabels) return eventData[0].resultados;
-                    }
-                    if (typeof eventData === 'object') {
-                        for (let key in eventData) {
-                            if (eventData[key] && eventData[key].chartLabels) return eventData[key];
-                            if (eventData[key] && eventData[key].resultados && eventData[key].resultados.chartLabels) return eventData[key].resultados;
-                        }
-                    }
-                    return null;
-                };
-
-                const getCanvasContext = (containerId, canvasId) => {
-                    const container = document.getElementById(containerId);
-                    if (!container) return null;
-                    let canvas = document.getElementById(canvasId);
-                    if (!canvas) {
-                        container.innerHTML = '<canvas id="' + canvasId + '"></canvas>';
-                        canvas = document.getElementById(canvasId);
-                    }
-                    return canvas ? canvas.getContext('2d') : null;
-                };
-
-                const drawCharts = (res, filterMonth = 'all') => {
-                    if (!res || !res.chartLabels || typeof Chart === 'undefined') return;
-
-                    const isDark = document.documentElement.classList.contains('dark');
-                    const textColor = isDark ? '#cbd5e1' : '#334155';
-                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
-
-                    let labels = res.chartLabels;
-                    let p1DataRev = (res.chartData1 || []).map(item => item.revenue || 0);
-                    let p2DataRev = (res.chartData2 || []).map(item => item.revenue || 0);
-                    let p1DataTick = (res.chartData1 || []).map(item => item.tickets || 0);
-                    let p2DataTick = (res.chartData2 || []).map(item => item.tickets || 0);
-
-                    const label1 = res.periodo_1_label || 'Periodo 1';
-                    const label2 = res.periodo_2_label || 'Periodo 2';
-
-                    // Destruggi istanze esistenti per evitare sovrapposizioni
-                    if (revenueChartInstance) {
-                        try { revenueChartInstance.destroy(); } catch(e) {}
-                        revenueChartInstance = null;
-                    }
-                    if (ticketsChartInstance) {
-                        try { ticketsChartInstance.destroy(); } catch(e) {}
-                        ticketsChartInstance = null;
-                    }
-
-                    // Grafico Fatturato
-                    const ctxRev = getCanvasContext('revenueChartContainer', 'revenueComparisonChart');
-                    if (ctxRev) {
-                        revenueChartInstance = new Chart(ctxRev, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: label1,
-                                        data: p1DataRev,
-                                        borderColor: '#94a3b8',
-                                        backgroundColor: 'rgba(148, 163, 184, 0.15)',
-                                        fill: true,
-                                        tension: 0.35,
-                                        pointRadius: 2,
-                                        pointHoverRadius: 5
-                                    },
-                                    {
-                                        label: label2,
-                                        data: p2DataRev,
-                                        borderColor: '#0c5289',
-                                        backgroundColor: 'rgba(12, 82, 137, 0.2)',
-                                        fill: true,
-                                        tension: 0.35,
-                                        pointRadius: 3,
-                                        pointHoverRadius: 6
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                        labels: { color: textColor, font: { weight: '600' } }
-                                    },
-                                    tooltip: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        callbacks: {
-                                            label: function(context) {
-                                                let l = context.dataset.label || '';
-                                                if (l) l += ': ';
-                                                if (context.parsed.y !== null) {
-                                                    l += new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
-                                                }
-                                                return l;
-                                            }
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    x: {
-                                        ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
-                                        grid: { color: gridColor }
-                                    },
-                                    y: {
-                                        ticks: {
-                                            color: textColor,
-                                            callback: function(value) {
-                                                return '€ ' + value.toLocaleString('it-IT');
-                                            }
-                                        },
-                                        grid: { color: gridColor }
-                                    }
-                                }
-                            }
-                        });
-                    }
-
-                    // Grafico Biglietti
-                    const ctxTick = getCanvasContext('ticketsChartContainer', 'ticketsComparisonChart');
-                    if (ctxTick) {
-                        ticketsChartInstance = new Chart(ctxTick, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: label1,
-                                        data: p1DataTick,
-                                        borderColor: '#94a3b8',
-                                        backgroundColor: 'rgba(148, 163, 184, 0.15)',
-                                        fill: true,
-                                        tension: 0.35,
-                                        pointRadius: 2,
-                                        pointHoverRadius: 5
-                                    },
-                                    {
-                                        label: label2,
-                                        data: p2DataTick,
-                                        borderColor: '#29f48f',
-                                        backgroundColor: 'rgba(41, 244, 143, 0.2)',
-                                        fill: true,
-                                        tension: 0.35,
-                                        pointRadius: 3,
-                                        pointHoverRadius: 6
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                        labels: { color: textColor, font: { weight: '600' } }
-                                    },
-                                    tooltip: {
-                                        mode: 'index',
-                                        intersect: false
-                                    }
-                                },
-                                scales: {
-                                    x: {
-                                        ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
-                                        grid: { color: gridColor }
-                                    },
-                                    y: {
-                                        ticks: { color: textColor },
-                                        grid: { color: gridColor }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                };
-
-                const startCharts = () => {
-                    const initData = @json($risultati ?? null);
-                    if (initData) {
-                        currentChartData = initData;
-                        drawCharts(currentChartData, currentFilterMonth);
-                    }
-                };
-
-                startCharts();
-                setTimeout(startCharts, 100);
-                setTimeout(startCharts, 300);
-
-                const handleLivewireEvent = (eventData) => {
-                    const res = extractResults(eventData);
-                    if (res) {
-                        currentChartData = res;
-                        setTimeout(() => drawCharts(currentChartData, currentFilterMonth), 150);
-                    }
-                };
-
-                if (typeof Livewire !== 'undefined') {
-                    Livewire.on('draw-comparison-charts', handleLivewireEvent);
-                    Livewire.on('update-charts', handleLivewireEvent);
-                }
-
-                window.addEventListener('filter-charts-month', (e) => {
-                    currentFilterMonth = e.detail;
-                    if (currentChartData) {
-                        drawCharts(currentChartData, currentFilterMonth);
-                    }
-                });
-
-                document.addEventListener('livewire:navigated', () => {
-                    setTimeout(startCharts, 150);
-                });
-            })();
-        </script>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
+                            @forelse($risultati['locationBreakdown'] as $loc)
+                                <tr class="glossy-table-row transition-colors">
+                                    <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                                        {{ $loc['nomeLocation'] }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">
+                                        {{ number_format($loc['tickets_1'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">
+                                        {{ number_format($loc['tickets_2'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($loc['tickets_diff'] > 0)
+                                            <span class="text-green-600 dark:text-green-400 font-bold">+{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
+                                        @elseif($loc['tickets_diff'] < 0)
+                                            <span class="text-danger-600 dark:text-danger-400 font-bold">{{ $loc['tickets_diff'] }} ({{ $loc['tickets_diff_pct'] }}%)</span>
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">=</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-200">
+                                        € {{ number_format($loc['revenue_1'], 2, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">
+                                        € {{ number_format($loc['revenue_2'], 2, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        @if($loc['revenue_diff'] > 0)
+                                            <span class="text-green-600 dark:text-green-400 font-bold">+€{{ number_format($loc['revenue_diff'], 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
+                                        @elseif($loc['revenue_diff'] < 0)
+                                            <span class="text-danger-600 dark:text-danger-400 font-bold">-€{{ number_format(abs($loc['revenue_diff']), 2, ',', '.') }} ({{ $loc['revenue_diff_pct'] }}%)</span>
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">=</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        Nessuna vendita registrata nei periodi selezionati.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        </div>
     @endif
 </x-filament-panels::page>
