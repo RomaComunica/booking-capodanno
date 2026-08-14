@@ -1,87 +1,106 @@
 <x-filament-panels::page>
+    <style>
+        /* Direct Page Overrides for Comparatore High Contrast */
+        .dark select,
+        .dark select option,
+        select option {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+        .dark label, .dark .fi-fo-field-wrp-label, .dark .fi-fo-field-wrp-label span {
+            color: #f8fafc !important;
+            font-weight: 700 !important;
+        }
+        .dark input, .dark .fi-input-wrp, .dark .fi-select-input {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+        }
+    </style>
+
     <!-- Sezione Fissa: Confronto del Giorno di Oggi con lo Scorso Anno -->
     @if($oggiStats)
         <div class="glossy-card p-6 mb-6">
             <div class="flex items-center gap-2 mb-4 border-b border-gray-200/60 dark:border-slate-700/60 pb-3">
                 <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
-                <h3 class="text-md font-bold text-gray-900 dark:text-white">Confronto Rapido: Oggi vs Stesso Giorno Anno Scorso</h3>
+                <h3 class="text-md font-bold" style="color: #ffffff;">Confronto Rapido: Oggi vs Stesso Giorno Anno Scorso</h3>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fatturato Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Fatturato Lordo</div>
-                        <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Fatturato Lordo</div>
+                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
                             € {{ number_format($oggiStats['revenue_2'], 2, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): € {{ number_format($oggiStats['revenue_1'], 2, ',', '.') }}</span>
                         @if($oggiStats['revenue_diff'] > 0)
-                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['revenue_diff'] < 0)
-                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @else
-                            <span class="text-gray-400">=</span>
+                            <span style="color: #94a3b8;">=</span>
                         @endif
                     </div>
                 </div>
 
                 <!-- Biglietti Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Biglietti Venduti</div>
-                        <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Biglietti Venduti</div>
+                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
                             {{ number_format($oggiStats['tickets_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['tickets_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['tickets_diff'] > 0)
-                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['tickets_diff'] < 0)
-                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @else
-                            <span class="text-gray-400">=</span>
+                            <span style="color: #94a3b8;">=</span>
                         @endif
                     </div>
                 </div>
 
                 <!-- Ordini Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Ordini Conclusi</div>
-                        <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
+                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Ordini Conclusi</div>
+                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
                             {{ number_format($oggiStats['orders_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['orders_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['orders_diff'] > 0)
-                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['orders_diff'] < 0)
-                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @else
-                            <span class="text-gray-400">=</span>
+                            <span style="color: #94a3b8;">=</span>
                         @endif
                     </div>
                 </div>
@@ -105,11 +124,11 @@
     @if($risultati)
         <!-- Intestazione Risultati -->
         <div class="mt-4 mb-2">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+            <h2 class="text-xl font-bold" style="color: #ffffff;">
                 Risultati del Confronto
             </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                Confronto tra <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-semibold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
+            <p class="text-sm mt-1" style="color: #cbd5e1;">
+                Confronto tra <span class="font-bold" style="color: #ffffff;">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-bold" style="color: #29f48f;">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
             </p>
         </div>
 
@@ -119,20 +138,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Fatturato Lordo</span>
+                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Fatturato Lordo</span>
                         <x-filament::icon icon="heroicon-o-currency-euro" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
                         € {{ number_format($risultati['revenue_2'], 2, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
+                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
                         Precedente: € {{ number_format($risultati['revenue_1'], 2, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
                     @if($risultati['revenue_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +€{{ number_format($risultati['revenue_diff'], 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -140,7 +159,7 @@
                             @endif
                         </span>
                     @elseif($risultati['revenue_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -€{{ number_format(abs($risultati['revenue_diff']), 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -148,7 +167,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
                             = € 0,00
                         </span>
                     @endif
@@ -159,20 +178,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Biglietti Venduti</span>
+                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Biglietti Venduti</span>
                         <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
                         {{ number_format($risultati['tickets_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
+                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
                         Precedente: {{ number_format($risultati['tickets_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
                     @if($risultati['tickets_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['tickets_diff'], 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -180,7 +199,7 @@
                             @endif
                         </span>
                     @elseif($risultati['tickets_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['tickets_diff']), 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -188,7 +207,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
                             = 0
                         </span>
                     @endif
@@ -199,20 +218,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Ordini Conclusi</span>
+                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Ordini Conclusi</span>
                         <x-filament::icon icon="heroicon-o-shopping-cart" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
                         {{ number_format($risultati['orders_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
+                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
                         Precedente: {{ number_format($risultati['orders_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
-                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
                     @if($risultati['orders_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['orders_diff'], 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -220,7 +239,7 @@
                             @endif
                         </span>
                     @elseif($risultati['orders_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['orders_diff']), 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -228,7 +247,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
                             = 0
                         </span>
                     @endif
@@ -242,22 +261,22 @@
                 <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center glossy-card p-4 gap-4">
                     <div class="flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-5 w-5 text-primary-500" />
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
+                        <span class="text-sm font-bold" style="color: #ffffff;">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
                     </div>
-                    <select x-model="filterMonth" class="text-xs bg-white dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-700 rounded-lg p-2 min-w-[160px] shadow-sm cursor-pointer">
-                        <option value="all" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Tutto il periodo</option>
-                        <option value="01" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Gennaio</option>
-                        <option value="02" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Febbraio</option>
-                        <option value="03" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Marzo</option>
-                        <option value="04" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Aprile</option>
-                        <option value="05" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Maggio</option>
-                        <option value="06" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Giugno</option>
-                        <option value="07" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Luglio</option>
-                        <option value="08" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Agosto</option>
-                        <option value="09" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Settembre</option>
-                        <option value="10" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Ottobre</option>
-                        <option value="11" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Novembre</option>
-                        <option value="12" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Dicembre</option>
+                    <select x-model="filterMonth" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                        <option value="all" style="background-color: #0f172a !important; color: #ffffff !important;">Tutto il periodo</option>
+                        <option value="01" style="background-color: #0f172a !important; color: #ffffff !important;">Gennaio</option>
+                        <option value="02" style="background-color: #0f172a !important; color: #ffffff !important;">Febbraio</option>
+                        <option value="03" style="background-color: #0f172a !important; color: #ffffff !important;">Marzo</option>
+                        <option value="04" style="background-color: #0f172a !important; color: #ffffff !important;">Aprile</option>
+                        <option value="05" style="background-color: #0f172a !important; color: #ffffff !important;">Maggio</option>
+                        <option value="06" style="background-color: #0f172a !important; color: #ffffff !important;">Giugno</option>
+                        <option value="07" style="background-color: #0f172a !important; color: #ffffff !important;">Luglio</option>
+                        <option value="08" style="background-color: #0f172a !important; color: #ffffff !important;">Agosto</option>
+                        <option value="09" style="background-color: #0f172a !important; color: #ffffff !important;">Settembre</option>
+                        <option value="10" style="background-color: #0f172a !important; color: #ffffff !important;">Ottobre</option>
+                        <option value="11" style="background-color: #0f172a !important; color: #ffffff !important;">Novembre</option>
+                        <option value="12" style="background-color: #0f172a !important; color: #ffffff !important;">Dicembre</option>
                     </select>
                 </div>
             @endif

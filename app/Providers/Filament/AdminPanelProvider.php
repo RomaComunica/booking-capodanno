@@ -77,6 +77,11 @@ class AdminPanelProvider extends PanelProvider
             fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
         );
 
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
+        );
+
         // Register topbar glossy action buttons with brighter frosted glass background fallbacks
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::user-menu.before',
