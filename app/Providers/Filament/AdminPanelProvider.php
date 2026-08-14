@@ -41,7 +41,9 @@ class AdminPanelProvider extends PanelProvider
                 </div>
             '))
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('img/favicon-rc.png'))
+            ->assets([
+                \Filament\Support\Assets\Css::make('filament-theme-glossy', asset('css/filament-theme-glossy.css')),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

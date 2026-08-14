@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
     <form wire:submit="save">
         {{ $this->form }}
     </form>

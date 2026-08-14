@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
     <style>
         /* Direct Page Overrides for Comparatore High Contrast */
         .dark select,
