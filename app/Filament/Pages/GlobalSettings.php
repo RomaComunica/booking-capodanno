@@ -29,6 +29,65 @@ class GlobalSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        // Auto-sync payment methods into database without needing SSH migrations
+        try {
+            \Illuminate\Support\Facades\DB::table('tipo_pagamenti')->updateOrInsert(
+                ['idTipoPagamento' => 1],
+                [
+                    'nomePagamento' => 'PayPal (+2€ Costi Gestione)',
+                    'descrizioneTipoPagamento' => 'PayPal (+2€ Costi Gestione)',
+                    'descrizionePagamento' => 'Pagamento sicuro tramite PayPal (+2€ costi di gestione per biglietto)',
+                    'attivo' => 1,
+                ]
+            );
+            \Illuminate\Support\Facades\DB::table('tipo_pagamenti')->updateOrInsert(
+                ['idTipoPagamento' => 2],
+                [
+                    'nomePagamento' => 'Bonifico Bancario',
+                    'descrizioneTipoPagamento' => 'Bonifico Bancario',
+                    'descrizionePagamento' => 'Bonifico bancario anticipato',
+                    'attivo' => 1,
+                ]
+            );
+            \Illuminate\Support\Facades\DB::table('tipo_pagamenti')->updateOrInsert(
+                ['idTipoPagamento' => 4],
+                [
+                    'nomePagamento' => 'Ricarica PostePay',
+                    'descrizioneTipoPagamento' => 'Ricarica PostePay',
+                    'descrizionePagamento' => 'Ricarica su carta PostePay anticipata',
+                    'attivo' => 1,
+                ]
+            );
+            \Illuminate\Support\Facades\DB::table('tipo_pagamenti')->updateOrInsert(
+                ['idTipoPagamento' => 5],
+                [
+                    'nomePagamento' => 'Carta di Credito o Poste Pay',
+                    'descrizioneTipoPagamento' => 'Carta di Credito o Poste Pay',
+                    'descrizionePagamento' => 'Pagamento sicuro con Carta di Credito o PostePay',
+                    'attivo' => 1,
+                ]
+            );
+
+            // Attach Ricarica PostePay (4) to all locations if not already present
+            if (\Illuminate\Support\Facades\Schema::hasTable('cross_pagamenti_location')) {
+                $locations = \Illuminate\Support\Facades\DB::table('location')->pluck('idLocation');
+                foreach ($locations as $locId) {
+                    \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')->updateOrInsert(
+                        [
+                            'idLocationPagamento' => $locId,
+                            'idPagamento' => 4,
+                        ],
+                        [
+                            'pagamentoLocationAttivo' => 1,
+                            'costoPagamento' => 0,
+                        ]
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore if tables don't exist yet
+        }
+
         $this->form->fill([
             'anno_riferimento' => Setting::getVal('anno_riferimento', date('Y')),
             'email_notifiche' => Setting::getVal('email_notifiche', 'info@capodannoroma.it'),
