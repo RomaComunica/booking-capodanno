@@ -11,8 +11,8 @@
     /* Light Theme Glass Variables */
     --glass-bg: #ffffff;
     --glass-bg-hover: #ffffff;
-    --glass-border: rgba(0, 0, 0, 0.06);
-    --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --glass-border: #e2e8f0;
+    --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     --bg-canvas: #f8fafc;
 }
 
@@ -34,6 +34,23 @@ body.fi-body {
 .dark, .dark body, .dark .fi-body {
     background-color: #090d16 !important;
     color: #f8fafc !important;
+}
+
+/* DISABLE FILAMENT 3 HEAVY TAILWIND RINGS & DOUBLE BOX SHADOWS GLOBALLY */
+.fi-section,
+.fi-card,
+.fi-widget,
+.fi-input-wrp,
+.fi-fo-field-wrp,
+.fi-fieldset,
+.fi-ta-content,
+.fi-modal-window,
+[class*="fi-fo-"],
+[class*="fi-input"],
+[class*="fi-section"] {
+    --tw-ring-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    box-shadow: none !important;
 }
 
 /* Glossy Brand Logo Badge */
@@ -72,7 +89,7 @@ body.fi-body {
     height: 30px !important;
 }
 
-/* Clean, Light Cards & Sections (NO borders on field wrappers) */
+/* Clean, Light Cards & Sections */
 .fi-section,
 .fi-card,
 .fi-widget,
@@ -81,7 +98,6 @@ body.fi-body {
 .glossy-card {
     background-color: var(--glass-bg) !important;
     border: 1px solid var(--glass-border) !important;
-    box-shadow: var(--glass-shadow) !important;
     border-radius: 12px !important;
     transition: all 0.2s ease;
 }
@@ -97,25 +113,15 @@ body.fi-body {
     color: #f8fafc !important;
 }
 
-/* REMOVE ALL HEAVY BORDERS FROM FORM FIELD WRAPPERS */
+/* NO BORDERS ON FIELD WRAPPERS */
 .fi-fo-field-wrp,
 .dark .fi-fo-field-wrp {
     border: none !important;
-    box-shadow: none !important;
     background: transparent !important;
     border-radius: 0 !important;
 }
 
-/* Inner Card Containers */
-.dark .bg-white\/60 {
-    background-color: rgba(30, 41, 59, 0.6) !important;
-}
-
-.dark .bg-gray-50 {
-    background-color: #1e293b !important;
-}
-
-/* Form Inputs, Selects & Option Dropdowns */
+/* Form Inputs, Selects & Option Dropdowns (Clean 1px Border, No Rings) */
 .dark select,
 .dark select option,
 .dark input,
@@ -125,8 +131,8 @@ body.fi-body {
 .dark .fi-select-input {
     background-color: #1e293b !important;
     color: #ffffff !important;
-    border: 1px solid #334155 !important;
-    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
 }
 
 .dark select option {
@@ -143,7 +149,7 @@ html:not(.dark) .fi-select-input {
     background-color: #ffffff !important;
     color: #0f172a !important;
     border: 1px solid #cbd5e1 !important;
-    box-shadow: none !important;
+    border-radius: 8px !important;
 }
 
 /* Text & Typography Contrast */
