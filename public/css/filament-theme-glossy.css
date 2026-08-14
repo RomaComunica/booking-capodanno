@@ -43,12 +43,50 @@ body.fi-body {
     min-height: 100vh;
 }
 
-/* Dark Mode Logo invert so dark text becomes crisp white */
+/* Sleek Glossy White Glass Pill for Logo in Dark Mode */
+.dark .fi-logo,
+.dark .fi-sidebar-header a,
+.dark a.fi-logo,
+.dark [class*="fi-logo"] {
+    background: rgba(255, 255, 255, 0.94) !important;
+    padding: 6px 14px !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 .dark .fi-logo img,
 .dark .fi-sidebar-header img,
 .dark [class*="fi-logo"] img,
 .dark img[src*="logo"] {
-    filter: brightness(0) invert(1) drop-shadow(0 1px 3px rgba(255, 255, 255, 0.2)) !important;
+    filter: none !important;
+    max-height: 32px !important;
+    width: auto !important;
+    object-fit: contain !important;
+}
+
+/* Light Mode Logo container */
+.fi-logo,
+.fi-sidebar-header a,
+a.fi-logo {
+    display: inline-flex !important;
+    align-items: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.fi-logo img,
+.fi-sidebar-header img,
+img[src*="logo"] {
+    max-height: 34px !important;
+    width: auto !important;
+    object-fit: contain !important;
 }
 
 /* Glass Cards, Sections & Widgets */
@@ -150,11 +188,16 @@ body.fi-body {
 }
 
 .dark .glossy-btn-site:hover {
-    background: rgba(12, 82, 137, 0.3) !important;
+    background: rgba(12, 82, 137, 0.35) !important;
     border-color: #29f48f !important;
     color: #29f48f !important;
-    box-shadow: 0 0 12px rgba(41, 244, 143, 0.3) !important;
+    box-shadow: 0 0 14px rgba(41, 244, 143, 0.35) !important;
     transform: translateY(-1px) !important;
+}
+
+.dark .glossy-btn-site:hover span,
+.dark .glossy-btn-site:hover svg {
+    color: #29f48f !important;
 }
 
 /* Button 2: Svuota Cache (Fuchsia) */
@@ -183,8 +226,13 @@ body.fi-body {
     background: rgba(221, 7, 109, 0.25) !important;
     border-color: #DD076D !important;
     color: #ffffff !important;
-    box-shadow: 0 0 14px rgba(221, 7, 109, 0.4) !important;
+    box-shadow: 0 0 14px rgba(221, 7, 109, 0.45) !important;
     transform: translateY(-1px) !important;
+}
+
+.dark .glossy-btn-cache:hover span,
+.dark .glossy-btn-cache:hover svg {
+    color: #ffffff !important;
 }
 
 /* Tables & Headings */
