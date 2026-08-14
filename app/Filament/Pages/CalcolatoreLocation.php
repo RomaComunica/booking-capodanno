@@ -120,16 +120,37 @@ class CalcolatoreLocation extends Page implements HasForms
             ->orderBy('ordini.dataOrdine', 'desc')
             ->get();
 
-        // Load tipologie in memory to prevent duplicate rows
+        // Load tipologie in memory to prevent duplicate rows with robust multi-tier fallback
         $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
-        $tipologie = [];
-        if (!empty($idIngressoOrdini)) {
-            $tipologie = DB::table('tipologia_ingresso')
-                ->whereIn('idIngressoCont', $idIngressoOrdini)
-                ->get()
-                ->keyBy('idIngressoCont')
-                ->toArray();
-        }
+        $ticketNames = $righe->pluck('nomeIngressoOrdine')->unique()->filter()->toArray();
+
+        $tipologieByCont = DB::table('tipologia_ingresso')
+            ->whereIn('idIngressoCont', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngressoCont')
+            ->toArray();
+
+        $tipologieById = DB::table('tipologia_ingresso')
+            ->whereIn('idIngresso', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngresso')
+            ->toArray();
+
+        $tipologieByNameLoc = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso) . '_' . $item->idLocation;
+            })
+            ->toArray();
+
+        $tipologieByName = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso);
+            })
+            ->toArray();
 
         $totaleVenduto = 0;
         $totaleProvvigioni = 0;
@@ -145,9 +166,13 @@ class CalcolatoreLocation extends Page implements HasForms
         foreach ($righe as $index => $riga) {
             $venduto = (float)$riga->venduto;
             
-            $tipologia = $tipologie[$riga->idIngressoOrdine] ?? null;
-            $tipoProvvigione = $tipologia ? ($tipologia->tipoProvvigione ?? 0) : 0;
-            $valoreProvvigione = $tipologia ? ($tipologia->valoreProvvigione ?? 0) : 0;
+            $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                ?? $tipologieById[$riga->idIngressoOrdine]
+                ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocation] ?? null)
+                ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+            $tipoProvvigione = $tipologia ? (int)$tipologia->tipoProvvigione : 0;
+            $valoreProvvigione = $tipologia ? (float)$tipologia->valoreProvvigione : 0.0;
             
             // Calcola provvigione (nostro guadagno)
             if ($tipoProvvigione == 1) {
@@ -155,7 +180,7 @@ class CalcolatoreLocation extends Page implements HasForms
                 $provvigione = ($venduto / 100) * $valoreProvvigione;
             } else {
                 // Fissa per biglietto
-                $provvigione = $valoreProvvigione * $riga->quantitaIngressoOrdine;
+                $provvigione = $valoreProvvigione * (int)$riga->quantitaIngressoOrdine;
             }
             
             // Quota spettante alla location

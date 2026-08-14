@@ -105,27 +105,66 @@ class StatisticsService
     public function getTotalCommissions($year)
     {
         $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->join('tipologia_ingresso', 'righe_ordine.idIngressoOrdine', '=', 'tipologia_ingresso.idIngressoCont')
             ->whereYear('ordini.dataOrdine', $year)
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'righe_ordine.prezzoIngressoOrdine',
                 'righe_ordine.quantitaIngressoOrdine',
-                'tipologia_ingresso.tipoProvvigione',
-                'tipologia_ingresso.valoreProvvigione',
+                'righe_ordine.idIngressoOrdine',
+                'righe_ordine.nomeIngressoOrdine',
+                'ordini.idLocationOrdine',
             ])
             ->get();
 
+        $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
+        $ticketNames = $righe->pluck('nomeIngressoOrdine')->unique()->filter()->toArray();
+
+        $tipologieByCont = DB::table('tipologia_ingresso')
+            ->whereIn('idIngressoCont', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngressoCont')
+            ->toArray();
+
+        $tipologieById = DB::table('tipologia_ingresso')
+            ->whereIn('idIngresso', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngresso')
+            ->toArray();
+
+        $tipologieByNameLoc = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso) . '_' . $item->idLocation;
+            })
+            ->toArray();
+
+        $tipologieByName = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso);
+            })
+            ->toArray();
+
         $totalCommissions = 0;
         foreach ($righe as $riga) {
-            $subtotal = $riga->prezzoIngressoOrdine * $riga->quantitaIngressoOrdine;
+            $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
             
-            if ($riga->tipoProvvigione == 1) {
-                // Percentage
-                $commission = ($subtotal / 100) * $riga->valoreProvvigione;
+            $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                ?? $tipologieById[$riga->idIngressoOrdine]
+                ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocationOrdine] ?? null)
+                ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+            $tipoProvvigione = $tipologia ? (int)$tipologia->tipoProvvigione : 0;
+            $valoreProvvigione = $tipologia ? (float)$tipologia->valoreProvvigione : 0.0;
+
+            if ($tipoProvvigione == 1) {
+                // Percentuale
+                $commission = ($subtotal / 100) * $valoreProvvigione;
             } else {
-                // Fixed
-                $commission = $riga->valoreProvvigione * $riga->quantitaIngressoOrdine;
+                // Fisso per biglietto
+                $commission = $valoreProvvigione * (int)$riga->quantitaIngressoOrdine;
             }
             
             $totalCommissions += $commission;

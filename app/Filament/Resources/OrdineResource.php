@@ -254,12 +254,32 @@ class OrdineResource extends Resource
                     ->tooltip(fn ($record) => $record->noteOrdine ?: null)
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextInputColumn::make('tavolo')
+                Tables\Columns\TextColumn::make('tavolo')
                     ->label('Tavolo')
                     ->placeholder('—')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(),
+                    ->limit(15)
+                    ->tooltip(fn ($record) => $record->tavolo ? 'Tavolo: ' . $record->tavolo . ' (Clicca per modificare)' : 'Clicca per assegnare un tavolo')
+                    ->action(
+                        Tables\Actions\Action::make('modifica_tavolo')
+                            ->modalHeading(fn ($record) => 'Assegna / Modifica Tavolo (Ordine #' . $record->numeroOrdine . ')')
+                            ->modalDescription(fn ($record) => 'Cliente: ' . $record->nomeClienteOrdine . ' ' . $record->cognomeClienteOrdine . ' | ' . ($record->location?->nomeLocation ?? ''))
+                            ->form([
+                                Forms\Components\TextInput::make('tavolo')
+                                    ->label('Nome o Numero Tavolo')
+                                    ->placeholder('Es. Rossi, Tavolo 5, ecc.')
+                                    ->maxLength(100)
+                                    ->default(fn ($record) => $record->tavolo),
+                            ])
+                            ->action(function ($record, array $data) {
+                                $record->update(['tavolo' => trim($data['tavolo'] ?? '')]);
+                                Notification::make()
+                                    ->title('Tavolo aggiornato con successo')
+                                    ->success()
+                                    ->send();
+                            })
+                    ),
             ])
             ->filters([
                 // Ricerca libera
