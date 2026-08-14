@@ -122,7 +122,9 @@
                 </tr>
             </thead>
             <tbody>
+                @php $totaleBigliettiVoucher = 0; @endphp
                 @foreach($orderLines as $line)
+                @php $totaleBigliettiVoucher += ((float)$line->prezzoIngressoOrdine * (int)$line->quantitaIngressoOrdine); @endphp
                 <tr>
                     <td>
                         @if($line->ingressoSenzaDataOrdine)
@@ -138,7 +140,7 @@
                 @endforeach
                 <tr>
                     <td colspan="3" class="text-right"><strong>TOTALE:</strong></td>
-                    <td class="text-right"><strong>€ {{ number_format($order->totaleOrdine, 2, ',', '.') }}</strong></td>
+                    <td class="text-right"><strong>€ {{ number_format($totaleBigliettiVoucher, 2, ',', '.') }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -147,7 +149,7 @@
 
         <h3 style="color: #d9534f; margin-top: 25px;">ISTRUZIONI E CONDIZIONI</h3>
         <p>
-            <strong>A titolo di conferma della prenotazione è stato versato il saldo tramite {{ $order->tipoPagamento->descrizioneTipoPagamento ?? 'Pagamento' }}.</strong>
+            <strong>A titolo di conferma della prenotazione è stato versato il saldo tramite {{ $order->tipoPagamento->descrizioneTipoPagamento ?? $order->tipoPagamento->nomePagamento ?? 'Pagamento' }}.</strong>
         </p>
 
         <div class="steps-container" style="display: flex; gap: 15px; margin: 25px 0; flex-wrap: wrap;">

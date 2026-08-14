@@ -81,8 +81,11 @@
                     <strong>Stampa il Voucher</strong>
                 </a>
             @else
-                <strong>Attenzione:</strong> Il tuo ordine è temporaneamente in attesa di pagamento.<br>
-                Non appena il pagamento sarà verificato dal nostro staff, riceverai il tuo Voucher ufficiale.
+                <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 15px 0;">
+                    <strong>Attenzione:</strong> Il tuo ordine è temporaneamente in attesa di pagamento.<br>
+                    <strong style="color: #d9534f; font-size: 15px;">Ricorda che il tuo ordine sarà effettivo solo dopo il relativo pagamento.</strong><br>
+                    Non appena il pagamento sarà verificato dal nostro staff, potrai accedere al tuo Voucher ufficiale.
+                </div>
             @endif
         </p>
 
@@ -130,16 +133,24 @@
 
         <h5><strong>PAGAMENTO</strong></h5>
         <p>
-            {{ $order->tipoPagamento->descrizioneTipoPagamento ?? 'N/D' }}<br>
+            {{ $order->tipoPagamento->descrizioneTipoPagamento ?? $order->tipoPagamento->nomePagamento ?? 'N/D' }}<br>
             @if($order->statoOrdine == 0)
                 <span style="color: #f0ad4e; font-weight: bold;">In attesa di accredito.</span><br><br>
                 @if($order->tipoPagamentoOrdine == 2)
                     <strong>Coordinate Bancarie per il Bonifico:</strong><br>
-                    Intestatario: {{ \App\Models\Setting::getVal('intestatario_bonifico', 'Da Configurare nel Pannello Amministratore') }}<br>
-                    IBAN: {{ \App\Models\Setting::getVal('iban_bonifico', 'Da Configurare nel Pannello Amministratore') }}<br>
+                    Intestatario: {{ \App\Models\Setting::getVal('intestatario_bonifico', '') }}<br>
+                    IBAN: {{ \App\Models\Setting::getVal('iban_bonifico', '') }}<br>
                     Causale: Ordine #{{ $order->numeroOrdine }} - {{ $order->nomeClienteOrdine }} {{ $order->cognomeClienteOrdine }}<br>
                     <br>
                     <em>Per velocizzare l'emissione del voucher, puoi inviare copia della contabile rispondendo a questa email.</em>
+                @elseif($order->tipoPagamentoOrdine == 4)
+                    <strong>Dati per la Ricarica PostePay:</strong><br>
+                    Intestatario Carta: {{ \App\Models\Setting::getVal('intestatario_postepay', '') }}<br>
+                    Numero Carta: {{ \App\Models\Setting::getVal('numero_carta_postepay', '') }}<br>
+                    Codice Fiscale: {{ \App\Models\Setting::getVal('codice_fiscale_postepay', '') }}<br>
+                    Causale / Riferimento: Ordine #{{ $order->numeroOrdine }} - {{ $order->nomeClienteOrdine }} {{ $order->cognomeClienteOrdine }}<br>
+                    <br>
+                    <em>Per velocizzare l'emissione del voucher, puoi inviare copia della ricevuta di ricarica rispondendo a questa email.</em>
                 @endif
             @else
                 <span class="success-text">Pagamento confermato.</span>

@@ -23,19 +23,34 @@ class StatisticsService
         $cancelledOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 1)->count();
         $totalOrders = $completedOrders + $pendingOrders + $cancelledOrders;
 
-        // Biglietti venduti raggruppati per metodo di pagamento
-        $ticketsByPayment = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->leftJoin('tipo_pagamenti', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamenti.idTipoPagamento')
+        // Biglietti venduti raggruppati per metodo di pagamento con etichette uniformate
+        $payments = DB::table('tipo_pagamenti')->pluck('nomePagamento', 'idTipoPagamento')->toArray();
+
+        $rows = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
             ->whereYear('ordini.dataOrdine', $year)
             ->where('ordini.statoOrdine', 2)
             ->select([
-                DB::raw("COALESCE(tipo_pagamenti.nomePagamento, 'Non specificato') as nome_pagamento"),
-                DB::raw("SUM(righe_ordine.quantitaIngressoOrdine) as totale_biglietti")
+                'ordini.tipoPagamentoOrdine',
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as totale_biglietti')
             ])
-            ->groupBy('nome_pagamento')
-            ->orderByDesc('totale_biglietti')
-            ->pluck('totale_biglietti', 'nome_pagamento')
-            ->toArray();
+            ->groupBy('ordini.tipoPagamentoOrdine')
+            ->get();
+
+        $ticketsByPayment = [];
+        foreach ($rows as $row) {
+            $id = (int)$row->tipoPagamentoOrdine;
+            // Se null o 0 -> Bonifico Bancario (storico non specificato)
+            if ($id === 0 || empty($id)) {
+                $name = 'Bonifico Bancario';
+            } elseif (isset($payments[$id])) {
+                $name = $payments[$id];
+            } else {
+                $name = 'Bonifico Bancario';
+            }
+            
+            $ticketsByPayment[$name] = ($ticketsByPayment[$name] ?? 0) + (int)$row->totale_biglietti;
+        }
+        arsort($ticketsByPayment);
 
         $totalRevenue = $this->getTotalRevenue($year);
         $totalTickets = $this->getTotalTickets($year);

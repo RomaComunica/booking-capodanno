@@ -222,7 +222,7 @@ class OrdineResource extends Resource
                 Tables\Columns\TextColumn::make('tipoPagamento.nomePagamento')
                     ->label('Metodo Pagamento')
                     ->badge()
-                    ->placeholder('—')
+                    ->default('Bonifico Bancario')
                     ->sortable(),
                 
                 Tables\Columns\IconColumn::make('dataPagamentoOrdineFornitore')

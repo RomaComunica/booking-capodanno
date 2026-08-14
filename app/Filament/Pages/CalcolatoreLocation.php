@@ -212,7 +212,7 @@ class CalcolatoreLocation extends Page implements HasForms
                 'venduto' => $venduto,
                 'provvigione' => $provvigione,
                 'dare' => $dare,
-                'metodo_pagamento' => $riga->nomePagamento ?: 'Non specificato',
+                'metodo_pagamento' => $riga->nomePagamento ?: 'Bonifico Bancario',
                 'is_pagata_location' => $isPaid,
                 'data_pagamento_location' => $riga->dataPagamentoOrdineFornitore,
                 'note' => $riga->noteOrdine,

@@ -38,6 +38,10 @@ class GlobalSettings extends Page implements HasForms
             'bonifico_enabled' => Setting::getVal('bonifico_enabled', true),
             'iban_bonifico' => Setting::getVal('iban_bonifico', ''),
             'intestatario_bonifico' => Setting::getVal('intestatario_bonifico', ''),
+            'postepay_enabled' => Setting::getVal('postepay_enabled', true),
+            'intestatario_postepay' => Setting::getVal('intestatario_postepay', ''),
+            'numero_carta_postepay' => Setting::getVal('numero_carta_postepay', ''),
+            'codice_fiscale_postepay' => Setting::getVal('codice_fiscale_postepay', ''),
             'voucher_footer_text' => Setting::getVal('voucher_footer_text', ''),
             'google_analytics_id' => Setting::getVal('google_analytics_id', ''),
             'facebook_pixel_id' => Setting::getVal('facebook_pixel_id', ''),
@@ -74,10 +78,10 @@ class GlobalSettings extends Page implements HasForms
                         Tabs\Tab::make('Gateway Pagamento')
                             ->schema([
                                 Toggle::make('paypal_enabled')
-                                    ->label('Abilita PayPal'),
+                                    ->label('Abilita PayPal (+2€ Costi Gestione)'),
                                 
                                 Toggle::make('nexi_enabled')
-                                    ->label('Abilita Nexi XPay'),
+                                    ->label('Abilita Nexi XPay (Carta di Credito o Poste Pay)'),
                                 
                                 Section::make('Bonifico Bancario')
                                     ->schema([
@@ -88,6 +92,19 @@ class GlobalSettings extends Page implements HasForms
                                         TextInput::make('iban_bonifico')
                                             ->label('Coordinate IBAN'),
                                     ]),
+
+                                Section::make('Ricarica PostePay')
+                                    ->schema([
+                                        Toggle::make('postepay_enabled')
+                                            ->label('Abilita Ricarica PostePay'),
+                                        TextInput::make('intestatario_postepay')
+                                            ->label('Intestatario Carta'),
+                                        TextInput::make('numero_carta_postepay')
+                                            ->label('Numero Carta'),
+                                        TextInput::make('codice_fiscale_postepay')
+                                            ->label('Codice Fiscale'),
+                                    ])
+                                    ->columns(3),
                             ]),
                         Tabs\Tab::make('Voucher')
                             ->schema([
@@ -124,6 +141,10 @@ class GlobalSettings extends Page implements HasForms
         Setting::setVal('pagamenti', 'bonifico_enabled', $data['bonifico_enabled'], 'boolean');
         Setting::setVal('pagamenti', 'iban_bonifico', $data['iban_bonifico'], 'string');
         Setting::setVal('pagamenti', 'intestatario_bonifico', $data['intestatario_bonifico'], 'string');
+        Setting::setVal('pagamenti', 'postepay_enabled', $data['postepay_enabled'], 'boolean');
+        Setting::setVal('pagamenti', 'intestatario_postepay', $data['intestatario_postepay'], 'string');
+        Setting::setVal('pagamenti', 'numero_carta_postepay', $data['numero_carta_postepay'], 'string');
+        Setting::setVal('pagamenti', 'codice_fiscale_postepay', $data['codice_fiscale_postepay'], 'string');
         Setting::setVal('voucher', 'voucher_footer_text', $data['voucher_footer_text'], 'string');
         Setting::setVal('marketing', 'google_analytics_id', $data['google_analytics_id'] ?? '', 'string');
         Setting::setVal('marketing', 'facebook_pixel_id', $data['facebook_pixel_id'] ?? '', 'string');

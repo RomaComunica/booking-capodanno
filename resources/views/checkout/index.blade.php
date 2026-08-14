@@ -285,7 +285,7 @@
 
                 <hr class="divider">
 
-                {{-- Total with Shipping --}}
+                {{-- Total with Shipping and PayPal Surcharge --}}
                 <div class="checkout-section summary-box mb-4">
                     <div class="summary-row">
                         <div>
@@ -295,6 +295,14 @@
                         <div class="text-right">
                             <p class="font-bold">€{{ number_format($totaleAcquisto, 2, ',', '.') }}</p>
                             <p class="font-bold" id="shipping-cost">€0,00</p>
+                        </div>
+                    </div>
+                    <div class="summary-row mt-1" id="paypal-fee-row" style="display: none;">
+                        <div>
+                            <p class="text-secondary">Costi gestione PayPal (+€2/biglietto):</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-primary" id="paypal-fee-amount">€0,00</p>
                         </div>
                     </div>
                     <hr class="divider my-2">
@@ -335,22 +343,45 @@
 
 @push('scripts')
 <script>
-// Dynamic shipping cost calculation
-const subtotal = {{ $totaleAcquisto }};
-const shippingMethods = document.querySelectorAll('.shipping-method');
+// Dynamic shipping and PayPal fee calculation
+const subtotal = {{ (float)$totaleAcquisto }};
+const totalTickets = {{ (int)array_sum(array_column($cart, 'quantita')) }};
+const paypalFeePerTicket = 2.0;
 
-shippingMethods.forEach(method => {
-    method.addEventListener('change', function() {
-        const shippingCost = parseFloat(this.dataset.cost) || 0;
-        const total = subtotal + shippingCost;
-        
-        // Update shipping cost display
-        document.getElementById('shipping-cost').textContent = '€' + shippingCost.toFixed(2).replace('.', ',');
-        
-        // Update total display
-        document.getElementById('total-amount').textContent = '€' + total.toFixed(2).replace('.', ',');
-    });
-});
+function updateTotal() {
+    const selectedShipping = document.querySelector('.shipping-method:checked');
+    const shippingCost = selectedShipping ? (parseFloat(selectedShipping.dataset.cost) || 0) : 0;
+    
+    const selectedPayment = document.querySelector('input[name="tipoPagamento"]:checked');
+    const isPayPal = selectedPayment && selectedPayment.value === '1';
+    const paypalFee = isPayPal ? (totalTickets * paypalFeePerTicket) : 0;
+    
+    const shippingEl = document.getElementById('shipping-cost');
+    if (shippingEl) {
+        shippingEl.textContent = '€' + shippingCost.toFixed(2).replace('.', ',');
+    }
+    
+    const paypalRow = document.getElementById('paypal-fee-row');
+    const paypalAmountEl = document.getElementById('paypal-fee-amount');
+    if (paypalRow && paypalAmountEl) {
+        if (isPayPal && paypalFee > 0) {
+            paypalRow.style.display = 'flex';
+            paypalAmountEl.textContent = '+€' + paypalFee.toFixed(2).replace('.', ',');
+        } else {
+            paypalRow.style.display = 'none';
+        }
+    }
+    
+    const total = subtotal + shippingCost + paypalFee;
+    const totalAmountEl = document.getElementById('total-amount');
+    if (totalAmountEl) {
+        totalAmountEl.textContent = '€' + total.toFixed(2).replace('.', ',');
+    }
+}
+
+document.querySelectorAll('.shipping-method').forEach(el => el.addEventListener('change', updateTotal));
+document.querySelectorAll('input[name="tipoPagamento"]').forEach(el => el.addEventListener('change', updateTotal));
+document.addEventListener('DOMContentLoaded', updateTotal);
 
 function validateForm() {
     const nome = document.getElementById('nome').value.trim();

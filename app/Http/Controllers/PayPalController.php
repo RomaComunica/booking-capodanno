@@ -36,7 +36,11 @@ class PayPalController extends Controller
             $shippingCost = $shipping ? $shipping->costoSpedizione : 0;
         }
 
-        $totalAmount = $totaleAcquisto + $shippingCost;
+        // Calculate PayPal fee (+2€ per ticket)
+        $totalTickets = (int)array_sum(array_column($cart, 'quantita'));
+        $paypalFee = 2.00 * $totalTickets;
+
+        $totalAmount = $totaleAcquisto + $shippingCost + $paypalFee;
 
         // Prepare line items for PayPal
         $items = [];
@@ -45,6 +49,15 @@ class PayPalController extends Controller
                 'name' => $item['nomeIngresso'],
                 'price' => $item['prezzoIngresso'],
                 'quantity' => $item['quantita'],
+            ];
+        }
+
+        // Add PayPal fee line item if > 0
+        if ($paypalFee > 0) {
+            $items[] = [
+                'name' => 'Costi di gestione PayPal (+2€/biglietto)',
+                'price' => $paypalFee,
+                'quantity' => 1,
             ];
         }
 

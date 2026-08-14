@@ -48,6 +48,9 @@ class CheckoutController extends Controller
             if ($method->idTipoPagamento == 2 && !\App\Models\Setting::getVal('bonifico_enabled', true)) {
                 return false;
             }
+            if ($method->idTipoPagamento == 4 && !\App\Models\Setting::getVal('postepay_enabled', true)) {
+                return false;
+            }
             if ($method->idTipoPagamento == 5 && !\App\Models\Setting::getVal('nexi_enabled', true)) {
                 return false;
             }

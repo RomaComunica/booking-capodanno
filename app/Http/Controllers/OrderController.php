@@ -55,8 +55,8 @@ class OrderController extends Controller
             $numeroVoucher = $this->generateVoucherNumber();
             \Log::info('Generated voucher number', ['numeroVoucher' => $numeroVoucher]);
             
-            // Calculate total with shipping
-            $totaleOrdine = $this->calculateTotal($customer['tipoSpedizione']);
+            // Calculate total with shipping and payment surcharge
+            $totaleOrdine = $this->calculateTotal($customer['tipoSpedizione'], $customer['tipoPagamento'], $cart);
             \Log::info('Calculated total', ['totaleOrdine' => $totaleOrdine]);
             
             // Create order
@@ -171,7 +171,7 @@ class OrderController extends Controller
         return $lastVoucher ? (int)$lastVoucher->numeroVoucher + 1 : 100;
     }
     
-    private function calculateTotal($tipoSpedizione)
+    private function calculateTotal($tipoSpedizione, $tipoPagamento = null, $cart = [])
     {
         $subtotal = session('totaleAcquisto', 0);
         
@@ -181,21 +181,28 @@ class OrderController extends Controller
             ->where('idLocationSpedizione', session('idLocation'))
             ->first();
         
-        $shippingCost = $shipping ? $shipping->costoSpedizione : 0;
+        $shippingCost = $shipping ? (float)$shipping->costoSpedizione : 0.0;
         
-        return $subtotal + $shippingCost;
+        // Surcharge for PayPal (+2€ per ticket)
+        $paypalFee = 0.0;
+        if ((int)$tipoPagamento === 1 && !empty($cart)) {
+            $totalTickets = (int)array_sum(array_column($cart, 'quantita'));
+            $paypalFee = 2.00 * $totalTickets;
+        }
+        
+        return $subtotal + $shippingCost + $paypalFee;
     }
     
     private function createOrder($numeroOrdine, $customer, $idLocation, $partnerId, $totaleOrdine)
     {
-        $statoOrdine = 0;
+        $statoOrdine = 0; // 0 = In corso/in attesa
         $transazioneFornitore = null;
 
         if (session()->has('paypal_transaction_id')) {
-            $statoOrdine = 1; // Pagato
+            $statoOrdine = 2; // 2 = Completato
             $transazioneFornitore = session('paypal_transaction_id');
         } elseif (session()->has('nexi_transaction_id')) {
-            $statoOrdine = 1; // Pagato
+            $statoOrdine = 2; // 2 = Completato
             $transazioneFornitore = session('nexi_transaction_id');
         }
 
