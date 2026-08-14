@@ -16,7 +16,7 @@
             color: #0f172a !important;
         }
         .dark label, .dark .fi-fo-field-wrp-label, .dark .fi-fo-field-wrp-label span {
-            color: #f8fafc !important;
+            color: #ffffff !important;
             font-weight: 700 !important;
         }
         html:not(.dark) label, html:not(.dark) .fi-fo-field-wrp-label, html:not(.dark) .fi-fo-field-wrp-label span {
@@ -513,7 +513,7 @@
                                 :class="isYearActive('{{ $ds['year'] }}') ? 'bg-white dark:bg-slate-800 border-2 border-primary-500 shadow-sm opacity-100 font-bold' : 'bg-gray-100 dark:bg-slate-800/40 border border-gray-300 dark:border-slate-700 opacity-40 hover:opacity-75'"
                                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all cursor-pointer">
                             <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: {{ $ds['color'] }};"></span>
-                            <span class="text-gray-900 dark:text-white">{{ $ds['year'] }}</span>
+                            <span class="text-gray-900 dark:text-white font-bold">{{ $ds['year'] }}</span>
                         </button>
                     @endforeach
                 </div>
@@ -575,6 +575,13 @@
             let currentAllYearsMonth = 'all';
             let currentActiveYears = (@json($allYearsStats['years'] ?? [])).map(String);
 
+            const checkIsDark = function() {
+                return document.documentElement.classList.contains('dark') || 
+                       document.body.classList.contains('dark') ||
+                       document.documentElement.getAttribute('data-theme') === 'dark' ||
+                       (localStorage.getItem('theme') === 'dark');
+            };
+
             const getContext = function(containerId, canvasId) {
                 const container = document.getElementById(containerId);
                 if (!container) return null;
@@ -589,9 +596,9 @@
             const drawCharts = function(data, filterMonth) {
                 if (!data || !data.chartLabels || typeof Chart === 'undefined') return;
 
-                const isDark = document.documentElement.classList.contains('dark');
-                const textColor = isDark ? '#cbd5e1' : '#334155';
-                const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+                const isDark = checkIsDark();
+                const textColor = isDark ? '#ffffff' : '#0f172a';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
 
                 let labels = data.chartLabels;
                 let r1 = (data.chartData1 || []).map(function(d) { return d.revenue || 0; });
@@ -688,7 +695,7 @@
                             plugins: {
                                 legend: {
                                     position: 'top',
-                                    labels: { color: textColor, font: { weight: '600' } }
+                                    labels: { color: textColor, font: { weight: '700', size: 12 } }
                                 },
                                 tooltip: {
                                     mode: 'index',
@@ -707,12 +714,13 @@
                             },
                             scales: {
                                 x: {
-                                    ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
+                                    ticks: { color: textColor, maxRotation: 45, font: { weight: '600', size: 11 } },
                                     grid: { color: gridColor }
                                 },
                                 y: {
                                     ticks: {
                                         color: textColor,
+                                        font: { weight: '600', size: 11 },
                                         callback: function(value) { return '€ ' + value.toLocaleString('it-IT'); }
                                     },
                                     grid: { color: gridColor }
@@ -758,7 +766,7 @@
                             plugins: {
                                 legend: {
                                     position: 'top',
-                                    labels: { color: textColor, font: { weight: '600' } }
+                                    labels: { color: textColor, font: { weight: '700', size: 12 } }
                                 },
                                 tooltip: {
                                     mode: 'index',
@@ -767,11 +775,11 @@
                             },
                             scales: {
                                 x: {
-                                    ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
+                                    ticks: { color: textColor, maxRotation: 45, font: { weight: '600', size: 11 } },
                                     grid: { color: gridColor }
                                 },
                                 y: {
-                                    ticks: { color: textColor },
+                                    ticks: { color: textColor, font: { weight: '600', size: 11 } },
                                     grid: { color: gridColor }
                                 }
                             }
@@ -788,9 +796,9 @@
                     currentActiveYears = activeYears.map(String);
                 }
 
-                const isDark = document.documentElement.classList.contains('dark');
-                const textColor = isDark ? '#cbd5e1' : '#334155';
-                const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+                const isDark = checkIsDark();
+                const textColor = isDark ? '#ffffff' : '#0f172a';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
 
                 const ctxAllYears = getContext('allYearsChartContainer', 'allYearsRevenueChart');
                 if (!ctxAllYears) return;
@@ -887,7 +895,7 @@
                                 position: 'top',
                                 labels: {
                                     color: textColor,
-                                    font: { weight: '600', size: 11 },
+                                    font: { weight: '700', size: 12 },
                                     boxWidth: 14,
                                     padding: 10,
                                     usePointStyle: true
@@ -913,12 +921,13 @@
                         },
                         scales: {
                             x: {
-                                ticks: { color: textColor, font: { weight: '600' }, maxRotation: 45 },
+                                ticks: { color: textColor, font: { weight: '700', size: 11 }, maxRotation: 45 },
                                 grid: { color: gridColor }
                             },
                             y: {
                                 ticks: {
                                     color: textColor,
+                                    font: { weight: '700', size: 11 },
                                     callback: function(value) {
                                         return '€ ' + value.toLocaleString('it-IT');
                                     }
@@ -957,6 +966,14 @@
             init();
             setTimeout(init, 100);
             setTimeout(init, 300);
+
+            // MutationObserver to immediately update chart text contrast when theme is switched
+            try {
+                const themeObserver = new MutationObserver(function() {
+                    init();
+                });
+                themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+            } catch(e) {}
 
             // Listen to Livewire dynamic comparison submissions
             if (typeof Livewire !== 'undefined') {
