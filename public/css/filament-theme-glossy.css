@@ -37,6 +37,11 @@ body.fi-body {
     min-height: 100vh;
 }
 
+.dark, .dark body, .dark .fi-body {
+    background-color: #090d16 !important;
+    color: #f8fafc !important;
+}
+
 /* Glossy Brand Logo Badge */
 .glossy-brand-logo {
     display: inline-flex !important;
@@ -73,7 +78,7 @@ body.fi-body {
     height: 30px !important;
 }
 
-/* High Contrast Cards & Sections */
+/* All Cards, Panels, Sections, Modals in Dark Mode */
 .fi-section,
 .fi-card,
 .fi-widget,
@@ -93,22 +98,62 @@ body.fi-body {
 .dark .fi-card,
 .dark .fi-widget,
 .dark .fi-ta-content,
-.dark .glossy-card {
+.dark .fi-sidebar,
+.dark .fi-topbar,
+.dark .fi-fo-field-wrp,
+.dark .glossy-card,
+.dark [class*="fi-section"],
+.dark [class*="fi-card"] {
     background-color: #0f172a !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #f8fafc !important;
 }
 
-/* Form Inputs, Selects & Option Dropdowns (Cross-Browser Fix) */
+/* Inner Card Containers */
+.dark .bg-white\/60,
+.dark .bg-gray-50,
+.dark [class*="bg-gray-800"],
+.dark [class*="bg-slate-800"] {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Text & Typography Overrides for Dark Mode */
+.dark p,
+.dark span,
+.dark div,
+.dark label,
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+.dark td, .dark th,
+.dark .text-gray-400,
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-gray-700 {
+    color: #e2e8f0 !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-950,
+.dark .font-bold,
+.dark .font-semibold,
+.dark [class*="text-2xl"],
+.dark [class*="text-xl"],
+.dark [class*="text-lg"] {
+    color: #ffffff !important;
+}
+
+/* Form Inputs, Selects & Option Dropdowns (Cross-Browser Bulletproof Fix) */
+.dark input,
 .dark select,
 .dark select option,
-.dark input,
 .dark textarea,
+.dark .fi-input,
 .dark .fi-input-wrp,
 .dark .fi-select-input,
 .dark [class*="fi-input"] {
     background-color: #1e293b !important;
     color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .dark select option {
@@ -125,27 +170,6 @@ html:not(.dark) .fi-select-input {
     background-color: #ffffff !important;
     color: #0f172a !important;
     border-color: rgba(12, 82, 137, 0.2) !important;
-}
-
-/* Labels, Helper Text & Headings High Contrast */
-.dark .fi-section-header-heading,
-.dark .fi-header-heading,
-.dark h1, .dark h2, .dark h3, .dark h4, .dark h5 {
-    color: #ffffff !important;
-}
-
-.dark label,
-.dark .fi-fo-field-wrp-label,
-.dark .fi-fo-field-wrp-label span {
-    color: #f1f5f9 !important;
-    font-weight: 600 !important;
-}
-
-.dark p,
-.dark .fi-section-header-description,
-.dark .fi-fo-field-wrp-helper-text,
-.dark .fi-fo-field-wrp-hint {
-    color: #cbd5e1 !important;
 }
 
 /* Sidebar Styling */
@@ -341,10 +365,17 @@ html:not(.dark) .fi-select-input {
 }
 
 .dark .fi-badge-success,
-.dark .fi-color-success {
+.dark .fi-color-success,
+.dark .text-green-600,
+.dark .text-green-500,
+.dark .text-green-400 {
     color: #29f48f !important;
-    background-color: rgba(41, 244, 143, 0.12) !important;
-    border-color: rgba(41, 244, 143, 0.3) !important;
+}
+
+.dark .text-danger-600,
+.dark .text-danger-500,
+.dark .text-danger-400 {
+    color: #f472b6 !important;
 }
 
 /* Custom Glossy KPI Highlights */
