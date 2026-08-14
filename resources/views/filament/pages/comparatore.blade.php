@@ -1,15 +1,23 @@
 <x-filament-panels::page>
     <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
     <style>
-        /* Direct Page Overrides for Comparatore High Contrast */
+        /* Responsive High Contrast Overrides */
         .dark select,
-        .dark select option,
-        select option {
+        .dark select option {
             background-color: #1e293b !important;
             color: #ffffff !important;
         }
+        html:not(.dark) select,
+        html:not(.dark) select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
         .dark label, .dark .fi-fo-field-wrp-label, .dark .fi-fo-field-wrp-label span {
             color: #f8fafc !important;
+            font-weight: 700 !important;
+        }
+        html:not(.dark) label, html:not(.dark) .fi-fo-field-wrp-label, html:not(.dark) .fi-fo-field-wrp-label span {
+            color: #0f172a !important;
             font-weight: 700 !important;
         }
         .dark input, .dark .fi-input-wrp, .dark .fi-select-input {
@@ -17,13 +25,18 @@
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
         }
+        html:not(.dark) input, html:not(.dark) .fi-input-wrp, html:not(.dark) .fi-select-input {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
         .dark .glossy-table-row:hover,
         .dark .glossy-table-row:hover td {
             background-color: #1e293b !important;
             color: #ffffff !important;
         }
-        .glossy-table-row:hover,
-        .glossy-table-row:hover td {
+        html:not(.dark) .glossy-table-row:hover,
+        html:not(.dark) .glossy-table-row:hover td {
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
         }
@@ -32,86 +45,86 @@
     <!-- Sezione Fissa: Confronto del Giorno di Oggi con lo Scorso Anno -->
     @if($oggiStats)
         <div class="glossy-card p-6 mb-6">
-            <div class="flex items-center gap-2 mb-4 border-b border-gray-200/60 dark:border-slate-700/60 pb-3">
+            <div class="flex items-center gap-2 mb-4 border-b border-gray-200 dark:border-slate-700/60 pb-3">
                 <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
-                <h3 class="text-md font-bold" style="color: #ffffff;">Confronto Rapido: Oggi vs Stesso Giorno Anno Scorso</h3>
+                <h3 class="text-md font-bold text-gray-900 dark:text-white">Confronto Rapido: Oggi vs Stesso Giorno Anno Scorso</h3>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fatturato Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Fatturato Lordo</div>
-                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
+                        <div class="text-xs uppercase tracking-wider font-bold text-gray-600 dark:text-gray-300">Fatturato Lordo</div>
+                        <div class="text-2xl font-extrabold mt-1 text-gray-900 dark:text-white">
                             € {{ number_format($oggiStats['revenue_2'], 2, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold text-gray-600 dark:text-gray-300">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): € {{ number_format($oggiStats['revenue_1'], 2, ',', '.') }}</span>
                         @if($oggiStats['revenue_diff'] > 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-green-600 dark:text-green-400">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['revenue_diff'] < 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-danger-600 dark:text-danger-400">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @else
-                            <span style="color: #94a3b8;">=</span>
+                            <span class="text-gray-400 dark:text-gray-500">=</span>
                         @endif
                     </div>
                 </div>
 
                 <!-- Biglietti Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Biglietti Venduti</div>
-                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
+                        <div class="text-xs uppercase tracking-wider font-bold text-gray-600 dark:text-gray-300">Biglietti Venduti</div>
+                        <div class="text-2xl font-extrabold mt-1 text-gray-900 dark:text-white">
                             {{ number_format($oggiStats['tickets_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold text-gray-600 dark:text-gray-300">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['tickets_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['tickets_diff'] > 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-green-600 dark:text-green-400">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['tickets_diff'] < 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-danger-600 dark:text-danger-400">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @else
-                            <span style="color: #94a3b8;">=</span>
+                            <span class="text-gray-400 dark:text-gray-500">=</span>
                         @endif
                     </div>
                 </div>
 
                 <!-- Ordini Oggi -->
-                <div class="bg-white/60 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
+                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs uppercase tracking-wider font-bold" style="color: #cbd5e1;">Ordini Conclusi</div>
-                        <div class="text-2xl font-extrabold mt-1" style="color: #ffffff;">
+                        <div class="text-xs uppercase tracking-wider font-bold text-gray-600 dark:text-gray-300">Ordini Conclusi</div>
+                        <div class="text-2xl font-extrabold mt-1 text-gray-900 dark:text-white">
                             {{ number_format($oggiStats['orders_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold" style="color: #cbd5e1;">
+                    <div class="text-xs mt-2 pt-2 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold text-gray-600 dark:text-gray-300">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['orders_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['orders_diff'] > 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #29f48f;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-green-600 dark:text-green-400">
                                 <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['orders_diff'] < 0)
-                            <span class="font-bold inline-flex items-center gap-0.5" style="color: #f472b6;">
+                            <span class="font-bold inline-flex items-center gap-0.5 text-danger-600 dark:text-danger-400">
                                 <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @else
-                            <span style="color: #94a3b8;">=</span>
+                            <span class="text-gray-400 dark:text-gray-500">=</span>
                         @endif
                     </div>
                 </div>
@@ -135,11 +148,11 @@
     @if($risultati)
         <!-- Intestazione Risultati -->
         <div class="mt-4 mb-2">
-            <h2 class="text-xl font-bold" style="color: #ffffff;">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                 Risultati del Confronto
             </h2>
-            <p class="text-sm mt-1" style="color: #cbd5e1;">
-                Confronto tra <span class="font-bold" style="color: #ffffff;">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-bold" style="color: #29f48f;">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
+            <p class="text-sm mt-1 text-gray-600 dark:text-gray-300">
+                Confronto tra <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-bold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
             </p>
         </div>
 
@@ -149,20 +162,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Fatturato Lordo</span>
+                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Fatturato Lordo</span>
                         <x-filament::icon icon="heroicon-o-currency-euro" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
+                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
                         € {{ number_format($risultati['revenue_2'], 2, ',', '.') }}
                     </div>
-                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
+                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
                         Precedente: € {{ number_format($risultati['revenue_1'], 2, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['revenue_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +€{{ number_format($risultati['revenue_diff'], 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -170,7 +183,7 @@
                             @endif
                         </span>
                     @elseif($risultati['revenue_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -€{{ number_format(abs($risultati['revenue_diff']), 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -178,7 +191,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
                             = € 0,00
                         </span>
                     @endif
@@ -189,20 +202,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Biglietti Venduti</span>
+                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Biglietti Venduti</span>
                         <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
+                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
                         {{ number_format($risultati['tickets_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
+                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
                         Precedente: {{ number_format($risultati['tickets_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['tickets_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['tickets_diff'], 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -210,7 +223,7 @@
                             @endif
                         </span>
                     @elseif($risultati['tickets_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['tickets_diff']), 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -218,7 +231,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
                             = 0
                         </span>
                     @endif
@@ -229,20 +242,20 @@
             <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-bold uppercase tracking-wider" style="color: #cbd5e1;">Ordini Conclusi</span>
+                        <span class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ordini Conclusi</span>
                         <x-filament::icon icon="heroicon-o-shopping-cart" class="h-6 w-6 text-primary-500" />
                     </div>
-                    <div class="text-2xl font-extrabold" style="color: #ffffff;">
+                    <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
                         {{ number_format($risultati['orders_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm mt-1 font-semibold" style="color: #cbd5e1;">
+                    <div class="text-sm mt-1 font-semibold text-gray-600 dark:text-gray-300">
                         Precedente: {{ number_format($risultati['orders_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-semibold">
-                    <span class="text-sm" style="color: #cbd5e1;">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center justify-between font-semibold">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['orders_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(41, 244, 143, 0.15); color: #29f48f; border: 1px solid rgba(41, 244, 143, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['orders_diff'], 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -250,7 +263,7 @@
                             @endif
                         </span>
                     @elseif($risultati['orders_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full" style="background-color: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4);">
+                        <span class="inline-flex items-center gap-1 text-sm font-bold px-2.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['orders_diff']), 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -258,7 +271,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full" style="color: #cbd5e1; background-color: #1e293b;">
+                        <span class="inline-flex items-center text-sm font-semibold px-2.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800">
                             = 0
                         </span>
                     @endif
@@ -272,22 +285,22 @@
                 <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center glossy-card p-4 gap-4">
                     <div class="flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-5 w-5 text-primary-500" />
-                        <span class="text-sm font-bold" style="color: #ffffff;">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
                     </div>
-                    <select x-model="filterMonth" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
-                        <option value="all" style="background-color: #0f172a !important; color: #ffffff !important;">Tutto il periodo</option>
-                        <option value="01" style="background-color: #0f172a !important; color: #ffffff !important;">Gennaio</option>
-                        <option value="02" style="background-color: #0f172a !important; color: #ffffff !important;">Febbraio</option>
-                        <option value="03" style="background-color: #0f172a !important; color: #ffffff !important;">Marzo</option>
-                        <option value="04" style="background-color: #0f172a !important; color: #ffffff !important;">Aprile</option>
-                        <option value="05" style="background-color: #0f172a !important; color: #ffffff !important;">Maggio</option>
-                        <option value="06" style="background-color: #0f172a !important; color: #ffffff !important;">Giugno</option>
-                        <option value="07" style="background-color: #0f172a !important; color: #ffffff !important;">Luglio</option>
-                        <option value="08" style="background-color: #0f172a !important; color: #ffffff !important;">Agosto</option>
-                        <option value="09" style="background-color: #0f172a !important; color: #ffffff !important;">Settembre</option>
-                        <option value="10" style="background-color: #0f172a !important; color: #ffffff !important;">Ottobre</option>
-                        <option value="11" style="background-color: #0f172a !important; color: #ffffff !important;">Novembre</option>
-                        <option value="12" style="background-color: #0f172a !important; color: #ffffff !important;">Dicembre</option>
+                    <select x-model="filterMonth" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold shadow-sm cursor-pointer">
+                        <option value="all" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Tutto il periodo</option>
+                        <option value="01" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Gennaio</option>
+                        <option value="02" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Febbraio</option>
+                        <option value="03" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Marzo</option>
+                        <option value="04" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Aprile</option>
+                        <option value="05" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Maggio</option>
+                        <option value="06" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Giugno</option>
+                        <option value="07" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Luglio</option>
+                        <option value="08" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Agosto</option>
+                        <option value="09" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Settembre</option>
+                        <option value="10" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Ottobre</option>
+                        <option value="11" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Novembre</option>
+                        <option value="12" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white">Dicembre</option>
                     </select>
                 </div>
             @endif
@@ -297,7 +310,7 @@
                 <!-- Grafico Fatturato nel tempo -->
                 <x-filament::section class="h-full flex flex-col">
                     <x-slot name="heading">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 text-gray-900 dark:text-white">
                             <x-filament::icon icon="heroicon-o-chart-bar" class="h-6 w-6 text-primary-500" />
                             <span>Andamento temporale del Fatturato</span>
                         </div>
@@ -310,7 +323,7 @@
                 <!-- Grafico Biglietti nel tempo -->
                 <x-filament::section class="h-full flex flex-col">
                     <x-slot name="heading">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 text-gray-900 dark:text-white">
                             <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
                             <span>Andamento temporale dei Biglietti Venduti</span>
                         </div>
@@ -398,181 +411,178 @@
                 let currentFilterMonth = 'all';
 
                 const drawCharts = (data, filterMonth = 'all') => {
-                    if (!data) return;
-                    currentChartData = data;
-
                     const isDark = document.documentElement.classList.contains('dark');
-                    const textColor = isDark ? '#cbd5e1' : '#475569';
-                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+                    const textColor = isDark ? '#cbd5e1' : '#334155';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
 
-                    let labels = data.chartLabels;
-                    const p1Label = data.periodo_1_label;
-                    const p2Label = data.periodo_2_label;
+                    let labels = data.labels;
+                    let p1DataRev = data.p1.revenue;
+                    let p2DataRev = data.p2.revenue;
+                    let p1DataTick = data.p1.tickets;
+                    let p2DataTick = data.p2.tickets;
 
-                    // Extract datasets
-                    let r1 = data.chartData1.map(d => d.revenue);
-                    let r2 = data.chartData2.map(d => d.revenue);
-                    let t1 = data.chartData1.map(d => d.tickets);
-                    let t2 = data.chartData2.map(d => d.tickets);
-
-                    // Filter by month client-side if requested and it is daily data
-                    if (!data.isMonthly && filterMonth !== 'all') {
-                        labels = [];
-                        r1 = [];
-                        r2 = [];
-                        t1 = [];
-                        t2 = [];
-
-                        const count = Math.max(data.chartData1.length, data.chartData2.length);
-                        for (let i = 0; i < count; i++) {
-                            const d1 = data.chartData1[i] || {};
-                            const d2 = data.chartData2[i] || {};
-                            const dateStr = d2.date || d1.date;
-                            if (dateStr) {
-                                const parts = dateStr.split('-');
-                                const monthPart = parts[1]; // MM
-                                if (monthPart === filterMonth) {
-                                    const dayPart = parts[2]; // DD
-                                    labels.push("G. " + parseInt(dayPart));
-                                    r1.push(d1.revenue || 0);
-                                    r2.push(d2.revenue || 0);
-                                    t1.push(d1.tickets || 0);
-                                    t2.push(d2.tickets || 0);
-                                }
-                            }
-                        }
-
-                        // If no data points found for this month, show a fallback label
-                        if (labels.length === 0) {
-                            labels = ['Nessun dato'];
-                            r1 = [0];
-                            r2 = [0];
-                            t1 = [0];
-                            t2 = [0];
-                        }
+                    if (filterMonth !== 'all' && data.monthlyMap && data.monthlyMap[filterMonth]) {
+                        const indices = data.monthlyMap[filterMonth];
+                        labels = indices.map(i => data.labels[i]);
+                        p1DataRev = indices.map(i => data.p1.revenue[i]);
+                        p2DataRev = indices.map(i => data.p2.revenue[i]);
+                        p1DataTick = indices.map(i => data.p1.tickets[i]);
+                        p2DataTick = indices.map(i => data.p2.tickets[i]);
                     }
 
-                    // Destroy existing instances
+                    // Destruggi istanze esistenti
                     if (revenueChartInstance) revenueChartInstance.destroy();
                     if (ticketsChartInstance) ticketsChartInstance.destroy();
 
-                    // 1. Revenue Chart
-                    const ctxRev = document.getElementById('revenueComparisonChart').getContext('2d');
-                    revenueChartInstance = new Chart(ctxRev, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [
-                                {
-                                    label: p1Label,
-                                    data: r1,
-                                    borderColor: '#94a3b8',
-                                    backgroundColor: 'rgba(148, 163, 184, 0.15)',
-                                    fill: true,
-                                    tension: 0.3
-                                },
-                                {
-                                    label: p2Label,
-                                    data: r2,
-                                    borderColor: '#38bdf8',
-                                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
-                                    fill: true,
-                                    tension: 0.3
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false,
-                            },
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    labels: { color: textColor, font: { weight: 'bold' } }
-                                },
-                            },
-                            scales: {
-                                x: {
-                                    ticks: { color: textColor },
-                                    grid: { color: gridColor }
-                                },
-                                y: {
-                                    ticks: {
-                                        color: textColor,
-                                        callback: function(value) { return '€ ' + value.toLocaleString('it-IT'); }
+                    // Grafico Fatturato
+                    const ctxRev = document.getElementById('revenueComparisonChart')?.getContext('2d');
+                    if (ctxRev) {
+                        revenueChartInstance = new Chart(ctxRev, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: data.periodo_1_label,
+                                        data: p1DataRev,
+                                        borderColor: '#94a3b8',
+                                        backgroundColor: 'rgba(148, 163, 184, 0.15)',
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 2,
+                                        pointHoverRadius: 5
                                     },
-                                    grid: { color: gridColor }
+                                    {
+                                        label: data.periodo_2_label,
+                                        data: p2DataRev,
+                                        borderColor: '#0c5289',
+                                        backgroundColor: 'rgba(12, 82, 137, 0.2)',
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 3,
+                                        pointHoverRadius: 6
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                        labels: { color: textColor, font: { weight: '600' } }
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function(context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) label += ': ';
+                                                if (context.parsed.y !== null) {
+                                                    label += new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
+                                        grid: { color: gridColor }
+                                    },
+                                    y: {
+                                        ticks: {
+                                            color: textColor,
+                                            callback: function(value) {
+                                                return '€ ' + value.toLocaleString('it-IT');
+                                            }
+                                        },
+                                        grid: { color: gridColor }
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
 
-                    // 2. Tickets Chart
-                    const ctxTick = document.getElementById('ticketsComparisonChart').getContext('2d');
-                    ticketsChartInstance = new Chart(ctxTick, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [
-                                {
-                                    label: p1Label,
-                                    data: t1,
-                                    backgroundColor: '#94a3b8',
-                                    borderRadius: 4
-                                },
-                                {
-                                    label: p2Label,
-                                    data: t2,
-                                    backgroundColor: '#DD076D',
-                                    borderRadius: 4
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false,
+                    // Grafico Biglietti
+                    const ctxTick = document.getElementById('ticketsComparisonChart')?.getContext('2d');
+                    if (ctxTick) {
+                        ticketsChartInstance = new Chart(ctxTick, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: data.periodo_1_label,
+                                        data: p1DataTick,
+                                        borderColor: '#94a3b8',
+                                        backgroundColor: 'rgba(148, 163, 184, 0.15)',
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 2,
+                                        pointHoverRadius: 5
+                                    },
+                                    {
+                                        label: data.periodo_2_label,
+                                        data: p2DataTick,
+                                        borderColor: '#29f48f',
+                                        backgroundColor: 'rgba(41, 244, 143, 0.2)',
+                                        fill: true,
+                                        tension: 0.35,
+                                        pointRadius: 3,
+                                        pointHoverRadius: 6
+                                    }
+                                ]
                             },
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    labels: { color: textColor, font: { weight: 'bold' } }
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'top',
+                                        labels: { color: textColor, font: { weight: '600' } }
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false
+                                    }
                                 },
-                            },
-                            scales: {
-                                x: {
-                                    ticks: { color: textColor },
-                                    grid: { color: gridColor }
-                                },
-                                y: {
-                                    ticks: { color: textColor },
-                                    grid: { color: gridColor }
+                                scales: {
+                                    x: {
+                                        ticks: { color: textColor, maxRotation: 45, font: { size: 10 } },
+                                        grid: { color: gridColor }
+                                    },
+                                    y: {
+                                        ticks: { color: textColor },
+                                        grid: { color: gridColor }
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
                 };
 
-                // Draw initial charts
-                @if($risultati)
-                    drawCharts(@json($risultati), currentFilterMonth);
-                @endif
+                const initData = @json($risultati['chartData'] ?? null);
+                if (initData) {
+                    currentChartData = initData;
+                    drawCharts(currentChartData, currentFilterMonth);
+                }
 
-                // Listen to Livewire events for updates
-                window.addEventListener('draw-comparison-charts', (event) => {
-                    const data = event.detail.resultados || event.detail[0] || event.detail;
-                    drawCharts(data, currentFilterMonth);
+                Livewire.on('update-charts', (data) => {
+                    const chartData = Array.isArray(data) ? data[0] : data;
+                    if (chartData) {
+                        currentChartData = chartData;
+                        drawCharts(currentChartData, currentFilterMonth);
+                    }
                 });
 
-                // Listen to Alpine.js month filter events
-                window.addEventListener('filter-charts-month', (event) => {
-                    currentFilterMonth = event.detail;
-                    drawCharts(currentChartData, currentFilterMonth);
+                window.addEventListener('filter-charts-month', (e) => {
+                    currentFilterMonth = e.detail;
+                    if (currentChartData) {
+                        drawCharts(currentChartData, currentFilterMonth);
+                    }
                 });
             });
         </script>
