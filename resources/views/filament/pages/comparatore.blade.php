@@ -1,31 +1,31 @@
 <x-filament-panels::page>
     <!-- Sezione Fissa: Confronto del Giorno di Oggi con lo Scorso Anno -->
     @if($oggiStats)
-        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-800 mb-6">
-            <div class="flex items-center gap-2 mb-4 border-b border-gray-50 dark:border-gray-850 pb-3">
+        <div class="glossy-card p-6 mb-6">
+            <div class="flex items-center gap-2 mb-4 border-b border-gray-200/60 dark:border-slate-700/60 pb-3">
                 <x-filament::icon icon="heroicon-o-presentation-chart-line" class="h-6 w-6 text-primary-500" />
                 <h3 class="text-md font-bold text-gray-900 dark:text-white">Confronto Rapido: Oggi vs Stesso Giorno Anno Scorso</h3>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Fatturato Oggi -->
-                <div class="bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
+                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Fatturato Lordo</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Fatturato Lordo</div>
                         <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
                             € {{ number_format($oggiStats['revenue_2'], 2, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): € {{ number_format($oggiStats['revenue_1'], 2, ',', '.') }}</span>
                         @if($oggiStats['revenue_diff'] > 0)
-                            <span class="text-green-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-up class="h-3 w-3" />
+                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['revenue_diff'] < 0)
-                            <span class="text-danger-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-down class="h-3 w-3" />
+                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['revenue_diff_pct'] }}%
                             </span>
                         @else
@@ -35,23 +35,23 @@
                 </div>
 
                 <!-- Biglietti Oggi -->
-                <div class="bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
+                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Biglietti Venduti</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Biglietti Venduti</div>
                         <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
                             {{ number_format($oggiStats['tickets_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['tickets_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['tickets_diff'] > 0)
-                            <span class="text-green-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-up class="h-3 w-3" />
+                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['tickets_diff'] < 0)
-                            <span class="text-danger-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-down class="h-3 w-3" />
+                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['tickets_diff_pct'] }}%
                             </span>
                         @else
@@ -61,23 +61,23 @@
                 </div>
 
                 <!-- Ordini Oggi -->
-                <div class="bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800 flex flex-col justify-between">
+                <div class="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-gray-200/60 dark:border-slate-700/60 flex flex-col justify-between shadow-sm">
                     <div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Ordini Conclusi</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-semibold">Ordini Conclusi</div>
                         <div class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
                             {{ number_format($oggiStats['orders_2'], 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
                         <span>Scorso Anno ({{ $oggiStats['periodo_1_label'] }}): {{ number_format($oggiStats['orders_1'], 0, ',', '.') }}</span>
                         @if($oggiStats['orders_diff'] > 0)
-                            <span class="text-green-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-up class="h-3 w-3" />
+                            <span class="text-green-600 dark:text-green-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-up class="h-3.5 w-3.5" />
                                 +{{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @elseif($oggiStats['orders_diff'] < 0)
-                            <span class="text-danger-600 font-semibold inline-flex items-center gap-0.5">
-                                <x-heroicon-m-arrow-trending-down class="h-3 w-3" />
+                            <span class="text-danger-600 dark:text-danger-400 font-semibold inline-flex items-center gap-0.5">
+                                <x-heroicon-m-arrow-trending-down class="h-3.5 w-3.5" />
                                 {{ $oggiStats['orders_diff_pct'] }}%
                             </span>
                         @else
@@ -90,7 +90,7 @@
     @endif
 
     <!-- Form di Configurazione -->
-    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-800">
+    <div class="glossy-card p-6">
         <form wire:submit.prevent="confronta">
             {{ $this->form }}
             
@@ -108,31 +108,31 @@
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                 Risultati del Confronto
             </h2>
-            <p class="text-sm text-gray-500 mt-1">
-                Confronto tra <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-semibold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                Confronto tra <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $risultati['periodo_1_label'] }}</span> (Precedente) e <span class="font-semibold text-primary-600 dark:text-primary-400">{{ $risultati['periodo_2_label'] }}</span> (Successivo)
             </p>
         </div>
 
         <!-- KPI Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Card Fatturato -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fatturato Lordo</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Fatturato Lordo</span>
                         <x-filament::icon icon="heroicon-o-currency-euro" class="h-6 w-6 text-primary-500" />
                     </div>
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">
                         € {{ number_format($risultati['revenue_2'], 2, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-500 mt-1">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
                         Precedente: € {{ number_format($risultati['revenue_1'], 2, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['revenue_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +€{{ number_format($risultati['revenue_diff'], 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -140,7 +140,7 @@
                             @endif
                         </span>
                     @elseif($risultati['revenue_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -€{{ number_format(abs($risultati['revenue_diff']), 2, ',', '.') }} 
                             @if($risultati['revenue_diff_pct'] !== null)
@@ -148,7 +148,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
                             = € 0,00
                         </span>
                     @endif
@@ -156,23 +156,23 @@
             </div>
 
             <!-- Card Biglietti Venduti -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Biglietti Venduti</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Biglietti Venduti</span>
                         <x-filament::icon icon="heroicon-o-ticket" class="h-6 w-6 text-primary-500" />
                     </div>
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">
                         {{ number_format($risultati['tickets_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-500 mt-1">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
                         Precedente: {{ number_format($risultati['tickets_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['tickets_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['tickets_diff'], 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -180,7 +180,7 @@
                             @endif
                         </span>
                     @elseif($risultati['tickets_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['tickets_diff']), 0, ',', '.') }}
                             @if($risultati['tickets_diff_pct'] !== null)
@@ -188,7 +188,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
                             = 0
                         </span>
                     @endif
@@ -196,23 +196,23 @@
             </div>
 
             <!-- Card Ordini Totali -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+            <div class="glossy-card glossy-kpi-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ordini Conclusi</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Ordini Conclusi</span>
                         <x-filament::icon icon="heroicon-o-shopping-cart" class="h-6 w-6 text-primary-500" />
                     </div>
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">
                         {{ number_format($risultati['orders_2'], 0, ',', '.') }}
                     </div>
-                    <div class="text-sm text-gray-500 mt-1">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">
                         Precedente: {{ number_format($risultati['orders_1'], 0, ',', '.') }}
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Variazione:</span>
+                <div class="mt-4 pt-3 border-t border-gray-200/60 dark:border-slate-700/60 flex items-center justify-between font-medium">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Variazione:</span>
                     @if($risultati['orders_diff'] > 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2.5 py-0.5 rounded-full border border-green-200 dark:border-green-800">
                             <x-heroicon-m-arrow-trending-up class="h-4 w-4" />
                             +{{ number_format($risultati['orders_diff'], 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -220,7 +220,7 @@
                             @endif
                         </span>
                     @elseif($risultati['orders_diff'] < 0)
-                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/30 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center gap-1 text-sm font-semibold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 px-2.5 py-0.5 rounded-full border border-danger-200 dark:border-danger-800">
                             <x-heroicon-m-arrow-trending-down class="h-4 w-4" />
                             -{{ number_format(abs($risultati['orders_diff']), 0, ',', '.') }}
                             @if($risultati['orders_diff_pct'] !== null)
@@ -228,7 +228,7 @@
                             @endif
                         </span>
                     @else
-                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">
+                        <span class="inline-flex items-center text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
                             = 0
                         </span>
                     @endif
@@ -239,12 +239,12 @@
         <!-- Focalizzazione Mese per Grafici Temporali -->
         <div x-data="{ filterMonth: 'all' }" x-init="$watch('filterMonth', value => window.dispatchEvent(new CustomEvent('filter-charts-month', { detail: value })))">
             @if(!$risultati['isMonthly'])
-                <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm gap-4">
+                <div class="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center glossy-card p-4 gap-4">
                     <div class="flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-magnifying-glass-plus" class="h-5 w-5 text-primary-500" />
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Zoom/Focalizza l'andamento grafico su un singolo mese:</span>
                     </div>
-                    <select x-model="filterMonth" class="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg p-1.5 min-w-[150px]">
+                    <select x-model="filterMonth" class="text-xs bg-white dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-700 rounded-lg p-2 min-w-[160px] shadow-sm">
                         <option value="all">Tutto il periodo</option>
                         <option value="01">Gennaio</option>
                         <option value="02">Febbraio</option>
