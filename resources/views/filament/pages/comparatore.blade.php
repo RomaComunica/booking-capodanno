@@ -1,5 +1,8 @@
 <x-filament-panels::page>
+    <!-- Chart.js CDN Loaded First in Header -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
+    
     <style>
         /* Responsive High Contrast Overrides */
         .dark select,
@@ -315,7 +318,7 @@
                             <span>Andamento temporale del Fatturato</span>
                         </div>
                     </x-slot>
-                    <div class="h-[300px] relative w-full" wire:ignore>
+                    <div class="h-[300px] relative w-full" id="revenueChartContainer">
                         <canvas id="revenueComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
@@ -328,7 +331,7 @@
                             <span>Andamento temporale dei Biglietti Venduti</span>
                         </div>
                     </x-slot>
-                    <div class="h-[300px] relative w-full" wire:ignore>
+                    <div class="h-[300px] relative w-full" id="ticketsChartContainer">
                         <canvas id="ticketsComparisonChart"></canvas>
                     </div>
                 </x-filament::section>
@@ -402,7 +405,6 @@
         </x-filament::section>
 
         <!-- Chart.js Logic -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             (function() {
                 let revenueChartInstance = null;
@@ -410,8 +412,19 @@
                 let currentChartData = null;
                 let currentFilterMonth = 'all';
 
+                const getCanvasContext = (containerId, canvasId) => {
+                    const container = document.getElementById(containerId);
+                    if (!container) return null;
+                    let canvas = document.getElementById(canvasId);
+                    if (!canvas) {
+                        container.innerHTML = '<canvas id="' + canvasId + '"></canvas>';
+                        canvas = document.getElementById(canvasId);
+                    }
+                    return canvas ? canvas.getContext('2d') : null;
+                };
+
                 const drawCharts = (data, filterMonth = 'all') => {
-                    if (!data || !data.labels) return;
+                    if (!data || !data.labels || typeof Chart === 'undefined') return;
 
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#cbd5e1' : '#334155';
@@ -435,13 +448,15 @@
                     // Destruggi istanze esistenti
                     if (revenueChartInstance) {
                         try { revenueChartInstance.destroy(); } catch(e) {}
+                        revenueChartInstance = null;
                     }
                     if (ticketsChartInstance) {
                         try { ticketsChartInstance.destroy(); } catch(e) {}
+                        ticketsChartInstance = null;
                     }
 
                     // Grafico Fatturato
-                    const ctxRev = document.getElementById('revenueComparisonChart')?.getContext('2d');
+                    const ctxRev = getCanvasContext('revenueChartContainer', 'revenueComparisonChart');
                     if (ctxRev) {
                         revenueChartInstance = new Chart(ctxRev, {
                             type: 'line',
@@ -513,7 +528,7 @@
                     }
 
                     // Grafico Biglietti
-                    const ctxTick = document.getElementById('ticketsComparisonChart')?.getContext('2d');
+                    const ctxTick = getCanvasContext('ticketsChartContainer', 'ticketsComparisonChart');
                     if (ctxTick) {
                         ticketsChartInstance = new Chart(ctxTick, {
                             type: 'line',
@@ -570,11 +585,17 @@
                     }
                 };
 
-                const initData = @json($risultati['chartData'] ?? null);
-                if (initData) {
-                    currentChartData = initData;
-                    setTimeout(() => drawCharts(currentChartData, currentFilterMonth), 60);
-                }
+                const startCharts = () => {
+                    const initData = @json($risultati['chartData'] ?? null);
+                    if (initData) {
+                        currentChartData = initData;
+                        drawCharts(currentChartData, currentFilterMonth);
+                    }
+                };
+
+                startCharts();
+                setTimeout(startCharts, 100);
+                setTimeout(startCharts, 300);
 
                 if (typeof Livewire !== 'undefined') {
                     Livewire.on('update-charts', (data) => {
@@ -591,6 +612,10 @@
                     if (currentChartData) {
                         drawCharts(currentChartData, currentFilterMonth);
                     }
+                });
+
+                document.addEventListener('livewire:navigated', () => {
+                    startCharts();
                 });
             })();
         </script>
