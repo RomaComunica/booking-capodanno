@@ -404,13 +404,15 @@
         <!-- Chart.js Logic -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', () => {
+            (function() {
                 let revenueChartInstance = null;
                 let ticketsChartInstance = null;
                 let currentChartData = null;
                 let currentFilterMonth = 'all';
 
                 const drawCharts = (data, filterMonth = 'all') => {
+                    if (!data || !data.labels) return;
+
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#cbd5e1' : '#334155';
                     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
@@ -431,8 +433,12 @@
                     }
 
                     // Destruggi istanze esistenti
-                    if (revenueChartInstance) revenueChartInstance.destroy();
-                    if (ticketsChartInstance) ticketsChartInstance.destroy();
+                    if (revenueChartInstance) {
+                        try { revenueChartInstance.destroy(); } catch(e) {}
+                    }
+                    if (ticketsChartInstance) {
+                        try { ticketsChartInstance.destroy(); } catch(e) {}
+                    }
 
                     // Grafico Fatturato
                     const ctxRev = document.getElementById('revenueComparisonChart')?.getContext('2d');
@@ -567,16 +573,18 @@
                 const initData = @json($risultati['chartData'] ?? null);
                 if (initData) {
                     currentChartData = initData;
-                    drawCharts(currentChartData, currentFilterMonth);
+                    setTimeout(() => drawCharts(currentChartData, currentFilterMonth), 60);
                 }
 
-                Livewire.on('update-charts', (data) => {
-                    const chartData = Array.isArray(data) ? data[0] : data;
-                    if (chartData) {
-                        currentChartData = chartData;
-                        drawCharts(currentChartData, currentFilterMonth);
-                    }
-                });
+                if (typeof Livewire !== 'undefined') {
+                    Livewire.on('update-charts', (data) => {
+                        const chartData = Array.isArray(data) ? data[0] : data;
+                        if (chartData) {
+                            currentChartData = chartData;
+                            drawCharts(currentChartData, currentFilterMonth);
+                        }
+                    });
+                }
 
                 window.addEventListener('filter-charts-month', (e) => {
                     currentFilterMonth = e.detail;
@@ -584,7 +592,7 @@
                         drawCharts(currentChartData, currentFilterMonth);
                     }
                 });
-            });
+            })();
         </script>
     @endif
 </x-filament-panels::page>
