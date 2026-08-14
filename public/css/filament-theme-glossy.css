@@ -302,6 +302,28 @@ table thead th,
     font-weight: 700 !important;
 }
 
+/* Table Row Hover Universal High Contrast Fix */
+.dark table tbody tr:hover,
+.dark table tbody tr:hover td,
+.dark .fi-ta-row:hover,
+.dark .fi-ta-row:hover td {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+.dark table tbody tr:hover td span,
+.dark table tbody tr:hover td div,
+.dark .fi-ta-row:hover * {
+    color: #ffffff !important;
+}
+
+html:not(.dark) table tbody tr:hover,
+html:not(.dark) table tbody tr:hover td,
+html:not(.dark) .fi-ta-row:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
 .dark .fi-ta-row {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }

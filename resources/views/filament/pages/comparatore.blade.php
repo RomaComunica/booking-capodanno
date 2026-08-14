@@ -17,6 +17,16 @@
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
         }
+        .dark .glossy-table-row:hover,
+        .dark .glossy-table-row:hover td {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+        .glossy-table-row:hover,
+        .glossy-table-row:hover td {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
     </style>
 
     <!-- Sezione Fissa: Confronto del Giorno di Oggi con lo Scorso Anno -->
@@ -331,7 +341,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
                         @forelse($risultati['locationBreakdown'] as $loc)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors">
+                            <tr class="glossy-table-row transition-colors">
                                 <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                                     {{ $loc['nomeLocation'] }}
                                 </td>
