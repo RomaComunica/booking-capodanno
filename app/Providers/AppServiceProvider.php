@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Auto-sync payment methods into database without needing SSH migrations
+        // Auto-sync payment and shipping methods into database without needing SSH migrations
         try {
             if (Schema::hasTable('tipo_pagamenti')) {
                 DB::table('tipo_pagamenti')->updateOrInsert(
@@ -39,6 +39,15 @@ class AppServiceProvider extends ServiceProvider
                         'nomePagamento' => 'Bonifico Bancario',
                         'descrizioneTipoPagamento' => 'Bonifico Bancario',
                         'descrizionePagamento' => 'Bonifico bancario anticipato',
+                        'attivo' => 1,
+                    ]
+                );
+                DB::table('tipo_pagamenti')->updateOrInsert(
+                    ['idTipoPagamento' => 3],
+                    [
+                        'nomePagamento' => 'Contanti',
+                        'descrizioneTipoPagamento' => 'Contanti',
+                        'descrizionePagamento' => 'Pagamento in contanti al ritiro presso la nostra sede',
                         'attivo' => 1,
                     ]
                 );
@@ -64,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
                 // Auto-attach payment methods to all locations
                 if (Schema::hasTable('cross_pagamenti_location') && Schema::hasTable('location')) {
                     $locations = DB::table('location')->pluck('idLocation');
-                    $activePaymentIds = [1, 2, 4, 5];
+                    $activePaymentIds = [1, 2, 3, 4, 5];
                     foreach ($locations as $locId) {
                         foreach ($activePaymentIds as $pId) {
                             DB::table('cross_pagamenti_location')->updateOrInsert(
@@ -75,6 +84,48 @@ class AppServiceProvider extends ServiceProvider
                                 [
                                     'pagamentoLocationAttivo' => 1,
                                     'costoPagamento' => 0,
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Auto-sync shipping methods into database
+            if (Schema::hasTable('tipo_spedizione')) {
+                DB::table('tipo_spedizione')->updateOrInsert(
+                    ['idSpedizione' => 1],
+                    [
+                        'nomeSpedizione' => 'Voucher via E-mail',
+                        'descrizioneSpedizione' => 'Voucher via E-mail',
+                        'testoAggiuntivo' => 'Ricevi il voucher direttamente via email',
+                        'attivo' => 1,
+                    ]
+                );
+                DB::table('tipo_spedizione')->updateOrInsert(
+                    ['idSpedizione' => 4],
+                    [
+                        'nomeSpedizione' => 'Ritiro in sede',
+                        'descrizioneSpedizione' => 'Ritiro in sede',
+                        'testoAggiuntivo' => 'Ritiro presso la nostra sede (Via dei CARRARESI 12 - 00164 Roma)',
+                        'attivo' => 1,
+                    ]
+                );
+
+                // Auto-attach shipping methods to all locations
+                if (Schema::hasTable('cross_spedizioni_location') && Schema::hasTable('location')) {
+                    $locations = DB::table('location')->pluck('idLocation');
+                    $activeShippingIds = [1, 4];
+                    foreach ($locations as $locId) {
+                        foreach ($activeShippingIds as $sId) {
+                            DB::table('cross_spedizioni_location')->updateOrInsert(
+                                [
+                                    'idLocationSpedizione' => $locId,
+                                    'idSpedizione' => $sId,
+                                ],
+                                [
+                                    'spedizioneLocationAttiva' => 1,
+                                    'costoSpedizione' => 0,
                                 ]
                             );
                         }

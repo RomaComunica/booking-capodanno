@@ -42,7 +42,7 @@ class CheckoutController extends Controller
 
         // Fallback: if no location cross entries exist yet, load all standard payment methods
         if ($paymentMethods->isEmpty()) {
-            $paymentMethods = TipoPagamento::whereIn('idTipoPagamento', [1, 2, 4, 5])->get();
+            $paymentMethods = TipoPagamento::whereIn('idTipoPagamento', [1, 2, 3, 4, 5])->get();
         }
         
         // Filter out globally disabled methods
@@ -51,6 +51,9 @@ class CheckoutController extends Controller
                 return false;
             }
             if ($method->idTipoPagamento == 2 && !\App\Models\Setting::getVal('bonifico_enabled', true)) {
+                return false;
+            }
+            if ($method->idTipoPagamento == 3 && !\App\Models\Setting::getVal('contanti_enabled', true)) {
                 return false;
             }
             if ($method->idTipoPagamento == 4 && !\App\Models\Setting::getVal('postepay_enabled', true)) {
@@ -67,6 +70,19 @@ class CheckoutController extends Controller
             $q->where('idLocationSpedizione', $idLocation)
               ->where('spedizioneLocationAttiva', 1);
         })->get();
+
+        // Fallback: if no location cross entries exist yet, load standard shipping methods
+        if ($shippingMethods->isEmpty()) {
+            $shippingMethods = TipoSpedizione::whereIn('idSpedizione', [1, 4])->get();
+        }
+
+        // Ensure Ritiro in sede (ID 4) is present if missing
+        if (!$shippingMethods->contains('idSpedizione', 4)) {
+            $ritiro = TipoSpedizione::find(4);
+            if ($ritiro) {
+                $shippingMethods->push($ritiro);
+            }
+        }
         
         return view('checkout.index', compact(
             'cart', 
@@ -112,6 +128,17 @@ class CheckoutController extends Controller
             'tipoPagamento.required' => 'Seleziona un metodo di pagamento',
             'tipoSpedizione.required' => 'Seleziona un metodo di spedizione',
         ]);
+
+        // Enforcement: Se viene scelto il pagamento in Contanti (ID 3), il metodo di spedizione DEVE essere Ritiro in sede (non Voucher via email)
+        if ((int)$validated['tipoPagamento'] === 3) {
+            $shippingMethod = TipoSpedizione::find($validated['tipoSpedizione']);
+            $isEmail = $shippingMethod && ($shippingMethod->idSpedizione == 1 || str_contains(strtolower($shippingMethod->nomeSpedizione . ' ' . $shippingMethod->descrizioneSpedizione), 'mail'));
+            if ($isEmail) {
+                return redirect()->back()->withInput()->withErrors([
+                    'tipoSpedizione' => 'Per il pagamento in contanti il metodo di spedizione deve essere "Ritiro in sede". Non è possibile ricevere il voucher via email prima del pagamento.',
+                ]);
+            }
+        }
         
         \Log::info('Validation passed', ['validated' => $validated]);
         

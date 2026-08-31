@@ -226,8 +226,8 @@
                     
                     <div class="radio-group">
                         @forelse($paymentMethods as $method)
-                            <label class="radio-card">
-                                <input type="radio" name="tipoPagamento" value="{{ $method->idTipoPagamento }}" class="radio-input" required>
+                            <label class="radio-card payment-method-card" data-payment-id="{{ $method->idTipoPagamento }}" data-payment-name="{{ strtolower($method->nomePagamento) }}">
+                                <input type="radio" name="tipoPagamento" value="{{ $method->idTipoPagamento }}" class="radio-input payment-method-input" required>
                                 <div class="radio-content">
                                     <div class="radio-circle"></div>
                                     <div class="radio-body">
@@ -257,14 +257,18 @@
                         <span class="text-danger font-bold">*</span> Seleziona come desideri ricevere il voucher
                     </p>
                     
-                    <div class="radio-group">
+                    <div class="radio-group" id="shipping-methods-group">
                         @forelse($shippingMethods as $method)
-                            <label class="radio-card">
+                            @php
+                                $isEmail = ($method->idSpedizione == 1) || str_contains(strtolower($method->nomeSpedizione . ' ' . $method->descrizioneSpedizione), 'mail');
+                                $isPickup = ($method->idSpedizione == 4) || str_contains(strtolower($method->nomeSpedizione . ' ' . $method->descrizioneSpedizione), 'ritiro');
+                            @endphp
+                            <label class="radio-card shipping-card" data-shipping-id="{{ $method->idSpedizione }}" data-is-email="{{ $isEmail ? '1' : '0' }}" data-is-pickup="{{ $isPickup ? '1' : '0' }}" id="shipping-card-{{ $method->idSpedizione }}">
                                 <input type="radio" name="tipoSpedizione" value="{{ $method->idSpedizione }}" data-cost="{{ $method->pivot ? $method->pivot->costoSpedizione : 0 }}" class="radio-input shipping-method" required>
                                 <div class="radio-content">
                                     <div class="radio-circle"></div>
                                     <div class="radio-body">
-                                        <span class="radio-label">{{ $method->descrizioneSpedizione }}</span>
+                                        <span class="radio-label">{{ $method->descrizioneSpedizione ?: $method->nomeSpedizione }}</span>
                                         @if($method->testoAggiuntivo)
                                             <p class="radio-desc">{{ $method->testoAggiuntivo }}</p>
                                         @endif
@@ -348,6 +352,63 @@ const subtotal = {{ (float)$totaleAcquisto }};
 const totalTickets = {{ (int)array_sum(array_column($cart, 'quantita')) }};
 const paypalFeePerTicket = 2.0;
 
+function handlePaymentShippingSync() {
+    const selectedPayment = document.querySelector('input[name="tipoPagamento"]:checked');
+    const paymentCard = selectedPayment ? selectedPayment.closest('.payment-method-card') : null;
+    const paymentName = paymentCard ? (paymentCard.dataset.paymentName || '').toLowerCase() : '';
+    const isContanti = selectedPayment && (selectedPayment.value === '3' || paymentName.includes('contanti'));
+
+    const shippingCards = document.querySelectorAll('.shipping-card');
+
+    shippingCards.forEach(card => {
+        const isEmail = card.dataset.isEmail === '1';
+        const isPickup = card.dataset.isPickup === '1';
+        const input = card.querySelector('input[name="tipoSpedizione"]');
+
+        if (isContanti) {
+            // Chi sceglie Contanti: SOLO Ritiro in sede, NON voucher via email
+            if (isEmail) {
+                card.style.display = 'none';
+                if (input) {
+                    input.disabled = true;
+                    if (input.checked) input.checked = false;
+                }
+            } else if (isPickup) {
+                card.style.display = '';
+                if (input) {
+                    input.disabled = false;
+                    input.checked = true; // Auto-seleziona Ritiro in sede
+                }
+            } else {
+                card.style.display = 'none';
+                if (input) {
+                    input.disabled = true;
+                    if (input.checked) input.checked = false;
+                }
+            }
+        } else {
+            // Per tutti gli altri pagamenti: mostra tutti i metodi di spedizione
+            card.style.display = '';
+            if (input) {
+                input.disabled = false;
+            }
+        }
+    });
+
+    // Se non è contanti e nessun metodo di spedizione è selezionato, seleziona il primo disponibile
+    if (!isContanti) {
+        const anyChecked = document.querySelector('input[name="tipoSpedizione"]:checked');
+        if (!anyChecked) {
+            const firstAvailable = document.querySelector('.shipping-card:not([style*="display: none"]) input[name="tipoSpedizione"]');
+            if (firstAvailable) {
+                firstAvailable.checked = true;
+            }
+        }
+    }
+
+    updateTotal();
+}
+
 function updateTotal() {
     const selectedShipping = document.querySelector('.shipping-method:checked');
     const shippingCost = selectedShipping ? (parseFloat(selectedShipping.dataset.cost) || 0) : 0;
@@ -380,8 +441,11 @@ function updateTotal() {
 }
 
 document.querySelectorAll('.shipping-method').forEach(el => el.addEventListener('change', updateTotal));
-document.querySelectorAll('input[name="tipoPagamento"]').forEach(el => el.addEventListener('change', updateTotal));
-document.addEventListener('DOMContentLoaded', updateTotal);
+document.querySelectorAll('input[name="tipoPagamento"]').forEach(el => el.addEventListener('change', handlePaymentShippingSync));
+document.addEventListener('DOMContentLoaded', () => {
+    handlePaymentShippingSync();
+    updateTotal();
+});
 
 function validateForm() {
     const nome = document.getElementById('nome').value.trim();
@@ -445,6 +509,16 @@ function validateForm() {
     const shippingMethod = document.querySelector('input[name="tipoSpedizione"]:checked');
     if (!shippingMethod) {
         alert('Seleziona un metodo di spedizione');
+        return false;
+    }
+
+    // Check Contanti restriction
+    const paymentCard = paymentMethod.closest('.payment-method-card');
+    const paymentName = paymentCard ? (paymentCard.dataset.paymentName || '').toLowerCase() : '';
+    const isContanti = paymentMethod.value === '3' || paymentName.includes('contanti');
+    const shippingCard = shippingMethod.closest('.shipping-card');
+    if (isContanti && shippingCard && shippingCard.dataset.isEmail === '1') {
+        alert('Per il pagamento in contanti il metodo di spedizione deve essere "Ritiro in sede".');
         return false;
     }
     

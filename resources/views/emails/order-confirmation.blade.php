@@ -151,6 +151,12 @@
                     Causale / Riferimento: Ordine #{{ $order->numeroOrdine }} - {{ $order->nomeClienteOrdine }} {{ $order->cognomeClienteOrdine }}<br>
                     <br>
                     <em>Per velocizzare l'emissione del voucher, puoi inviare copia della ricevuta di ricarica rispondendo a questa email.</em>
+                @elseif($order->tipoPagamentoOrdine == 3)
+                    <strong>Pagamento in Contanti al Ritiro:</strong><br>
+                    Il pagamento verrà corrisposto in contanti al momento del ritiro dei biglietti presso la nostra sede.<br>
+                    <strong>Indirizzo sede:</strong> Via dei CARRARESI 12 - 00164 Roma (orario 9:30-17:30)<br>
+                    <br>
+                    <em>Verrai contattato dal nostro staff per concordare data e ora del ritiro, oppure puoi chiamare il numero 06.45495920 - 327.3103225.</em>
                 @endif
             @else
                 <span class="success-text">Pagamento confermato.</span>
@@ -161,7 +167,7 @@
 
         <h5><strong>CONSEGNA</strong></h5>
         <p>
-            {{ $order->tipoSpedizione->descrizioneSpedizione ?? 'N/D' }}<br>
+            {{ $order->tipoSpedizione->descrizioneSpedizione ?? $order->tipoSpedizione->nomeSpedizione ?? 'N/D' }}<br>
             @if($order->tipoSpedizioneOrdine == 1)
                 @if($order->statoOrdine == 0)
                     Il voucher sarà inviato alla verifica dell'accredito.
@@ -173,7 +179,7 @@
             @elseif($order->tipoSpedizioneOrdine == 3)
                 Verrai contattato dal nostro Staff per organizzare la consegna.
             @elseif($order->tipoSpedizioneOrdine == 4)
-                Per prenotare un appuntamento chiama il numero 06.45495920 - 327.3103225
+                Ritiro presso la nostra sede in Via dei CARRARESI 12 - 00164 Roma (9:30-17:30). Per fissare l'appuntamento chiama il numero 06.45495920 - 327.3103225.
             @endif
         </p>
 

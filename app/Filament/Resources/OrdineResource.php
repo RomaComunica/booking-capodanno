@@ -71,12 +71,30 @@ class OrdineResource extends Resource
                             ->label('Metodo Pagamento')
                             ->relationship('tipoPagamento', 'nomePagamento')
                             ->required()
-                            ->default(2),
+                            ->default(2)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                if ((int)$state === 3) {
+                                    $set('tipoSpedizioneOrdine', 4);
+                                }
+                            }),
                         
                         Forms\Components\Select::make('tipoSpedizioneOrdine')
                             ->label('Tipo Spedizione')
-                            ->relationship('tipoSpedizione', 'nomeSpedizione')
-                            ->default(1),
+                            ->options(function (Forms\Get $get) {
+                                $tipoPagamento = (int)$get('tipoPagamentoOrdine');
+                                $query = \App\Models\TipoSpedizione::query();
+                                if ($tipoPagamento === 3) {
+                                    $query->where(function($q) {
+                                        $q->where('idSpedizione', 4)
+                                          ->orWhere('nomeSpedizione', 'like', '%ritiro%')
+                                          ->orWhere('descrizioneSpedizione', 'like', '%ritiro%');
+                                    });
+                                }
+                                return $query->pluck('nomeSpedizione', 'idSpedizione');
+                            })
+                            ->default(1)
+                            ->required(),
 
                         Forms\Components\DateTimePicker::make('dataOrdine')
                             ->label('Data Ordine')

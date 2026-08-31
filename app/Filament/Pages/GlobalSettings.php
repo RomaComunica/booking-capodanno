@@ -101,6 +101,7 @@ class GlobalSettings extends Page implements HasForms
             'intestatario_postepay' => Setting::getVal('intestatario_postepay', ''),
             'numero_carta_postepay' => Setting::getVal('numero_carta_postepay', ''),
             'codice_fiscale_postepay' => Setting::getVal('codice_fiscale_postepay', ''),
+            'contanti_enabled' => Setting::getVal('contanti_enabled', true),
             'voucher_footer_text' => Setting::getVal('voucher_footer_text', ''),
             'google_analytics_id' => Setting::getVal('google_analytics_id', ''),
             'facebook_pixel_id' => Setting::getVal('facebook_pixel_id', ''),
@@ -152,7 +153,7 @@ class GlobalSettings extends Page implements HasForms
                                             ->label('Coordinate IBAN'),
                                     ]),
 
-                                Section::make('Ricarica PostePay')
+                                 Section::make('Ricarica PostePay')
                                     ->schema([
                                         Toggle::make('postepay_enabled')
                                             ->label('Abilita Ricarica PostePay'),
@@ -164,6 +165,12 @@ class GlobalSettings extends Page implements HasForms
                                             ->label('Codice Fiscale'),
                                     ])
                                     ->columns(3),
+
+                                Section::make('Pagamento in Contanti (Ritiro in Sede)')
+                                    ->schema([
+                                        Toggle::make('contanti_enabled')
+                                            ->label('Abilita Pagamento in Contanti (Ritiro in sede)'),
+                                    ]),
                             ]),
                         Tabs\Tab::make('Voucher')
                             ->schema([
@@ -204,6 +211,7 @@ class GlobalSettings extends Page implements HasForms
         Setting::setVal('pagamenti', 'intestatario_postepay', $data['intestatario_postepay'], 'string');
         Setting::setVal('pagamenti', 'numero_carta_postepay', $data['numero_carta_postepay'], 'string');
         Setting::setVal('pagamenti', 'codice_fiscale_postepay', $data['codice_fiscale_postepay'], 'string');
+        Setting::setVal('pagamenti', 'contanti_enabled', $data['contanti_enabled'], 'boolean');
         Setting::setVal('voucher', 'voucher_footer_text', $data['voucher_footer_text'], 'string');
         Setting::setVal('marketing', 'google_analytics_id', $data['google_analytics_id'] ?? '', 'string');
         Setting::setVal('marketing', 'facebook_pixel_id', $data['facebook_pixel_id'] ?? '', 'string');
