@@ -146,17 +146,20 @@ class GlobalSettings extends Page implements HasForms
                                 Section::make('Bonifico Bancario')
                                     ->schema([
                                         Toggle::make('bonifico_enabled')
-                                            ->label('Abilita Bonifico Bancario'),
+                                            ->label('Abilita Bonifico Bancario')
+                                            ->columnSpanFull(),
                                         TextInput::make('intestatario_bonifico')
                                             ->label('Intestatario Conto'),
                                         TextInput::make('iban_bonifico')
                                             ->label('Coordinate IBAN'),
-                                    ]),
+                                    ])
+                                    ->columns(2),
 
-                                 Section::make('Ricarica PostePay')
+                                Section::make('Ricarica PostePay')
                                     ->schema([
                                         Toggle::make('postepay_enabled')
-                                            ->label('Abilita Ricarica PostePay'),
+                                            ->label('Abilita Ricarica PostePay')
+                                            ->columnSpanFull(),
                                         TextInput::make('intestatario_postepay')
                                             ->label('Intestatario Carta'),
                                         TextInput::make('numero_carta_postepay')
