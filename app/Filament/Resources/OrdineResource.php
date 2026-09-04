@@ -304,6 +304,28 @@ class OrdineResource extends Resource
                             ->send();
                     })
                     ->tooltip('Clicca per cambiare lo stato di pagamento alla location'),
+
+                Tables\Columns\IconColumn::make('dataPagamentoOrdinePartner')
+                    ->label('Pagato Partner')
+                    ->boolean()
+                    ->getStateUsing(fn ($record) => 
+                        $record->dataPagamentoOrdinePartner && $record->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00'
+                    )
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger')
+                    ->action(function ($record) {
+                        $isPaid = $record->dataPagamentoOrdinePartner && $record->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00';
+                        $record->update([
+                            'dataPagamentoOrdinePartner' => $isPaid ? null : now(),
+                        ]);
+                        Notification::make()
+                            ->title($isPaid ? 'Pagamento Partner contrassegnato come DA PAGARE' : 'Pagamento Partner contrassegnato come PAGATO')
+                            ->success()
+                            ->send();
+                    })
+                    ->tooltip('Clicca per cambiare lo stato di pagamento al partner'),
                 
                 Tables\Columns\TextColumn::make('noteOrdine')
                     ->label('Note')

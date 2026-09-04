@@ -78,6 +78,32 @@ class EntrataUscitaResource extends Resource
                     ->color(fn ($record) => $record->tipoOperazione === 'E' ? 'success' : 'danger'),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('anno')
+                    ->label('Anno')
+                    ->options(function () {
+                        $years = EntrataUscita::query()
+                            ->whereNotNull('dataOperazione')
+                            ->pluck('dataOperazione')
+                            ->map(fn ($d) => \Carbon\Carbon::parse($d)->format('Y'))
+                            ->unique()
+                            ->sortDesc()
+                            ->mapWithKeys(fn ($y) => [(string)$y => (string)$y])
+                            ->toArray();
+
+                        $currentYear = (string)date('Y');
+                        if (!isset($years[$currentYear])) {
+                            $years[$currentYear] = $currentYear;
+                            krsort($years);
+                        }
+
+                        return $years;
+                    })
+                    ->query(function ($query, array $data) {
+                        if (!empty($data['value'])) {
+                            $query->whereYear('dataOperazione', $data['value']);
+                        }
+                    }),
+
                 Tables\Filters\SelectFilter::make('tipoOperazione')
                     ->label('Tipo Operazione')
                     ->options([

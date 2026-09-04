@@ -81,13 +81,17 @@
                         {{ number_format($stats['total_tickets'], 0, ',', '.') }}
                     </div>
                 </div>
-                <!-- Breakdown per Metodo di Pagamento Spaziati -->
+                <!-- Breakdown per Metodo di Pagamento con Biglietti e Totale € -->
                 <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
                     @if(!empty($stats['tickets_by_payment']))
-                        @foreach($stats['tickets_by_payment'] as $metodo => $qta)
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-slate-700 shadow-2xs">
+                        @foreach($stats['tickets_by_payment'] as $metodo => $item)
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-gray-100/90 dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-gray-200/90 dark:border-slate-700 shadow-2xs">
                                 <span class="text-gray-600 dark:text-gray-400 font-semibold">{{ $metodo }}:</span>
-                                <span class="text-primary-600 dark:text-primary-400">{{ number_format($qta, 0, ',', '.') }}</span>
+                                <span class="text-primary-600 dark:text-primary-400 font-extrabold">{{ number_format(is_array($item) ? $item['tickets'] : $item, 0, ',', '.') }} pz</span>
+                                @if(is_array($item) && isset($item['revenue']))
+                                    <span class="text-gray-300 dark:text-slate-600 font-normal">|</span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">€ {{ number_format($item['revenue'], 2, ',', '.') }}</span>
+                                @endif
                             </span>
                         @endforeach
                     @else

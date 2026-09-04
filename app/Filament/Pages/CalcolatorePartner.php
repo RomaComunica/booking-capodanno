@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Partner;
 use App\Models\Location;
+use App\Models\Ordine;
 use App\Models\RigaOrdine;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -11,6 +12,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 
 class CalcolatorePartner extends Page implements HasForms
@@ -34,6 +36,7 @@ class CalcolatorePartner extends Page implements HasForms
         $this->form->fill([
             'data_da' => now()->startOfYear(),
             'data_a' => now(),
+            'stato_pagamento' => 'tutti',
         ]);
     }
 
@@ -83,6 +86,8 @@ class CalcolatorePartner extends Page implements HasForms
             ->leftJoin('tipologia_ingresso', function ($join) {
                 $join->on('tipologia_ingresso.idIngressoCont', '=', 'righe_ordine.idIngressoOrdine');
             })
+            ->leftJoin('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
+            ->leftJoin('tipo_pagamenti', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamenti.idTipoPagamento')
             ->where('ordini.idPartnerOrdine', $data['idPartner'])
             ->where('ordini.statoOrdine', 2)
             ->whereDate('ordini.dataOrdine', '>=', $data['data_da'])
@@ -107,7 +112,13 @@ class CalcolatorePartner extends Page implements HasForms
         }
         
         $righe = $query->select([
+                'ordini.numeroOrdine',
+                'ordini.nomeClienteOrdine',
+                'ordini.cognomeClienteOrdine',
+                'ordini.dataPagamentoOrdinePartner',
                 'ordini.idLocationOrdine',
+                'location.nomeLocation',
+                'tipo_pagamenti.nomePagamento as metodo_pagamento',
                 'righe_ordine.nomeIngressoOrdine',
                 'righe_ordine.quantitaIngressoOrdine',
                 DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
@@ -115,16 +126,17 @@ class CalcolatorePartner extends Page implements HasForms
                 DB::raw('COALESCE(tipologia_ingresso.valoreProvvigionePartner, 0) as valoreProvvigionePartner'),
                 DB::raw('(righe_ordine.quantitaIngressoOrdine * COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0)) as venduto')
             ])
+            ->orderBy('ordini.numeroOrdine', 'desc')
             ->get();
 
         $totaleVenduto = 0;
         $totaleProvvigione = 0;
+        $totaleGiaPagato = 0;
         $totaleQuantita = 0;
         $dettagli = [];
-        $locationCache = [];
 
         foreach ($righe as $riga) {
-            $venduto = $riga->venduto;
+            $venduto = (float)$riga->venduto;
             
             // Calcola provvigione partner
             if ($riga->tipoProvvigionePartner == 1) {
@@ -134,40 +146,68 @@ class CalcolatorePartner extends Page implements HasForms
             } else {
                 // Fissa per biglietto
                 $provvigione = $riga->valoreProvvigionePartner * $riga->quantitaIngressoOrdine;
-                $provvigioneLabel = '€' . number_format($riga->valoreProvvigionePartner, 2);
+                $provvigioneLabel = '€' . number_format($riga->valoreProvvigionePartner, 2, ',', '.');
             }
             
+            $isPaid = !empty($riga->dataPagamentoOrdinePartner) 
+                && $riga->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00' 
+                && $riga->dataPagamentoOrdinePartner !== '';
+
             $totaleVenduto += $venduto;
             $totaleProvvigione += $provvigione;
             $totaleQuantita += $riga->quantitaIngressoOrdine;
             
-            // Cache location name
-            if (!isset($locationCache[$riga->idLocationOrdine])) {
-                $location = Location::find($riga->idLocationOrdine);
-                $locationCache[$riga->idLocationOrdine] = $location ? $location->nomeLocation : 'N/A';
+            if ($isPaid) {
+                $totaleGiaPagato += $provvigione;
             }
             
             $dettagli[] = [
-                'location' => $locationCache[$riga->idLocationOrdine],
+                'numeroOrdine' => $riga->numeroOrdine,
+                'cliente' => trim(($riga->nomeClienteOrdine ?? '') . ' ' . ($riga->cognomeClienteOrdine ?? '')),
+                'location' => $riga->nomeLocation ?? 'N/A',
+                'metodo_pagamento' => $riga->metodo_pagamento ?? 'Non spec.',
                 'biglietto' => $riga->nomeIngressoOrdine,
                 'quantita' => $riga->quantitaIngressoOrdine,
                 'prezzo' => $riga->prezzoIngressoOrdine,
                 'venduto' => $venduto,
                 'provvigione_label' => $provvigioneLabel,
                 'provvigione' => $provvigione,
+                'is_pagato_partner' => $isPaid,
             ];
         }
+
+        $totaleDaPagareResiduo = max(0, $totaleProvvigione - $totaleGiaPagato);
 
         $partner = Partner::find($data['idPartner']);
 
         $this->risultati = [
-            'partner' => $partner->nomePartner,
-            'location' => !empty($data['idLocation']) ? Location::find($data['idLocation'])->nomeLocation : 'Tutte',
+            'partner' => $partner ? $partner->nomePartner : 'N/D',
+            'location' => !empty($data['idLocation']) ? (Location::find($data['idLocation'])->nomeLocation ?? 'Tutte') : 'Tutte',
             'periodo' => date('d/m/Y', strtotime($data['data_da'])) . ' - ' . date('d/m/Y', strtotime($data['data_a'])),
             'dettagli' => $dettagli,
             'totaleQuantita' => $totaleQuantita,
             'totaleVenduto' => $totaleVenduto,
             'totaleProvvigione' => $totaleProvvigione,
+            'totaleGiaPagato' => $totaleGiaPagato,
+            'totaleDaPagareResiduo' => $totaleDaPagareResiduo,
         ];
+    }
+
+    public function togglePagamentoPartner(int $numeroOrdine): void
+    {
+        $ordine = Ordine::find($numeroOrdine);
+        if ($ordine) {
+            $isPaid = !empty($ordine->dataPagamentoOrdinePartner) && $ordine->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00';
+            $ordine->update([
+                'dataPagamentoOrdinePartner' => $isPaid ? null : now(),
+            ]);
+            
+            $this->calcola();
+            
+            Notification::make()
+                ->title($isPaid ? 'Ordine #' . $numeroOrdine . ': Pagamento Partner rimosso (Da Pagare)' : 'Ordine #' . $numeroOrdine . ': Pagamento Partner registrato (PAGATO)')
+                ->success()
+                ->send();
+        }
     }
 }

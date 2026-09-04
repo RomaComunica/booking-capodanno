@@ -23,7 +23,7 @@ class StatisticsService
         $cancelledOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 1)->count();
         $totalOrders = $completedOrders + $pendingOrders + $cancelledOrders;
 
-        // Biglietti venduti raggruppati per metodo di pagamento con etichette uniformate
+        // Biglietti venduti raggruppati per metodo di pagamento con etichette uniformate e totale in €
         $payments = DB::table('tipo_pagamenti')->pluck('nomePagamento', 'idTipoPagamento')->toArray();
 
         $rows = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
@@ -31,7 +31,8 @@ class StatisticsService
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'ordini.tipoPagamentoOrdine',
-                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as totale_biglietti')
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as totale_biglietti'),
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine * righe_ordine.prezzoIngressoOrdine) as totale_euro')
             ])
             ->groupBy('ordini.tipoPagamentoOrdine')
             ->get();
@@ -39,18 +40,39 @@ class StatisticsService
         $ticketsByPayment = [];
         foreach ($rows as $row) {
             $id = (int)$row->tipoPagamentoOrdine;
-            // Se null o 0 -> Bonifico Bancario (storico non specificato)
-            if ($id === 0 || empty($id)) {
-                $name = 'Bonifico Bancario';
-            } elseif (isset($payments[$id])) {
-                $name = $payments[$id];
-            } else {
-                $name = 'Bonifico Bancario';
-            }
             
-            $ticketsByPayment[$name] = ($ticketsByPayment[$name] ?? 0) + (int)$row->totale_biglietti;
+            // Risoluzione iniziale nome metodo
+            if ($id === 0 || empty($id)) {
+                $rawName = 'Bonifico Bancario';
+            } elseif (isset($payments[$id])) {
+                $rawName = $payments[$id];
+            } else {
+                $rawName = 'Bonifico Bancario';
+            }
+
+            // Correzione inversione richiesta dal cliente tra Bonifico Bancario e Ricarica PostePay
+            if ($rawName === 'Bonifico Bancario') {
+                $name = 'Ricarica PostePay';
+            } elseif ($rawName === 'Ricarica PostePay') {
+                $name = 'Bonifico Bancario';
+            } else {
+                $name = $rawName;
+            }
+
+            if (!isset($ticketsByPayment[$name])) {
+                $ticketsByPayment[$name] = [
+                    'tickets' => 0,
+                    'revenue' => 0.0,
+                ];
+            }
+
+            $ticketsByPayment[$name]['tickets'] += (int)$row->totale_biglietti;
+            $ticketsByPayment[$name]['revenue'] += (float)$row->totale_euro;
         }
-        arsort($ticketsByPayment);
+
+        uasort($ticketsByPayment, function ($a, $b) {
+            return $b['tickets'] <=> $a['tickets'];
+        });
 
         $totalRevenue = $this->getTotalRevenue($year);
         $totalTickets = $this->getTotalTickets($year);

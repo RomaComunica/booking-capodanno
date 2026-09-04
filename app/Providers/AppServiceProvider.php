@@ -21,9 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Auto-sync payment and shipping methods into database without needing SSH migrations
+        // Auto-sync payment and shipping methods into database once without needing SSH migrations
         try {
-            if (Schema::hasTable('tipo_pagamenti')) {
+            if (!\Illuminate\Support\Facades\Cache::has('payment_shipping_synced_v3')) {
+                \Illuminate\Support\Facades\Cache::forever('payment_shipping_synced_v3', true);
+                if (Schema::hasTable('tipo_pagamenti')) {
                 DB::table('tipo_pagamenti')->updateOrInsert(
                     ['idTipoPagamento' => 1],
                     [
@@ -131,6 +133,7 @@ class AppServiceProvider extends ServiceProvider
                         }
                     }
                 }
+            }
             }
         } catch (\Exception $e) {
             // Ignore during setup/migrations
