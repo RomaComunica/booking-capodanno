@@ -88,18 +88,6 @@ class CalcolatoreLocation extends Page implements HasForms
             $query->where('ordini.idLocationOrdine', $data['idLocation']);
         }
             
-        if (($data['stato_pagamento'] ?? 'tutti') === 'da_pagare') {
-            $query->where(function($q) {
-                $q->whereNull('ordini.dataPagamentoOrdineFornitore')
-                  ->orWhere('ordini.dataPagamentoOrdineFornitore', '=', '')
-                  ->orWhere('ordini.dataPagamentoOrdineFornitore', '=', '0000-00-00 00:00:00');
-            });
-        } elseif (($data['stato_pagamento'] ?? 'tutti') === 'pagati') {
-            $query->whereNotNull('ordini.dataPagamentoOrdineFornitore')
-                  ->where('ordini.dataPagamentoOrdineFornitore', '!=', '')
-                  ->where('ordini.dataPagamentoOrdineFornitore', '!=', '0000-00-00 00:00:00');
-        }
-            
         $righe = $query->select([
                 'righe_ordine.idRigaOrdine',
                 'righe_ordine.idIngressoOrdine',
@@ -162,8 +150,9 @@ class CalcolatoreLocation extends Page implements HasForms
         
         // Reset tavoli array
         $this->tavoli = [];
+        $statoPagamento = $data['stato_pagamento'] ?? 'tutti';
 
-        foreach ($righe as $index => $riga) {
+        foreach ($righe as $riga) {
             $venduto = (float)$riga->venduto;
             
             $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
@@ -186,8 +175,11 @@ class CalcolatoreLocation extends Page implements HasForms
             // Quota spettante alla location
             $dare = $venduto - $provvigione;
             
-            $isPaid = !empty($riga->dataPagamentoOrdineFornitore) && $riga->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00';
+            $isPaid = !empty($riga->dataPagamentoOrdineFornitore) 
+                && $riga->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00'
+                && $riga->dataPagamentoOrdineFornitore !== '';
 
+            // Totali finanziari complessivi del periodo e location (mostrano sempre il quadro completo)
             $totaleVenduto += $venduto;
             $totaleProvvigioni += $provvigione;
             $totaleDare += $dare;
@@ -198,10 +190,19 @@ class CalcolatoreLocation extends Page implements HasForms
             } else {
                 $totaleDaPagareResiduo += $dare;
             }
+
+            // Filtro visualizzazione tabella ordini
+            if ($statoPagamento === 'da_pagare' && $isPaid) {
+                continue;
+            }
+            if ($statoPagamento === 'pagati' && !$isPaid) {
+                continue;
+            }
             
+            $dettagliIndex = count($dettagli);
             $tavoloAssegnato = $riga->tavolo ?: $this->extractTavoloName($riga->noteOrdine, (int)$riga->numeroOrdine);
             $dettagli[] = [
-                'index' => $index,
+                'index' => $dettagliIndex,
                 'cliente' => $riga->nomeClienteOrdine . ' ' . $riga->cognomeClienteOrdine,
                 'nome' => $riga->nomeClienteOrdine,
                 'cognome' => $riga->cognomeClienteOrdine,
@@ -222,7 +223,7 @@ class CalcolatoreLocation extends Page implements HasForms
             ];
 
             // Pre-fill tavoli using database or note extraction fallback
-            $this->tavoli[$index] = $tavoloAssegnato;
+            $this->tavoli[$dettagliIndex] = $tavoloAssegnato;
         }
 
         $locationName = !empty($data['idLocation']) 

@@ -98,19 +98,6 @@ class CalcolatorePartner extends Page implements HasForms
             $query->where('ordini.idLocationOrdine', $data['idLocation']);
         }
         
-        // Filtro stato pagamento
-        if (($data['stato_pagamento'] ?? 'tutti') === 'da_pagare') {
-            $query->where(function($q) {
-                $q->whereNull('ordini.dataPagamentoOrdinePartner')
-                  ->orWhere('ordini.dataPagamentoOrdinePartner', '=', '')
-                  ->orWhere('ordini.dataPagamentoOrdinePartner', '=', '0000-00-00 00:00:00');
-            });
-        } elseif (($data['stato_pagamento'] ?? 'tutti') === 'pagati') {
-            $query->whereNotNull('ordini.dataPagamentoOrdinePartner')
-                  ->where('ordini.dataPagamentoOrdinePartner', '!=', '')
-                  ->where('ordini.dataPagamentoOrdinePartner', '!=', '0000-00-00 00:00:00');
-        }
-        
         $righe = $query->select([
                 'ordini.numeroOrdine',
                 'ordini.nomeClienteOrdine',
@@ -134,6 +121,7 @@ class CalcolatorePartner extends Page implements HasForms
         $totaleGiaPagato = 0;
         $totaleQuantita = 0;
         $dettagli = [];
+        $statoPagamento = $data['stato_pagamento'] ?? 'tutti';
 
         foreach ($righe as $riga) {
             $venduto = (float)$riga->venduto;
@@ -153,12 +141,21 @@ class CalcolatorePartner extends Page implements HasForms
                 && $riga->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00' 
                 && $riga->dataPagamentoOrdinePartner !== '';
 
+            // Totali finanziari complessivi del periodo e partner
             $totaleVenduto += $venduto;
             $totaleProvvigione += $provvigione;
             $totaleQuantita += $riga->quantitaIngressoOrdine;
             
             if ($isPaid) {
                 $totaleGiaPagato += $provvigione;
+            }
+
+            // Filtro visualizzazione tabella ordini
+            if ($statoPagamento === 'da_pagare' && $isPaid) {
+                continue;
+            }
+            if ($statoPagamento === 'pagati' && !$isPaid) {
+                continue;
             }
             
             $dettagli[] = [
