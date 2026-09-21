@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Enums\FiltersLayout;
 
 class EntrataUscitaResource extends Resource
 {
@@ -79,23 +80,13 @@ class EntrataUscitaResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('anno')
-                    ->label('Anno')
+                    ->label('Anno di riferimento')
+                    ->placeholder('Tutti gli anni')
                     ->options(function () {
-                        $years = EntrataUscita::query()
-                            ->whereNotNull('dataOperazione')
-                            ->pluck('dataOperazione')
-                            ->map(fn ($d) => \Carbon\Carbon::parse($d)->format('Y'))
-                            ->unique()
-                            ->sortDesc()
-                            ->mapWithKeys(fn ($y) => [(string)$y => (string)$y])
-                            ->toArray();
-
-                        $currentYear = (string)date('Y');
-                        if (!isset($years[$currentYear])) {
-                            $years[$currentYear] = $currentYear;
-                            krsort($years);
+                        $years = [];
+                        for ($y = date('Y') + 1; $y >= 2017; $y--) {
+                            $years[(string)$y] = (string)$y;
                         }
-
                         return $years;
                     })
                     ->query(function ($query, array $data) {
@@ -106,11 +97,14 @@ class EntrataUscitaResource extends Resource
 
                 Tables\Filters\SelectFilter::make('tipoOperazione')
                     ->label('Tipo Operazione')
+                    ->placeholder('Tutte le operazioni')
                     ->options([
                         'E' => 'Solo Entrate',
                         'U' => 'Solo Uscite',
                     ]),
             ])
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filtersFormColumns(2)
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

@@ -34,7 +34,7 @@ class Dashboard extends BaseDashboard implements HasForms
                     ->label('Anno di riferimento')
                     ->options(function () {
                         $years = [];
-                        for ($y = date('Y') + 1; $y >= 2020; $y--) {
+                        for ($y = date('Y') + 1; $y >= 2017; $y--) {
                             $years[(string)$y] = $y;
                         }
                         return $years;
