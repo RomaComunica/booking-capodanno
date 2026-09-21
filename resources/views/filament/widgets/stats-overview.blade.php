@@ -1,68 +1,51 @@
 <x-filament-widgets::widget>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
-        <!-- 1. Fatturato Totale -->
+        <!-- 1. Fatturato & Ordini Totali (Uniti) -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary-500/40">
             <!-- Header Banda Superiore Colorata -->
             <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #0c5289 0%, #1773ba 100%);">
                 <div class="flex items-center gap-2.5">
                     <div class="p-1 rounded-lg bg-white/15">
-                        <x-heroicon-o-currency-euro class="h-5 w-5 text-white" />
+                        <x-heroicon-o-presentation-chart-line class="h-5 w-5 text-white" />
                     </div>
-                    <span class="text-sm font-bold tracking-wide">Fatturato Totale</span>
+                    <span class="text-sm font-bold tracking-wide">Fatturato & Ordini</span>
                 </div>
                 <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $year }}</span>
             </div>
             <!-- Corpo Card con Respiro e Padding -->
             <div class="p-6 flex-1 flex flex-col justify-between">
                 <div>
-                    <div class="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight my-1">
-                        € {{ number_format($stats['total_revenue'], 2, ',', '.') }}
+                    <div class="flex items-baseline justify-between gap-2">
+                        <div class="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight my-1">
+                            € {{ number_format($stats['total_revenue'], 2, ',', '.') }}
+                        </div>
+                        <div class="text-xs font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 px-2.5 py-1 rounded-lg border border-primary-200/80 dark:border-primary-800/60 shadow-2xs">
+                            {{ number_format($stats['total_orders'], 0, ',', '.') }} ordini
+                        </div>
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
                         Vendite lorde complessive concluse nell'anno {{ $year }}
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- 2. Ordini Totali -->
-        <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-amber-500/40">
-            <!-- Header Banda Superiore Colorata -->
-            <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-1 rounded-lg bg-white/15">
-                        <x-heroicon-o-shopping-cart class="h-5 w-5 text-white" />
-                    </div>
-                    <span class="text-sm font-bold tracking-wide">Ordini Totali</span>
-                </div>
-                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $year }}</span>
-            </div>
-            <!-- Corpo Card con Respiro e Padding -->
-            <div class="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                    <div class="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight my-1">
-                        {{ number_format($stats['total_orders'], 0, ',', '.') }}
-                    </div>
-                </div>
-                <!-- Breakdown Stati Ordine Spaziati -->
-                <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                        Completati: {{ number_format($stats['completed_orders'] ?? 0, 0, ',', '.') }}
+                <!-- Breakdown Stati Ordine -->
+                <div class="flex flex-wrap items-center gap-1.5 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Compl: {{ number_format($stats['completed_orders'] ?? 0, 0, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                         In Corso: {{ number_format($stats['pending_orders'] ?? 0, 0, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800/60">
-                        <span class="w-2 h-2 rounded-full bg-danger-500"></span>
-                        Annullati: {{ number_format($stats['cancelled_orders'] ?? 0, 0, ',', '.') }}
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-danger-500"></span>
+                        Ann: {{ number_format($stats['cancelled_orders'] ?? 0, 0, ',', '.') }}
                     </span>
                 </div>
             </div>
         </div>
 
-        <!-- 3. Biglietti Venduti -->
+        <!-- 2. Biglietti Venduti -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-cyan-500/40">
             <!-- Header Banda Superiore Colorata -->
             <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);">
@@ -101,7 +84,7 @@
             </div>
         </div>
 
-        <!-- 4. Utile Netto (da Biglietti) -->
+        <!-- 3. Utile Lordo (da Biglietti) -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-green-500/40">
             <!-- Header Banda Superiore Colorata -->
             <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
@@ -109,7 +92,7 @@
                     <div class="p-1 rounded-lg bg-white/15">
                         <x-heroicon-o-banknotes class="h-5 w-5 text-white" />
                     </div>
-                    <span class="text-sm font-bold tracking-wide">Utile Netto (da Biglietti)</span>
+                    <span class="text-sm font-bold tracking-wide">Utile Lordo (da Biglietti)</span>
                 </div>
                 <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">Provvigioni</span>
             </div>
@@ -122,6 +105,41 @@
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
                         Percentuali e quote provvigionali lorde maturate sui biglietti venduti
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Provvigioni Partner (Spese Partner) -->
+        <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-amber-500/40">
+            <!-- Header Banda Superiore Colorata -->
+            <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-1 rounded-lg bg-white/15">
+                        <x-heroicon-o-user-group class="h-5 w-5 text-white" />
+                    </div>
+                    <span class="text-sm font-bold tracking-wide">Provvigioni Partner</span>
+                </div>
+                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">Partner</span>
+            </div>
+            <!-- Corpo Card con Respiro e Padding -->
+            <div class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="text-3xl lg:text-4xl font-extrabold text-amber-600 dark:text-amber-400 tracking-tight my-1">
+                        € {{ number_format($stats['partner_commissions'] ?? 0, 2, ',', '.') }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                        Quote provvigionali maturate e spettanti ai partner per l'anno
+                    </div>
+                </div>
+                <!-- Breakdown Info Partner -->
+                <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Ordini Partner: {{ number_format($stats['partner_orders_count'] ?? 0, 0, ',', '.') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-gray-600 dark:text-gray-400">
+                        {{ $stats['partners_count'] ?? 0 }} partner a sistema
+                    </span>
                 </div>
             </div>
         </div>
@@ -148,6 +166,13 @@
                         Totale spese e costi registrati in Entrate/Uscite Extra per l'anno
                     </div>
                 </div>
+                @if(!empty($stats['extra_incomes']) && $stats['extra_incomes'] > 0)
+                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
+                        + € {{ number_format($stats['extra_incomes'], 2, ',', '.') }} entrate extra
+                    </span>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -170,7 +195,7 @@
                         € {{ number_format($stats['profit_after_expenses'], 2, ',', '.') }}
                     </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
-                        Utile netto biglietti meno uscite extra (+ eventuali entrate extra)
+                        Utile netto biglietti meno provvigioni partner e uscite extra (+ eventuali entrate extra)
                     </div>
                 </div>
             </div>

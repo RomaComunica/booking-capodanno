@@ -77,6 +77,8 @@ class StatisticsService
         $totalRevenue = $this->getTotalRevenue($year);
         $totalTickets = $this->getTotalTickets($year);
         $netProfitTickets = $this->getTotalCommissions($year);
+        $partnerCommissions = $this->getTotalPartnerCommissions($year);
+        $partnerOrdersCount = $this->getPartnerOrdersCount($year);
 
         $extraIncomes = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
             ->where('tipoOperazione', 'E')
@@ -86,7 +88,7 @@ class StatisticsService
             ->where('tipoOperazione', 'U')
             ->sum('importo');
 
-        $profitAfterExpenses = round($netProfitTickets + $extraIncomes - $extraExpenses, 2);
+        $profitAfterExpenses = round($netProfitTickets - $partnerCommissions + $extraIncomes - $extraExpenses, 2);
 
         return [
             'total_revenue' => $totalRevenue,
@@ -99,6 +101,8 @@ class StatisticsService
             'total_commissions' => $netProfitTickets,
             'total_margin' => round($totalRevenue - $netProfitTickets, 2),
             'net_profit_tickets' => $netProfitTickets,
+            'partner_commissions' => $partnerCommissions,
+            'partner_orders_count' => $partnerOrdersCount,
             'extra_incomes' => $extraIncomes,
             'extra_expenses' => $extraExpenses,
             'profit_after_expenses' => $profitAfterExpenses,
@@ -213,6 +217,106 @@ class StatisticsService
     }
 
     /**
+     * Calculate total partner commissions for year
+     */
+    public function getTotalPartnerCommissions($year)
+    {
+        $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
+
+        $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereYear('ordini.dataOrdine', $year)
+            ->where('ordini.statoOrdine', 2)
+            ->whereNotNull('ordini.idPartnerOrdine')
+            ->where('ordini.idPartnerOrdine', '>', 0)
+            ->where('ordini.idPartnerOrdine', '!=', $idPartnerGestore)
+            ->select([
+                DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
+                'righe_ordine.quantitaIngressoOrdine',
+                'righe_ordine.idIngressoOrdine',
+                'righe_ordine.nomeIngressoOrdine',
+                'ordini.idLocationOrdine',
+                'ordini.idPartnerOrdine',
+            ])
+            ->get();
+
+        if ($righe->isEmpty()) {
+            return 0.0;
+        }
+
+        $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
+        $ticketNames = $righe->pluck('nomeIngressoOrdine')->unique()->filter()->toArray();
+
+        $tipologieByCont = DB::table('tipologia_ingresso')
+            ->whereIn('idIngressoCont', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngressoCont')
+            ->toArray();
+
+        $tipologieById = DB::table('tipologia_ingresso')
+            ->whereIn('idIngresso', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngresso')
+            ->toArray();
+
+        $tipologieByNameLoc = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso) . '_' . $item->idLocation;
+            })
+            ->toArray();
+
+        $tipologieByName = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso);
+            })
+            ->toArray();
+
+        $totalPartnerCommissions = 0.0;
+
+        foreach ($righe as $riga) {
+            $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
+
+            $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                ?? $tipologieById[$riga->idIngressoOrdine]
+                ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocationOrdine] ?? null)
+                ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+            $tipoProv = $tipologia ? (int)$tipologia->tipoProvvigionePartner : 0;
+            $valoreProv = $tipologia ? (float)$tipologia->valoreProvvigionePartner : 0.0;
+
+            if ($tipoProv == 1) {
+                // Percentuale
+                $commission = ($subtotal / 100) * $valoreProv;
+            } else {
+                // Fisso per biglietto
+                $commission = $valoreProv * (int)$riga->quantitaIngressoOrdine;
+            }
+
+            $totalPartnerCommissions += $commission;
+        }
+
+        return round($totalPartnerCommissions, 2);
+    }
+
+    /**
+     * Get count of completed orders associated with external partners for year
+     */
+    public function getPartnerOrdersCount($year)
+    {
+        $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
+
+        return Ordine::whereYear('dataOrdine', $year)
+            ->where('statoOrdine', 2)
+            ->whereNotNull('idPartnerOrdine')
+            ->where('idPartnerOrdine', '>', 0)
+            ->where('idPartnerOrdine', '!=', $idPartnerGestore)
+            ->count();
+    }
+
+    /**
      * Calculate total margin (revenue - commissions) without external ledger
      */
     public function getTotalMargin($year)
@@ -221,11 +325,12 @@ class StatisticsService
     }
 
     /**
-     * Calculate total net profit (margin + entrate - uscite)
+     * Calculate total net profit (net commissions - partner commissions + entrate - uscite)
      */
     public function getTotalProfit($year)
     {
-        $margin = $this->getTotalMargin($year);
+        $netProfitTickets = $this->getTotalCommissions($year);
+        $partnerCommissions = $this->getTotalPartnerCommissions($year);
 
         // Add Entrate and subtract Uscite from the new ledger table
         $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
@@ -236,7 +341,7 @@ class StatisticsService
             ->where('tipoOperazione', 'U')
             ->sum('importo');
 
-        return round($margin + $entrate - $uscite, 2);
+        return round($netProfitTickets - $partnerCommissions + $entrate - $uscite, 2);
     }
 
     /**
@@ -759,6 +864,42 @@ class StatisticsService
 
             $spettanteLocation = round(max(0, $revenue - $commissions), 2);
 
+            // Calcolo provvigioni partner per il mese
+            $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
+            $partnerRighe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+                ->whereYear('ordini.dataOrdine', $year)
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2)
+                ->whereNotNull('ordini.idPartnerOrdine')
+                ->where('ordini.idPartnerOrdine', '>', 0)
+                ->where('ordini.idPartnerOrdine', '!=', $idPartnerGestore)
+                ->select([
+                    DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
+                    'righe_ordine.quantitaIngressoOrdine',
+                    'righe_ordine.idIngressoOrdine',
+                    'righe_ordine.nomeIngressoOrdine',
+                    'ordini.idLocationOrdine',
+                ])
+                ->get();
+
+            $partnerCommissions = 0.0;
+            foreach ($partnerRighe as $riga) {
+                $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
+                $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                    ?? $tipologieById[$riga->idIngressoOrdine]
+                    ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocationOrdine] ?? null)
+                    ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+                $tipoProv = $tipologia ? (int)$tipologia->tipoProvvigionePartner : 0;
+                $valoreProv = $tipologia ? (float)$tipologia->valoreProvvigionePartner : 0.0;
+
+                if ($tipoProv == 1) {
+                    $partnerCommissions += ($subtotal / 100) * $valoreProv;
+                } else {
+                    $partnerCommissions += $valoreProv * (int)$riga->quantitaIngressoOrdine;
+                }
+            }
+
             $entrate = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
                 ->whereMonth('dataOperazione', $month)
                 ->where('tipoOperazione', 'E')
@@ -769,15 +910,16 @@ class StatisticsService
                 ->where('tipoOperazione', 'U')
                 ->sum('importo');
 
-            // Utile Netto Reale = Nostra Provvigione Biglietti + Entrate Extra - Uscite Extra
-            $profit = round($commissions + $entrate - $uscite, 2);
+            // Utile Netto Reale = Nostra Provvigione Biglietti - Provvigioni Partner + Entrate Extra - Uscite Extra
+            $profit = round($commissions - $partnerCommissions + $entrate - $uscite, 2);
 
             $data[] = [
                 'month' => self::MONTHS_IT[$month],
                 'revenue' => round($revenue, 2),
                 'commissions' => round($commissions, 2),
+                'partner_commissions' => round($partnerCommissions, 2),
                 'spettante_location' => $spettanteLocation,
-                'margin' => round($commissions, 2), // Margine della nostra attività = Provvigione
+                'margin' => round($commissions, 2),
                 'entrate' => round($entrate, 2),
                 'uscite' => round($uscite, 2),
                 'profit' => $profit,
