@@ -30,6 +30,10 @@ class TipologiaIngresso extends Model
                 $model->idIngresso = 0;
             }
         });
+
+        static::deleting(function ($model) {
+            $model->partners()->detach();
+        });
     }
 
     protected $casts = [

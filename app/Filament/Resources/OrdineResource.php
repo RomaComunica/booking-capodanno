@@ -433,6 +433,45 @@ class OrdineResource extends Resource
                         return 'Fino al ' . date('d/m/Y', strtotime($data['data_a']));
                     }),
                 
+                // Periodo Festività
+                Filter::make('periodo_speciale')
+                    ->form([
+                        Forms\Components\Select::make('periodo')
+                            ->label('Periodo Festività')
+                            ->placeholder('Tutti i periodi')
+                            ->options([
+                                'halloween' => 'Halloween (1 Ott - 1 Nov)',
+                                'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
+                                'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $periodo = $data['periodo'] ?? null;
+                        if (!$periodo) {
+                            return $query;
+                        }
+
+                        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+                        $dateExpr = $driver === 'sqlite' 
+                            ? "strftime('%m-%d', dataOrdine)" 
+                            : "DATE_FORMAT(dataOrdine, '%m-%d')";
+
+                        return match ($periodo) {
+                            'halloween' => $query->whereRaw("{$dateExpr} BETWEEN '10-01' AND '11-01'"),
+                            'san_valentino' => $query->whereRaw("{$dateExpr} BETWEEN '01-14' AND '02-14'"),
+                            'festa_donna' => $query->whereRaw("{$dateExpr} BETWEEN '02-08' AND '03-08'"),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        return match ($data['periodo'] ?? null) {
+                            'halloween' => 'Periodo: Halloween (1 Ott - 1 Nov)',
+                            'san_valentino' => 'Periodo: San Valentino (14 Gen - 14 Feb)',
+                            'festa_donna' => 'Periodo: Festa della Donna (8 Feb - 8 Mar)',
+                            default => null,
+                        };
+                    }),
+                
                 // Location
                 SelectFilter::make('idLocationOrdine')
                     ->label('Location')

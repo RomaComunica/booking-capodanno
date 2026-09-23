@@ -120,18 +120,21 @@ class Comparatore extends Page implements HasForms
                         'questo_mese' => 'Questo mese (fino a oggi) vs Anno scorso (stesso periodo)',
                         'anno_in_corso' => 'Anno in corso (fino a oggi) vs Anno scorso (stesso periodo)',
                         'anno_contro_anno' => 'Anno intero contro Anno intero',
+                        'halloween' => 'Halloween (1 Ott - 1 Nov) vs Anno scorso',
+                        'san_valentino' => 'San Valentino (14 Gen - 14 Feb) vs Anno scorso',
+                        'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar) vs Anno scorso',
                         'periodo_personalizzato' => 'Periodi personalizzati (range di date)',
                     ])
                     ->required()
                     ->live()
                     ->columnSpan(4),
 
-                // Data di riferimento per oggi, mese, anno in corso
+                // Data di riferimento per oggi, mese, anno in corso, festività
                 DatePicker::make('data_riferimento')
-                    ->label('Data Riferimento')
+                    ->label('Data / Anno Riferimento')
                     ->default(now())
                     ->required()
-                    ->visible(fn ($get) => in_array($get('tipo_confronto'), ['oggi', 'questo_mese', 'anno_in_corso']))
+                    ->visible(fn ($get) => in_array($get('tipo_confronto'), ['oggi', 'questo_mese', 'anno_in_corso', 'halloween', 'san_valentino', 'festa_donna']))
                     ->columnSpan(4),
 
                 // Anni per Anno contro Anno
@@ -209,7 +212,7 @@ class Comparatore extends Page implements HasForms
         $refDay = (int)date('d', $refTime);
 
         $short1 = $short2 = '';
-        $isPrimaryComparison = in_array($tipo, ['oggi', 'questo_mese', 'anno_in_corso', 'anno_contro_anno']);
+        $isPrimaryComparison = in_array($tipo, ['oggi', 'questo_mese', 'anno_in_corso', 'anno_contro_anno', 'halloween', 'san_valentino', 'festa_donna']);
 
         if ($tipo === 'oggi') {
             $from1 = date('Y-m-d', mktime(0,0,0, $refMonth, $refDay, $refYear - 1));
@@ -259,6 +262,36 @@ class Comparatore extends Page implements HasForms
             $short1 = (string)$year1;
             $short2 = (string)$year2;
             $isMonthlyChart = false;
+        } elseif ($tipo === 'halloween') {
+            $from1 = ($refYear - 1) . '-10-01';
+            $to1 = ($refYear - 1) . '-11-01';
+            $from2 = $refYear . '-10-01';
+            $to2 = $refYear . '-11-01';
+            
+            $label1 = "Halloween " . ($refYear - 1) . " (1 Ott - 1 Nov)";
+            $label2 = "Halloween " . $refYear . " (1 Ott - 1 Nov)";
+            $short1 = "Hall. " . date('y', strtotime($from1));
+            $short2 = "Hall. " . date('y', strtotime($from2));
+        } elseif ($tipo === 'san_valentino') {
+            $from1 = ($refYear - 1) . '-01-14';
+            $to1 = ($refYear - 1) . '-02-14';
+            $from2 = $refYear . '-01-14';
+            $to2 = $refYear . '-02-14';
+            
+            $label1 = "San Valentino " . ($refYear - 1) . " (14 Gen - 14 Feb)";
+            $label2 = "San Valentino " . $refYear . " (14 Gen - 14 Feb)";
+            $short1 = "S.Val. " . date('y', strtotime($from1));
+            $short2 = "S.Val. " . date('y', strtotime($from2));
+        } elseif ($tipo === 'festa_donna') {
+            $from1 = ($refYear - 1) . '-02-08';
+            $to1 = ($refYear - 1) . '-03-08';
+            $from2 = $refYear . '-02-08';
+            $to2 = $refYear . '-03-08';
+            
+            $label1 = "Festa della Donna " . ($refYear - 1) . " (8 Feb - 8 Mar)";
+            $label2 = "Festa della Donna " . $refYear . " (8 Feb - 8 Mar)";
+            $short1 = "Donna " . date('y', strtotime($from1));
+            $short2 = "Donna " . date('y', strtotime($from2));
         } else { // periodo_personalizzato
             $from1 = $data['periodo_1_da'];
             $to1 = $data['periodo_1_a'];

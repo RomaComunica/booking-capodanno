@@ -58,25 +58,22 @@ class IngressiRelationManager extends RelationManager
                 Forms\Components\Section::make('Partner Abilitati')
                     ->description('Seleziona i partner che possono vendere questo biglietto')
                     ->schema([
-                        Forms\Components\CheckboxList::make('partner_ids')
+                        Forms\Components\CheckboxList::make('partners')
                             ->label('Partner')
-                            ->options(\App\Models\Partner::pluck('nomePartner', 'idPartner'))
+                            ->relationship(
+                                name: 'partners',
+                                titleAttribute: 'nomePartner',
+                                modifyQueryUsing: fn ($query) => $query->orderBy('nomePartner')
+                            )
+                            ->pivotData(fn ($livewire) => [
+                                'idLocation' => $livewire->getOwnerRecord()->idLocation,
+                                'quantitaIngressi' => 0,
+                                'quantitaIngressiTerra' => 0,
+                            ])
                             ->searchable()
                             ->bulkToggleable()
                             ->columns(3)
-                            ->gridDirection('row')
-                            ->afterStateHydrated(function ($component, $record) {
-                                if ($record && $record->exists) {
-                                    // Load existing partner IDs
-                                    $partnerIds = \DB::table('cross_partner_ingressi')
-                                        ->where('idTipologiaIngresso', $record->idIngressoCont)
-                                        ->where('idLocation', $record->idLocation)
-                                        ->pluck('idPartnerIngressi')
-                                        ->toArray();
-                                    
-                                    $component->state($partnerIds);
-                                }
-                            }),
+                            ->gridDirection('row'),
                     ])
                     ->collapsible()
                     ->collapsed(),
@@ -164,60 +161,13 @@ class IngressiRelationManager extends RelationManager
                         // Auto-assign next order value
                         $maxOrder = $this->getOwnerRecord()->ingressi()->max('ordine') ?? 0;
                         $data['ordine'] = $maxOrder + 10;
-                        $data['idIngresso'] = $this->getOwnerRecord()->ingressi()->max('idIngresso') + 1 ?? 1;
-                        
-                        // Store partner ids and remove from main data
-                        $this->cachedPartnerIds = $data['partner_ids'] ?? [];
-                        unset($data['partner_ids']);
+                        $data['idIngresso'] = ($this->getOwnerRecord()->ingressi()->max('idIngresso') ?? 0) + 1;
                         
                         return $data;
-                    })
-                    ->after(function ($record) {
-                        // Save partner associations
-                        if (isset($this->cachedPartnerIds) && is_array($this->cachedPartnerIds)) {
-                            foreach ($this->cachedPartnerIds as $partnerId) {
-                                \DB::table('cross_partner_ingressi')->insert([
-                                    'idPartnerIngressi' => $partnerId,
-                                    'idLocation' => $this->getOwnerRecord()->idLocation,
-                                    'idTipologiaIngresso' => $record->idIngressoCont,
-                                    'quantitaIngressi' => 0,
-                                    'quantitaIngressiTerra' => 0,
-                                ]);
-                            }
-                        }
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->mutateFormDataUsing(function (array $data): array {
-                        // Store partner IDs and remove from main data
-                        $this->cachedPartnerIds = $data['partner_ids'] ?? [];
-                        unset($data['partner_ids']);
-                        return $data;
-                    })
-                    ->after(function ($record) {
-                        // Update partner associations
-                        if (isset($this->cachedPartnerIds)) {
-                            // Remove old associations
-                            \DB::table('cross_partner_ingressi')
-                                ->where('idTipologiaIngresso', $record->idIngressoCont)
-                                ->where('idLocation', $this->getOwnerRecord()->idLocation)
-                                ->delete();
-                            
-                            // Add new associations
-                            if (is_array($this->cachedPartnerIds)) {
-                                foreach ($this->cachedPartnerIds as $partnerId) {
-                                    \DB::table('cross_partner_ingressi')->insert([
-                                        'idPartnerIngressi' => $partnerId,
-                                        'idLocation' => $this->getOwnerRecord()->idLocation,
-                                        'idTipologiaIngresso' => $record->idIngressoCont,
-                                        'quantitaIngressi' => 0,
-                                        'quantitaIngressiTerra' => 0,
-                                    ]);
-                                }
-                            }
-                        }
-                    }),
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

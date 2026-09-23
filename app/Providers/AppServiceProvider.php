@@ -138,5 +138,47 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Ignore during setup/migrations
         }
+
+        // Auto-ensure cross_partner_ingressi table exists and legacy entries are synced
+        try {
+            if (!Schema::hasTable('cross_partner_ingressi')) {
+                Schema::create('cross_partner_ingressi', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->increments('idCrossPartnerIngressi');
+                    $table->integer('idTipologiaIngresso');
+                    $table->integer('idPartnerIngressi');
+                    $table->integer('idLocation')->default(0);
+                    $table->integer('quantitaIngressi')->default(0);
+                    $table->integer('quantitaIngressiTerra')->default(0);
+                    $table->timestamps();
+                });
+            }
+
+            if (!\Illuminate\Support\Facades\Cache::has('cross_partner_legacy_synced_v1')) {
+                \Illuminate\Support\Facades\Cache::forever('cross_partner_legacy_synced_v1', true);
+                if (Schema::hasTable('cross_partner_ingressi') && Schema::hasTable('tipologia_ingresso')) {
+                    $orphans = DB::table('cross_partner_ingressi')
+                        ->whereNotExists(function ($query) {
+                            $query->select(DB::raw(1))
+                                ->from('tipologia_ingresso')
+                                ->whereColumn('tipologia_ingresso.idIngressoCont', 'cross_partner_ingressi.idTipologiaIngresso');
+                        })
+                        ->get();
+
+                    foreach ($orphans as $orphan) {
+                        $matched = DB::table('tipologia_ingresso')
+                            ->where('idLocation', $orphan->idLocation)
+                            ->where('idIngresso', $orphan->idTipologiaIngresso)
+                            ->first();
+                        if ($matched) {
+                            DB::table('cross_partner_ingressi')
+                                ->where('idCrossPartnerIngressi', $orphan->idCrossPartnerIngressi)
+                                ->update(['idTipologiaIngresso' => $matched->idIngressoCont]);
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore during setup/migrations
+        }
     }
 }

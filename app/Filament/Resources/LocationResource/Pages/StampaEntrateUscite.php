@@ -38,6 +38,35 @@ class StampaEntrateUscite extends Page
                     ->reactive()
                     ->afterStateUpdated(fn () => $this->updatedFilters()),
                 
+                Select::make('periodo_speciale')
+                    ->label('Periodo Festività')
+                    ->placeholder('Preimpostato...')
+                    ->options([
+                        'questo_mese' => 'Questo mese',
+                        'halloween' => 'Halloween (1 Ott - 1 Nov)',
+                        'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
+                        'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
+                    ])
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
+                        if (!$state) return;
+                        $year = date('Y');
+                        if ($state === 'questo_mese') {
+                            $set('data_dal', now()->startOfMonth()->format('Y-m-d'));
+                            $set('data_al', now()->endOfMonth()->format('Y-m-d'));
+                        } elseif ($state === 'halloween') {
+                            $set('data_dal', "{$year}-10-01");
+                            $set('data_al', "{$year}-11-01");
+                        } elseif ($state === 'san_valentino') {
+                            $set('data_dal', "{$year}-01-14");
+                            $set('data_al', "{$year}-02-14");
+                        } elseif ($state === 'festa_donna') {
+                            $set('data_dal', "{$year}-02-08");
+                            $set('data_al', "{$year}-03-08");
+                        }
+                        $this->updatedFilters();
+                    }),
+                
                 DatePicker::make('data_dal')
                     ->label('Dal')
                     ->required()
@@ -52,7 +81,7 @@ class StampaEntrateUscite extends Page
                     ->afterStateUpdated(fn () => $this->updatedFilters())
                     ->default(now()->endOfMonth()),
             ])
-            ->columns(3)
+            ->columns(4)
             ->statePath('data');
     }
 

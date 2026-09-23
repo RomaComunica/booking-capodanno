@@ -55,6 +55,36 @@ class CalcolatorePartner extends Page implements HasForms
                     ->options(Location::pluck('nomeLocation', 'idLocation'))
                     ->searchable(),
                 
+                Select::make('periodo_speciale')
+                    ->label('Periodo Festività')
+                    ->placeholder('Seleziona periodo...')
+                    ->options([
+                        'tutto_anno' => "Tutto l'anno",
+                        'halloween' => 'Halloween (1 Ott - 1 Nov)',
+                        'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
+                        'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
+                    ])
+                    ->live()
+                    ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
+                        if (!$state) return;
+                        $currentFrom = $get('data_da');
+                        $year = $currentFrom ? date('Y', strtotime($currentFrom)) : date('Y');
+                        
+                        if ($state === 'tutto_anno') {
+                            $set('data_da', "{$year}-01-01");
+                            $set('data_a', "{$year}-12-31");
+                        } elseif ($state === 'halloween') {
+                            $set('data_da', "{$year}-10-01");
+                            $set('data_a', "{$year}-11-01");
+                        } elseif ($state === 'san_valentino') {
+                            $set('data_da', "{$year}-01-14");
+                            $set('data_a', "{$year}-02-14");
+                        } elseif ($state === 'festa_donna') {
+                            $set('data_da', "{$year}-02-08");
+                            $set('data_a', "{$year}-03-08");
+                        }
+                    }),
+
                 DatePicker::make('data_da')
                     ->label('Dal')
                     ->required(),
@@ -72,7 +102,7 @@ class CalcolatorePartner extends Page implements HasForms
                     ])
                     ->default('tutti'),
             ])
-            ->columns(5)
+            ->columns(6)
             ->statePath('data');
     }
 
