@@ -46,7 +46,8 @@ body.fi-body {
 .fi-ta-content,
 .fi-modal-window,
 [class*="fi-fo-"],
-[class*="fi-input"],
+.fi-input:not([type="checkbox"]):not([type="radio"]),
+.fi-input-wrp,
 [class*="fi-section"] {
     --tw-ring-shadow: none !important;
     --tw-ring-color: transparent !important;
@@ -124,9 +125,9 @@ body.fi-body {
 /* Form Inputs, Selects & Option Dropdowns (Clean 1px Border, No Rings) */
 .dark select,
 .dark select option,
-.dark input,
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .dark textarea,
-.dark .fi-input,
+.dark .fi-input:not([type="checkbox"]):not([type="radio"]),
 .dark .fi-input-wrp,
 .dark .fi-select-input {
     background-color: #1e293b !important;
@@ -142,7 +143,7 @@ body.fi-body {
 
 html:not(.dark) select,
 html:not(.dark) select option,
-html:not(.dark) input,
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 html:not(.dark) textarea,
 html:not(.dark) .fi-input-wrp,
 html:not(.dark) .fi-select-input {
@@ -150,6 +151,77 @@ html:not(.dark) .fi-select-input {
     color: #0f172a !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
+}
+
+/* Checkbox & Radio Inputs - Perfect Visibility & Fill State */
+input[type="checkbox"],
+input[type="radio"],
+.fi-checkbox-input,
+.fi-radio-input {
+    cursor: pointer !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    min-height: 1.25rem !important;
+    border-radius: 4px !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+input[type="radio"],
+.fi-radio-input {
+    border-radius: 9999px !important;
+}
+
+/* Unchecked State (Light Theme) */
+html:not(.dark) input[type="checkbox"]:not(:checked),
+html:not(.dark) input[type="radio"]:not(:checked),
+html:not(.dark) .fi-checkbox-input:not(:checked),
+html:not(.dark) .fi-radio-input:not(:checked) {
+    background-color: #ffffff !important;
+    border: 2px solid #94a3b8 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Unchecked State (Dark Theme) */
+.dark input[type="checkbox"]:not(:checked),
+.dark input[type="radio"]:not(:checked),
+.dark .fi-checkbox-input:not(:checked),
+.dark .fi-radio-input:not(:checked) {
+    background-color: #1e293b !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Checked State (Light & Dark) - Bright Brand Blue fill with white icon */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked,
+.fi-checkbox-input:checked,
+.fi-radio-input:checked {
+    background-color: #0c5289 !important;
+    border: 2px solid #0c5289 !important;
+    color: #ffffff !important;
+    background-size: 80% 80% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Checked SVG checkmark icon for checkboxes */
+input[type="checkbox"]:checked,
+.fi-checkbox-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+}
+
+/* Checked SVG dot icon for radio buttons */
+input[type="radio"]:checked,
+.fi-radio-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3.5'/%3e%3c/svg%3e") !important;
+}
+
+/* Hover & Focus state */
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+.fi-checkbox-input:hover,
+.fi-radio-input:hover {
+    border-color: #0c5289 !important;
 }
 
 /* Text & Typography Contrast */
