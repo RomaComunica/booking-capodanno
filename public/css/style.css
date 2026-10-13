@@ -512,7 +512,7 @@ a:hover {
     }
     
     .page-title {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
     }
     
     .filter-grid {
@@ -520,20 +520,65 @@ a:hover {
     }
 
     .detail-pad {
-        padding: 1rem 0.5rem;
+        padding: 0.75rem 0.25rem;
+    }
+
+    .table-responsive {
+        overflow-x: hidden !important;
+        border-radius: 8px;
+    }
+
+    .modern-table {
+        width: 100% !important;
     }
 
     .modern-table th,
     .modern-table td {
-        padding: 0.75rem 0.5rem;
+        padding: 0.6rem 0.25rem;
     }
 
     .col-datetime {
         display: none !important;
     }
 
+    .col-price {
+        width: 68px !important;
+        white-space: nowrap !important;
+        font-size: 0.9rem !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        text-align: center !important;
+    }
+
+    .col-qty {
+        width: 54px !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        text-align: center !important;
+    }
+
     .qty-input {
-        width: 65px;
+        width: 48px !important;
+        height: 36px !important;
+        padding: 2px 2px !important;
+        font-size: 0.95rem !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .ticket-name {
+        font-size: 0.92rem !important;
+        line-height: 1.25 !important;
+        word-break: break-word !important;
+    }
+
+    .refund-wrapper {
+        gap: 0.5rem !important;
+    }
+
+    .refund-label {
+        font-size: 0.8rem !important;
+        line-height: 1.25 !important;
     }
 }
 
@@ -946,6 +991,8 @@ a:hover {
 /* Iframe layout overrides */
 body.iframe-body {
     background-color: var(--bg-primary) !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 body.iframe-body .site-header,
@@ -954,23 +1001,51 @@ body.iframe-body .site-footer {
 }
 
 body.iframe-body .container {
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
 }
 
 body.iframe-body .main-content {
-    padding: 2.5rem 0 !important;
+    padding: 0.75rem 0 !important;
 }
 
-@media (max-width: 480px) {
+body.iframe-body .page-header {
+    margin-bottom: 0.75rem !important;
+}
+
+body.iframe-body .divider {
+    margin: 0.75rem 0 !important;
+}
+
+body.iframe-body .step-indicator {
+    margin-bottom: 0.75rem !important;
+}
+
+body.iframe-body .glass-panel {
+    border-radius: 12px;
+}
+
+body.iframe-body .detail-pad {
+    padding: 1.25rem 1rem !important;
+}
+
+@media (max-width: 768px) {
     body.iframe-body .container {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+    body.iframe-body .main-content {
+        padding: 0.25rem 0 !important;
+    }
+    body.iframe-body .detail-pad {
+        padding: 0.6rem 0.25rem !important;
     }
     body.iframe-body .page-title {
-        font-size: 1.5rem !important;
+        font-size: 1.35rem !important;
     }
     body.iframe-body .page-subtitle {
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important;
     }
 }

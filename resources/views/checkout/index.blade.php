@@ -67,6 +67,43 @@
                             .col-datetime {
                                 display: none !important;
                             }
+                            .table-responsive {
+                                overflow-x: hidden !important;
+                            }
+                            .modern-table {
+                                width: 100% !important;
+                            }
+                            .modern-table th,
+                            .modern-table td {
+                                padding: 0.6rem 0.25rem !important;
+                            }
+                            .col-price {
+                                width: 64px !important;
+                                white-space: nowrap !important;
+                                font-size: 0.88rem !important;
+                                padding-left: 2px !important;
+                                padding-right: 2px !important;
+                                text-align: center !important;
+                            }
+                            .col-qty {
+                                width: 38px !important;
+                                padding-left: 2px !important;
+                                padding-right: 2px !important;
+                                text-align: center !important;
+                            }
+                            .col-total {
+                                width: 68px !important;
+                                white-space: nowrap !important;
+                                font-size: 0.88rem !important;
+                                padding-left: 2px !important;
+                                padding-right: 2px !important;
+                                text-align: right !important;
+                            }
+                            .ticket-name {
+                                font-size: 0.92rem !important;
+                                line-height: 1.25 !important;
+                                word-break: break-word !important;
+                            }
                         }
                     </style>
 
@@ -76,12 +113,12 @@
                                 <tr>
                                     <th class="text-left col-datetime">Data e ora</th>
                                     <th class="text-left">Biglietto</th>
-                                    <th class="text-center">Prezzo</th>
-                                    <th class="text-center">Qtà</th>
+                                    <th class="text-center col-price">Prezzo</th>
+                                    <th class="text-center col-qty">Qtà</th>
                                     @if(collect($cart)->some(fn($item) => $item['rimborso'] == 1))
                                     <th class="text-center">Rimborso</th>
                                     @endif
-                                    <th class="text-right">Totale</th>
+                                    <th class="text-right col-total">Totale</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -102,12 +139,12 @@
                                     </td>
                                     
                                     {{-- Prezzo --}}
-                                    <td class="text-center">
+                                    <td class="text-center col-price">
                                         {{ number_format($item['prezzoIngresso'], 2, ',', '.') }} €
                                     </td>
                                     
                                     {{-- Quantità --}}
-                                    <td class="text-center font-bold">
+                                    <td class="text-center font-bold col-qty">
                                         {{ $item['quantita'] }}
                                     </td>
                                     
@@ -123,7 +160,7 @@
                                     @endif
                                     
                                     {{-- Totale Riga --}}
-                                    <td class="text-right font-bold text-dark">
+                                    <td class="text-right font-bold text-dark col-total">
                                         {{ number_format($item['subtotale'], 2, ',', '.') }} €
                                     </td>
                                 </tr>

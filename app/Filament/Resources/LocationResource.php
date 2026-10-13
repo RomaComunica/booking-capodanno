@@ -52,9 +52,10 @@ class LocationResource extends Resource
                             ->maxLength(50),
                         
                         Forms\Components\TextInput::make('emailLocation')
-                            ->label('Email')
-                            ->email()
-                            ->maxLength(100),
+                            ->label('Email Notifiche')
+                            ->placeholder('es: info@locale.it, prenotazioni@locale.it')
+                            ->helperText('Puoi inserire più email separate da virgola.')
+                            ->maxLength(255),
                     ])
                     ->columns(3),
 
@@ -87,8 +88,9 @@ class LocationResource extends Resource
                         
                         Forms\Components\TextInput::make('emailRifLocation')
                             ->label('Email Riferimento')
-                            ->email()
-                            ->maxLength(100),
+                            ->placeholder('es: mario@locale.it, luca@locale.it')
+                            ->helperText('Puoi inserire più email separate da virgola.')
+                            ->maxLength(255),
                     ])
                     ->columns(3)
                     ->collapsible(),

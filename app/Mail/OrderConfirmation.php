@@ -41,19 +41,37 @@ class OrderConfirmation extends Mailable
     {
         $bccs = [];
         
-        // Aggiungi email della location in copia
+        // Aggiungi email della location in copia (supporta email multiple separate da virgola, punto e virgola o spazio)
         if ($this->location) {
             if (!empty($this->location->emailLocation)) {
-                $bccs[] = $this->location->emailLocation;
+                $emails = preg_split('/[,;\s]+/', $this->location->emailLocation, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($emails as $email) {
+                    $clean = trim($email);
+                    if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                        $bccs[] = $clean;
+                    }
+                }
             }
             if (!empty($this->location->emailRifLocation)) {
-                $bccs[] = $this->location->emailRifLocation;
+                $emails = preg_split('/[,;\s]+/', $this->location->emailRifLocation, -1, PREG_SPLIT_NO_EMPTY);
+                foreach ($emails as $email) {
+                    $clean = trim($email);
+                    if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                        $bccs[] = $clean;
+                    }
+                }
             }
         }
         
         // Aggiungi email del partner in copia
         if ($this->partner && !empty($this->partner->emailPartner)) {
-            $bccs[] = $this->partner->emailPartner;
+            $emails = preg_split('/[,;\s]+/', $this->partner->emailPartner, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($emails as $email) {
+                $clean = trim($email);
+                if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                    $bccs[] = $clean;
+                }
+            }
         }
 
         return new Envelope(

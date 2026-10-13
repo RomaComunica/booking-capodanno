@@ -84,14 +84,51 @@
                         display: none !important;
                     }
                     .detail-pad {
-                        padding: 1rem 0.5rem;
+                        padding: 0.75rem 0.25rem !important;
+                    }
+                    .table-responsive {
+                        overflow-x: hidden !important;
+                    }
+                    .modern-table {
+                        width: 100% !important;
                     }
                     .modern-table th,
                     .modern-table td {
-                        padding: 0.75rem 0.5rem;
+                        padding: 0.6rem 0.25rem !important;
+                    }
+                    .col-price {
+                        width: 68px !important;
+                        white-space: nowrap !important;
+                        font-size: 0.9rem !important;
+                        padding-left: 2px !important;
+                        padding-right: 2px !important;
+                        text-align: center !important;
+                    }
+                    .col-qty {
+                        width: 54px !important;
+                        padding-left: 2px !important;
+                        padding-right: 2px !important;
+                        text-align: center !important;
                     }
                     .qty-input {
-                        width: 65px;
+                        width: 48px !important;
+                        height: 36px !important;
+                        padding: 2px 2px !important;
+                        font-size: 0.95rem !important;
+                        margin: 0 auto !important;
+                        box-sizing: border-box !important;
+                    }
+                    .ticket-name {
+                        font-size: 0.92rem !important;
+                        line-height: 1.25 !important;
+                        word-break: break-word !important;
+                    }
+                    .refund-wrapper {
+                        gap: 0.5rem !important;
+                    }
+                    .refund-label {
+                        font-size: 0.8rem !important;
+                        line-height: 1.25 !important;
                     }
                 }
             </style>
@@ -118,8 +155,8 @@
                             <tr>
                                 <th class="text-left col-datetime">Data e ora</th>
                                 <th class="text-left">Biglietto</th>
-                                <th class="text-center">Prezzo</th>
-                                <th class="text-center">Qtà</th>
+                                <th class="text-center col-price">Prezzo</th>
+                                <th class="text-center col-qty">Qtà</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,12 +177,12 @@
                                 </td>
 
                                 {{-- Prezzo --}}
-                                <td class="text-center font-bold text-dark">
+                                <td class="text-center font-bold text-dark col-price">
                                     {{ number_format($ingresso->prezzoIngresso, 2, ',', '.') }} €
                                 </td>
 
                                 {{-- Quantità --}}
-                                <td class="text-center">
+                                <td class="text-center col-qty">
                                     {{-- Hidden fields for this ticket --}}
                                     <input type="hidden" name="dataIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->dataIngresso }}">
                                     <input type="hidden" name="orarioIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->orarioIngresso }}">
