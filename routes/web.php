@@ -101,3 +101,50 @@ Route::get('/run-migrations', function () {
         return 'Errore durante la migrazione: ' . $e->getMessage();
     }
 });
+
+Route::get('/storage-link', function () {
+    if (!auth()->check() && request('token') !== 'rc-storage-link') {
+        abort(403, 'Accesso non autorizzato. Utilizza /storage-link?token=rc-storage-link.');
+    }
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return 'Link simbolico storage creato con successo!<br><pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
+    } catch (\Exception $e) {
+        return 'Errore durante la creazione del link simbolico: ' . $e->getMessage();
+    }
+});
+
+// Fallback route to serve storage files if public/storage symlink is missing on shared hosting (e.g. SiteGround)
+Route::get('/storage/{path}', function ($path) {
+    $candidates = [
+        storage_path('app/public/' . $path),
+        public_path('img/locations/' . basename($path)),
+        public_path('storage/' . $path),
+        storage_path('app/public/locations/' . basename($path)),
+        storage_path('app/private/locations/' . basename($path)),
+        storage_path('app/locations/' . basename($path)),
+    ];
+
+    foreach ($candidates as $filePath) {
+        if (file_exists($filePath) && !is_dir($filePath)) {
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'webp' => 'image/webp',
+                'jpg'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'svg'  => 'image/svg+xml',
+            ];
+            $contentType = $mimeTypes[$extension] ?? (mime_content_type($filePath) ?: 'application/octet-stream');
+
+            return response()->file($filePath, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'public, max-age=86400',
+            ]);
+        }
+    }
+
+    abort(404);
+})->where('path', '.*');
+

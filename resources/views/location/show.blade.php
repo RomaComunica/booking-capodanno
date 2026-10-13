@@ -2,7 +2,7 @@
 
 @section('meta_title', $location->nomeLocation . ' - Capodanno ' . date('Y'))
 @section('meta_description', Str::limit(strip_tags($location->descrizioneLocation), 160))
-@section('og_image', asset('loghi/' . $location->idLocation . '.jpg'))
+@section('og_image', $location->image_url ?? asset('loghi/' . $location->idLocation . '.jpg'))
 
 @section('content')
 <!-- Schema.org Event Markup -->
@@ -27,7 +27,7 @@
     }
   },
   "image": [
-    "{{ asset('loghi/' . $location->idLocation . '.jpg') }}"
+    "{{ $location->image_url ?? asset('loghi/' . $location->idLocation . '.jpg') }}"
   ],
   "offers": {
     "@@type": "AggregateOffer",
@@ -101,6 +101,12 @@
             <form id="formTickets" method="POST" action="{{ route('cart.add') }}">
                 @csrf
                 
+                @if(!$iframe && $location->image_url)
+                <div class="location-banner mb-4" style="max-height: 280px; overflow: hidden; border-radius: 8px; border: 1px solid var(--border-color, rgba(255,255,255,0.1));">
+                    <img src="{{ $location->image_url }}" alt="{{ $location->nomeLocation }}" style="width: 100%; max-height: 280px; object-fit: cover; display: block;" onerror="this.parentElement.style.display='none'">
+                </div>
+                @endif
+
                 <h2 class="panel-heading">
                     Scegli Quantità - {{ $location->nomeLocation }}
                 </h2>

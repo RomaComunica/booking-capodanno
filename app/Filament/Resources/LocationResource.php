@@ -61,10 +61,17 @@ class LocationResource extends Resource
                 Forms\Components\Section::make('Media')
                     ->schema([
                         Forms\Components\FileUpload::make('immagineLocation')
-                            ->label('Immagine/Locandina')
+                            ->label('Immagine / Locandina')
+                            ->helperText('Formati accettati: WebP, JPG, JPEG, PNG, GIF (fino a 20 MB).')
                             ->image()
+                            ->imageEditor()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'])
+                            ->maxSize(20480)
+                            ->disk('public')
                             ->directory('locations')
-                            ->visibility('public'),
+                            ->visibility('public')
+                            ->openable()
+                            ->downloadable(),
                     ]),
                 
                 Forms\Components\Section::make('Riferimento')
@@ -114,6 +121,11 @@ class LocationResource extends Resource
                 Tables\Columns\IconColumn::make('attivaLocation')
                     ->label('Attiva')
                     ->boolean(),
+                
+                Tables\Columns\ImageColumn::make('immagineLocation')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->square(),
                 
                 Tables\Columns\TextColumn::make('nomeLocation')
                     ->label('Nome')
