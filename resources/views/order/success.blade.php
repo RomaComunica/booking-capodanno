@@ -65,9 +65,29 @@
             <div style="margin-bottom: 2rem;">
                 <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold); margin-bottom: 1rem;">Biglietti Acquistati</h3>
                     <style>
+                        .desktop-only-row {
+                            display: table-row;
+                        }
+                        .mobile-only-row {
+                            display: none;
+                        }
                         @media (max-width: 768px) {
+                            .desktop-only-row {
+                                display: none !important;
+                            }
+                            .mobile-only-row {
+                                display: table-row !important;
+                            }
                             .col-datetime {
                                 display: none !important;
+                            }
+                            .table-responsive {
+                                overflow-x: hidden !important;
+                                border-radius: 8px;
+                            }
+                            .modern-table {
+                                width: 100% !important;
+                                table-layout: auto !important;
                             }
                         }
                     </style>
@@ -95,14 +115,24 @@
                                 <td><span class="ticket-name">{{ $line->nomeIngressoOrdine }}</span></td>
                                 <td style="text-align: center;">{{ number_format($line->prezzoIngressoOrdine, 2, ',', '.') }} €</td>
                                 <td style="text-align: center; font-weight: 700;">{{ $line->quantitaIngressoOrdine }}</td>
-                                <td style="text-align: right; font-weight: 700; color: #0f172a;">{{ number_format($line->totaleRiga, 2, ',', '.') }} €</td>
+                                <td style="text-align: right; font-weight: 700; color: #0f172a; white-space: nowrap;">{{ number_format($line->totaleRiga, 2, ',', '.') }} €</td>
                             </tr>
                             @endforeach
-                            <tr class="row-inactive">
+                            {{-- Total Row Desktop --}}
+                            <tr class="row-inactive desktop-only-row">
                                 <td colspan="4" style="text-align: right;">
                                     <strong>Totale Ordine</strong>
                                 </td>
-                                <td style="text-align: right;">
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <strong>{{ number_format($order->totaleOrdine, 2, ',', '.') }} €</strong>
+                                </td>
+                            </tr>
+                            {{-- Total Row Mobile --}}
+                            <tr class="row-inactive mobile-only-row">
+                                <td colspan="3" style="text-align: right;">
+                                    <strong>Totale Ordine</strong>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
                                     <strong>{{ number_format($order->totaleOrdine, 2, ',', '.') }} €</strong>
                                 </td>
                             </tr>

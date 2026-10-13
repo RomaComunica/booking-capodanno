@@ -501,10 +501,14 @@ a:hover {
 /* Visibility Utilities */
 .desktop-only { display: block; }
 .mobile-only { display: none; }
+.desktop-only-row { display: table-row; }
+.mobile-only-row { display: none; }
 
 @media (max-width: 768px) {
     .desktop-only { display: none; }
     .mobile-only { display: block; }
+    .desktop-only-row { display: none !important; }
+    .mobile-only-row { display: table-row !important; }
     
     .flex-between {
         flex-direction: column;

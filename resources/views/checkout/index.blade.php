@@ -63,22 +63,36 @@
                 <div class="checkout-section mb-4">
                     <h2 class="section-heading">Riepilogo ordine</h2>
                     <style>
+                        .desktop-only-row {
+                            display: table-row;
+                        }
+                        .mobile-only-row {
+                            display: none;
+                        }
                         @media (max-width: 768px) {
+                            .desktop-only-row {
+                                display: none !important;
+                            }
+                            .mobile-only-row {
+                                display: table-row !important;
+                            }
                             .col-datetime {
                                 display: none !important;
                             }
                             .table-responsive {
                                 overflow-x: hidden !important;
+                                border-radius: 8px;
                             }
                             .modern-table {
                                 width: 100% !important;
+                                table-layout: auto !important;
                             }
                             .modern-table th,
                             .modern-table td {
                                 padding: 0.6rem 0.25rem !important;
                             }
                             .col-price {
-                                width: 64px !important;
+                                width: 65px !important;
                                 white-space: nowrap !important;
                                 font-size: 0.88rem !important;
                                 padding-left: 2px !important;
@@ -92,11 +106,11 @@
                                 text-align: center !important;
                             }
                             .col-total {
-                                width: 68px !important;
+                                width: 72px !important;
                                 white-space: nowrap !important;
                                 font-size: 0.88rem !important;
                                 padding-left: 2px !important;
-                                padding-right: 2px !important;
+                                padding-right: 6px !important;
                                 text-align: right !important;
                             }
                             .ticket-name {
@@ -166,13 +180,23 @@
                                 </tr>
                                 @endforeach
                                 
-                                {{-- Total Row --}}
-                                <tr class="row-inactive">
+                                {{-- Total Row Desktop --}}
+                                <tr class="row-inactive desktop-only-row">
                                     <td colspan="{{ collect($cart)->some(fn($item) => $item['rimborso'] == 1) ? '5' : '4' }}" class="text-right">
-                                        <h4 class="font-bold">Totale Euro</h4>
+                                        <strong style="font-size: 1.05rem; color: #1e293b;">Totale Euro</strong>
                                     </td>
-                                    <td class="text-right">
-                                        <h4 class="font-bold">{{ number_format($totaleAcquisto, 2, ',', '.') }} €</h4>
+                                    <td class="text-right col-total" style="white-space: nowrap;">
+                                        <strong style="font-size: 1.05rem; color: #1e293b; white-space: nowrap;">{{ number_format($totaleAcquisto, 2, ',', '.') }} €</strong>
+                                    </td>
+                                </tr>
+
+                                {{-- Total Row Mobile --}}
+                                <tr class="row-inactive mobile-only-row">
+                                    <td colspan="{{ collect($cart)->some(fn($item) => $item['rimborso'] == 1) ? '4' : '3' }}" class="text-right">
+                                        <strong style="font-size: 0.95rem; color: #1e293b;">Totale Euro</strong>
+                                    </td>
+                                    <td class="text-right col-total" style="white-space: nowrap;">
+                                        <strong style="font-size: 0.95rem; color: #1e293b; white-space: nowrap;">{{ number_format($totaleAcquisto, 2, ',', '.') }} €</strong>
                                     </td>
                                 </tr>
                             </tbody>
