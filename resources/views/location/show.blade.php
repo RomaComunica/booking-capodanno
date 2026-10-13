@@ -194,6 +194,9 @@
                 <input type="hidden" name="totaleAcquisto" id="totaleAcquisto">
                 <input type="hidden" name="idLocation" value="{{ $location->idLocation }}">
                 <input type="hidden" name="idPartner" value="{{ $partnerId }}">
+                @if($iframe)
+                    <input type="hidden" name="iframe" value="1">
+                @endif
 
                 {{-- Navigation Buttons --}}
                 <div class="nav-actions mt-4">

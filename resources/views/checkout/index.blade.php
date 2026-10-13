@@ -55,6 +55,9 @@
             
             <form id="formCheckout" method="POST" action="{{ route('checkout.process') }}">
                 @csrf
+                @if($iframe)
+                    <input type="hidden" name="iframe" value="1">
+                @endif
                 
                 {{-- Order Summary --}}
                 <div class="checkout-section mb-4">

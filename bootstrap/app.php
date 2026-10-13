@@ -15,6 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\TrackPartner::class,
         ]);
+
+        // Exempt iframe checkout and payment routes from CSRF mismatch
+        $middleware->validateCsrfTokens(except: [
+            'cart/*',
+            'checkout/*',
+            'paypal/*',
+            'nexi/*',
+        ]);
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {
