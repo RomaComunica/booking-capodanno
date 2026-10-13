@@ -78,6 +78,24 @@
     <div class="glass-panel detail-panel animate-fade-in">
         <div class="detail-pad">
             
+            <style>
+                @media (max-width: 768px) {
+                    .col-datetime {
+                        display: none !important;
+                    }
+                    .detail-pad {
+                        padding: 1rem 0.5rem;
+                    }
+                    .modern-table th,
+                    .modern-table td {
+                        padding: 0.75rem 0.5rem;
+                    }
+                    .qty-input {
+                        width: 65px;
+                    }
+                }
+            </style>
+
             @if($ingressi->count() > 0)
             
             <form id="formTickets" method="POST" action="{{ route('cart.add') }}">
@@ -92,7 +110,7 @@
                     <table class="modern-table">
                         <thead>
                             <tr>
-                                <th class="text-left">Data e ora</th>
+                                <th class="text-left col-datetime">Data e ora</th>
                                 <th class="text-left">Biglietto</th>
                                 <th class="text-center">Prezzo</th>
                                 <th class="text-center">Qtà</th>
@@ -102,7 +120,7 @@
                             @foreach($ingressi as $ingresso)
                             <tr class="{{ $ingresso->ingressoAttivo ? 'row-active' : 'row-inactive' }}">
                                 {{-- Data e Ora --}}
-                                <td>
+                                <td class="col-datetime">
                                     @if($ingresso->ingressoSenzaData)
                                         {{ $ingresso->etichettaIngresso }} - {{ $ingresso->orarioIngresso ? \Carbon\Carbon::parse($ingresso->orarioIngresso)->format('H:i') : '' }}
                                     @else

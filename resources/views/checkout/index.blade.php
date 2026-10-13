@@ -317,6 +317,23 @@
                         <h3 class="total-label">TOTALE:</h3>
                         <h3 class="total-amount" id="total-amount">€{{ number_format($totaleAcquisto, 2, ',', '.') }}</h3>
                     </div>
+                {{-- Privacy Policy Agreement --}}
+                <div class="checkout-section mb-4 p-3" style="background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.12);">
+                    <label class="custom-checkbox flex items-start gap-3" style="cursor: pointer; display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <input 
+                            type="checkbox" 
+                            name="privacy" 
+                            id="privacy" 
+                            value="1" 
+                            required 
+                            {{ old('privacy') ? 'checked' : '' }}
+                            style="margin-top: 0.2rem; width: 1.25rem; height: 1.25rem; min-width: 1.25rem; cursor: pointer; accent-color: var(--color-primary, #38bdf8);"
+                        >
+                        <span class="text-sm leading-relaxed" style="font-size: 0.92rem; line-height: 1.45; color: var(--text-primary, #fff);">
+                            Ho letto e accetto l'<a href="https://capodannoromacentro.it/privacy/" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: #38bdf8; font-weight: 600;">Informativa sulla Privacy</a> <span class="text-danger">*</span>
+                        </span>
+                    </label>
+                    @error('privacy') <p class="text-danger text-sm mt-2">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Navigation Buttons --}}
@@ -522,6 +539,14 @@ function validateForm() {
     const shippingCard = shippingMethod.closest('.shipping-card');
     if (isContanti && shippingCard && shippingCard.dataset.isEmail === '1') {
         alert('Per il pagamento in contanti il metodo di spedizione deve essere "Ritiro in sede".');
+        return false;
+    }
+
+    // Check Privacy Policy acceptance
+    const privacy = document.getElementById('privacy');
+    if (privacy && !privacy.checked) {
+        alert('È necessario accettare l\'informativa sulla privacy per procedere.');
+        privacy.focus();
         return false;
     }
     

@@ -7,6 +7,7 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\RigaOrdine;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class AdvancedStatsTable extends BaseWidget
 {
@@ -20,25 +21,32 @@ class AdvancedStatsTable extends BaseWidget
         'year-changed-stats' => 'updateYear'
     ];
 
+    public function mount(): void
+    {
+        $this->year = (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+    }
+
     public function updateYear($year)
     {
-        $this->year = $year;
+        $this->year = (int)$year;
         $this->resetTable();
     }
     
     protected function getTableHeading(): ?string
     {
-        return 'Ordini Recenti';
+        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        return "Ordini Recenti ({$year})";
     }
 
     public function table(Table $table): Table
     {
+        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+
         return $table
             ->query(
                 RigaOrdine::query()
                     ->join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-                    ->join('tipologia_ingresso', 'righe_ordine.idIngressoOrdine', '=', 'tipologia_ingresso.idIngressoCont')
-                    ->join('location', 'tipologia_ingresso.idLocation', '=', 'location.idLocation')
+                    ->leftJoin('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
                     ->leftJoin('partner', 'ordini.idPartnerOrdine', '=', 'partner.idPartner')
                     ->select(
                         'righe_ordine.*', 
@@ -46,13 +54,12 @@ class AdvancedStatsTable extends BaseWidget
                         'ordini.numeroOrdine as ordine_num',
                         'location.nomeLocation',
                         'partner.nomePartner',
-                        'righe_ordine.nomeIngressoOrdine'
+                        'righe_ordine.nomeIngressoOrdine',
+                        DB::raw('(righe_ordine.quantitaIngressoOrdine * COALESCE(righe_ordine.prezzoIngressoOrdine, 0)) as totaleRiga')
                     )
-                    ->when($this->year, function ($query) {
-                        return $query->whereYear('ordini.dataOrdine', $this->year);
-                    })
+                    ->whereYear('ordini.dataOrdine', $year)
+                    ->where('ordini.statoOrdine', 2)
                     ->orderBy('ordini.dataOrdine', 'desc')
-                    ->limit(50)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('ordine_num')

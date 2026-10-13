@@ -118,6 +118,7 @@ class CheckoutController extends Controller
             'citta' => 'nullable|string|max:255',
             'tipoPagamento' => 'required|integer|exists:tipo_pagamenti,idTipoPagamento',
             'tipoSpedizione' => 'required|integer|exists:tipo_spedizione,idSpedizione',
+            'privacy' => 'accepted',
         ], [
             'nome.required' => 'Il nome è obbligatorio',
             'cognome.required' => 'Il cognome è obbligatorio',
@@ -127,6 +128,7 @@ class CheckoutController extends Controller
             'telefono.required' => 'Il telefono è obbligatorio',
             'tipoPagamento.required' => 'Seleziona un metodo di pagamento',
             'tipoSpedizione.required' => 'Seleziona un metodo di spedizione',
+            'privacy.accepted' => 'È obbligatorio accettare l\'informativa sulla privacy per procedere.',
         ]);
 
         // Enforcement: Se viene scelto il pagamento in Contanti (ID 3), il metodo di spedizione DEVE essere Ritiro in sede (non Voucher via email)

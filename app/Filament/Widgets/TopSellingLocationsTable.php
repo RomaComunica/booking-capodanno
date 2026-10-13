@@ -21,15 +21,34 @@ class TopSellingLocationsTable extends BaseWidget
         'year-changed-stats' => 'updateYear'
     ];
 
+    public function mount(): void
+    {
+        $this->year = (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+    }
+
     public function updateYear($year)
     {
-        $this->year = $year;
+        $this->year = (int)$year;
         $this->resetTable();
+    }
+
+    public function getTotalLocationsCount(): int
+    {
+        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+
+        return (int) RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->where('ordini.statoOrdine', 2)
+            ->whereYear('ordini.dataOrdine', $year)
+            ->whereNotNull('ordini.idLocationOrdine')
+            ->where('ordini.idLocationOrdine', '>', 0)
+            ->distinct('ordini.idLocationOrdine')
+            ->count('ordini.idLocationOrdine');
     }
     
     protected function getTableHeading(): ?string
     {
-        return 'I Più Venduti (Location)';
+        $count = $this->getTotalLocationsCount();
+        return "I Più Venduti - Location ({$count})";
     }
 
     public function getTableRecordKey($record): string
@@ -39,15 +58,16 @@ class TopSellingLocationsTable extends BaseWidget
 
     public function table(Table $table): Table
     {
+        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $totalLocations = $this->getTotalLocationsCount();
+
         return $table
             ->query(
                 RigaOrdine::query()
                     ->join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
                     ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
                     ->where('ordini.statoOrdine', 2)
-                    ->when($this->year, function ($query) {
-                        return $query->whereYear('ordini.dataOrdine', $this->year);
-                    })
+                    ->whereYear('ordini.dataOrdine', $year)
                     ->select([
                         'location.idLocation',
                         'location.nomeLocation',
@@ -60,7 +80,7 @@ class TopSellingLocationsTable extends BaseWidget
             ->recordUrl(null)
             ->columns([
                 Tables\Columns\TextColumn::make('nomeLocation')
-                    ->label('Location')
+                    ->label("Location ({$totalLocations})")
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_tickets')

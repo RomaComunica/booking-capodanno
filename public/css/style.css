@@ -518,6 +518,23 @@ a:hover {
     .filter-grid {
         grid-template-columns: 1fr;
     }
+
+    .detail-pad {
+        padding: 1rem 0.5rem;
+    }
+
+    .modern-table th,
+    .modern-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .col-datetime {
+        display: none !important;
+    }
+
+    .qty-input {
+        width: 65px;
+    }
 }
 
 /* Detail Page & Tables */
