@@ -17,7 +17,7 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         // Get partner and iframe from session/request
-        $partnerId = session('idPartner', 1);
+        $partnerId = session('idPartner', 5);
         $partner = Partner::find($partnerId);
         $iframe = $request->has('iframe') && $request->iframe == '1';
         

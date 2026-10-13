@@ -136,7 +136,7 @@ class PayPalController extends Controller
             'customer' => session('customer'),
             'payer' => $details,
             'location' => \App\Models\Location::find(session('idLocation')),
-            'partner' => \App\Models\Partner::find(session('idPartner', 1)),
+            'partner' => \App\Models\Partner::find(session('idPartner', 5)),
         ]);
     }
 

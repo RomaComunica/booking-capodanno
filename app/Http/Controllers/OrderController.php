@@ -25,7 +25,7 @@ class OrderController extends Controller
         $cart = session('cart', []);
         $customer = session('customer', []);
         $idLocation = session('idLocation');
-        $partnerId = session('idPartner', 1);
+        $partnerId = session('idPartner', 5);
         
         \Log::info('Session data loaded', [
             'cart_count' => count($cart),

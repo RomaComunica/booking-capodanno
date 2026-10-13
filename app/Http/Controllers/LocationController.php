@@ -12,7 +12,7 @@ class LocationController extends Controller
     public function show(Request $request, $id)
     {
         // Get partner ID from session (set by TrackPartner middleware)
-        $partnerId = session('idPartner', 1);
+        $partnerId = session('idPartner', 5);
         
         // Get partner info for display
         $partner = Partner::find($partnerId);
