@@ -62,13 +62,19 @@
                 {{-- Order Summary --}}
                 <div class="checkout-section mb-4">
                     <h2 class="section-heading">Riepilogo ordine</h2>
-                    <p class="section-desc">Hai scelto: <strong>{{ $nomeLocation }}</strong></p>
-                    
+                    <style>
+                        @media (max-width: 768px) {
+                            .col-datetime {
+                                display: none !important;
+                            }
+                        }
+                    </style>
+
                     <div class="table-responsive mt-2">
                         <table class="modern-table">
                             <thead>
                                 <tr>
-                                    <th class="text-left">Data e ora</th>
+                                    <th class="text-left col-datetime">Data e ora</th>
                                     <th class="text-left">Biglietto</th>
                                     <th class="text-center">Prezzo</th>
                                     <th class="text-center">Qtà</th>
@@ -82,7 +88,7 @@
                                 @foreach($cart as $item)
                                 <tr class="row-active">
                                     {{-- Data e Ora --}}
-                                    <td>
+                                    <td class="col-datetime">
                                         @if($item['ingressoSenzaData'])
                                             {{ $item['etichettaIngresso'] }} - {{ $item['orarioIngresso'] ? \Carbon\Carbon::parse($item['orarioIngresso'])->format('H:i') : '' }}
                                         @else
@@ -218,8 +224,8 @@
                     </div>
                 </div>
 
-                {{-- Privacy Policy Agreement --}}
-                <div class="checkout-section mb-4 p-3" style="background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.12);">
+                {{-- Privacy & Terms Agreement --}}
+                <div class="mb-4 mt-3" style="padding-left: 0.25rem;">
                     <div style="display: flex; align-items: flex-start; gap: 12px;">
                         <input 
                             type="checkbox" 
@@ -231,7 +237,7 @@
                             style="margin-top: 3px; width: 20px; height: 20px; min-width: 20px; cursor: pointer; accent-color: #38bdf8; z-index: 10;"
                         >
                         <label for="privacy" style="cursor: pointer; font-size: 0.95rem; line-height: 1.45; color: var(--text-primary, #fff); user-select: none;">
-                            Ho letto e accetto l'<a href="https://capodannoromacentro.it/privacy/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="text-decoration: underline; color: #38bdf8; font-weight: 600;">Informativa sulla Privacy</a> <span class="text-danger font-bold">*</span>
+                            Ho letto e accetto l'<a href="https://capodannoromacentro.it/privacy/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="text-decoration: underline; color: #38bdf8; font-weight: 600;">Informativa sulla Privacy</a> e le <a href="https://capodannoromacentro.it/condizioni-di-vendita/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="text-decoration: underline; color: #38bdf8; font-weight: 600;">Condizioni di Vendita</a> <span class="text-danger font-bold">*</span>
                         </label>
                     </div>
                     @error('privacy') <p class="text-danger text-sm mt-2">{{ $message }}</p> @enderror
@@ -544,10 +550,10 @@ function validateForm() {
         return false;
     }
 
-    // Check Privacy Policy acceptance
+    // Check Privacy Policy & Terms of Sale acceptance
     const privacy = document.getElementById('privacy');
     if (privacy && !privacy.checked) {
-        alert('È necessario accettare l\'informativa sulla privacy per procedere.');
+        alert('È necessario accettare l\'informativa sulla privacy e le condizioni di vendita per procedere.');
         privacy.focus();
         return false;
     }

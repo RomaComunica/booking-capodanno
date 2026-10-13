@@ -128,7 +128,7 @@ class CheckoutController extends Controller
             'telefono.required' => 'Il telefono è obbligatorio',
             'tipoPagamento.required' => 'Seleziona un metodo di pagamento',
             'tipoSpedizione.required' => 'Seleziona un metodo di spedizione',
-            'privacy.accepted' => 'È obbligatorio accettare l\'informativa sulla privacy per procedere.',
+            'privacy.accepted' => 'È obbligatorio accettare l\'informativa sulla privacy e le condizioni di vendita per procedere.',
         ]);
 
         // Enforcement: Se viene scelto il pagamento in Contanti (ID 3), il metodo di spedizione DEVE essere Ritiro in sede (non Voucher via email)

@@ -64,11 +64,18 @@
             {{-- Order Lines Table --}}
             <div style="margin-bottom: 2rem;">
                 <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold); margin-bottom: 1rem;">Biglietti Acquistati</h3>
+                    <style>
+                        @media (max-width: 768px) {
+                            .col-datetime {
+                                display: none !important;
+                            }
+                        }
+                    </style>
                 <div class="table-responsive">
                     <table class="modern-table">
                         <thead>
                             <tr>
-                                <th style="text-align: left;">Data e Ora</th>
+                                <th class="col-datetime" style="text-align: left;">Data e Ora</th>
                                 <th style="text-align: left;">Biglietto</th>
                                 <th style="text-align: center;">Prezzo</th>
                                 <th style="text-align: center;">Qtà</th>
@@ -78,7 +85,7 @@
                         <tbody>
                             @foreach($orderLines as $line)
                             <tr class="row-active">
-                                <td>
+                                <td class="col-datetime">
                                     @if($line->ingressoSenzaDataOrdine)
                                         {{ $line->etichettaIngressoOrdine }} - {{ $line->orarioIngressoOrdine ? \Carbon\Carbon::parse($line->orarioIngressoOrdine)->format('H:i') : '' }}
                                     @else

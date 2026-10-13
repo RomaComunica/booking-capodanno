@@ -50,14 +50,7 @@ class StatisticsService
                 $rawName = 'Bonifico Bancario';
             }
 
-            // Correzione inversione richiesta dal cliente tra Bonifico Bancario e Ricarica PostePay
-            if ($rawName === 'Bonifico Bancario') {
-                $name = 'Ricarica PostePay';
-            } elseif ($rawName === 'Ricarica PostePay') {
-                $name = 'Bonifico Bancario';
-            } else {
-                $name = $rawName;
-            }
+            $name = $rawName;
 
             if (!isset($ticketsByPayment[$name])) {
                 $ticketsByPayment[$name] = [
