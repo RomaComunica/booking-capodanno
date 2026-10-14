@@ -23,7 +23,7 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
 
     protected function getColumns(): int
     {
-        return 6;
+        return 4;
     }
 
     protected function getStats(): array
@@ -63,7 +63,15 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
         $commissioni = (float)(clone $commissioniQuery)->sum('importo');
         $commissioniCount = (int)(clone $commissioniQuery)->count();
 
-        // 6. Altre Uscite
+        // 6. Rinnovi Domini
+        $rinnoviQuery = (clone $usciteQuery)->where(function ($q) {
+            $q->where('causale', 'LIKE', '%rinnov%')
+              ->orWhere('causale', 'LIKE', '%domini%');
+        });
+        $rinnovi = (float)(clone $rinnoviQuery)->sum('importo');
+        $rinnoviCount = (int)(clone $rinnoviQuery)->count();
+
+        // 7. Altre Uscite
         $altreSpeseQuery = (clone $usciteQuery)
             ->where('causale', 'NOT LIKE', '%google%')
             ->where('causale', 'NOT LIKE', '%facebook%')
@@ -71,7 +79,9 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
             ->where('causale', 'NOT LIKE', '%fb%')
             ->where('causale', 'NOT LIKE', '%rimbors%')
             ->where('causale', 'NOT LIKE', '%straordinar%')
-            ->where('causale', 'NOT LIKE', '%commission%');
+            ->where('causale', 'NOT LIKE', '%commission%')
+            ->where('causale', 'NOT LIKE', '%rinnov%')
+            ->where('causale', 'NOT LIKE', '%domini%');
         $altreSpese = (float)(clone $altreSpeseQuery)->sum('importo');
         $altreCount = (int)(clone $altreSpeseQuery)->count();
 
@@ -107,6 +117,11 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
                 ->description($calcDesc($commissioni, $commissioniCount, $totaleUscite))
                 ->descriptionIcon('heroicon-m-credit-card')
                 ->color('success'),
+
+            Stat::make('Rinnovi Domini', '€ ' . number_format($rinnovi, 2, ',', '.'))
+                ->description($calcDesc($rinnovi, $rinnoviCount, $totaleUscite))
+                ->descriptionIcon('heroicon-m-globe-americas')
+                ->color('info'),
 
             Stat::make('Altre Uscite', '€ ' . number_format($altreSpese, 2, ',', '.'))
                 ->description($calcDesc($altreSpese, $altreCount, $totaleUscite))
