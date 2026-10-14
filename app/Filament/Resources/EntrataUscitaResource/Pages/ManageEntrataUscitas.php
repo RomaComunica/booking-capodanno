@@ -26,4 +26,11 @@ class ManageEntrataUscitas extends ManageRecords
             EntrataUscitaResource\Widgets\EntrataUscitaOverview::class,
         ];
     }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            EntrataUscitaResource\Widgets\EntrataUscitaRiepilogoSpese::class,
+        ];
+    }
 }

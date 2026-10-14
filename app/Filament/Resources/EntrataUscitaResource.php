@@ -39,6 +39,14 @@ class EntrataUscitaResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('causale')
                     ->label('Causale')
+                    ->datalist([
+                        'Google ADS',
+                        'Facebook ADS',
+                        'Rimborso Voucher #',
+                        'Rimborso Cliente ',
+                        'Straordinari ',
+                    ])
+                    ->helperText('Suggerimenti: Google ADS, Facebook ADS, Rimborso [Voucher/Cliente], Straordinari [Nome]')
                     ->maxLength(255)
                     ->required(),
                 Forms\Components\TextInput::make('importo')
@@ -69,6 +77,25 @@ class EntrataUscitaResource extends Resource
                         'danger' => 'U',
                     ])
                     ->formatStateUsing(fn (string $state): string => $state === 'E' ? 'Entrata' : 'Uscita'),
+                Tables\Columns\BadgeColumn::make('categoria')
+                    ->label('Categoria')
+                    ->getStateUsing(function ($record) {
+                        if ($record->tipoOperazione === 'E') return 'Entrata';
+                        $c = strtolower($record->causale ?? '');
+                        if (str_contains($c, 'google')) return 'Google ADS';
+                        if (str_contains($c, 'facebook') || str_contains($c, 'meta') || str_contains($c, 'fb')) return 'Facebook ADS';
+                        if (str_contains($c, 'rimbors')) return 'Rimborso';
+                        if (str_contains($c, 'straordinar')) return 'Straordinari';
+                        return 'Altro';
+                    })
+                    ->colors([
+                        'success' => 'Entrata',
+                        'info' => 'Google ADS',
+                        'primary' => 'Facebook ADS',
+                        'danger' => 'Rimborso',
+                        'warning' => 'Straordinari',
+                        'gray' => 'Altro',
+                    ]),
                 Tables\Columns\TextColumn::make('causale')
                     ->label('Causale')
                     ->searchable(),
@@ -102,9 +129,47 @@ class EntrataUscitaResource extends Resource
                         'E' => 'Solo Entrate',
                         'U' => 'Solo Uscite',
                     ]),
+
+                Tables\Filters\SelectFilter::make('categoriaSpesa')
+                    ->label('Categoria Causale')
+                    ->placeholder('Tutte le causali')
+                    ->options([
+                        'google_ads' => '📢 Google ADS',
+                        'facebook_ads' => '📱 Facebook ADS',
+                        'rimborsi' => '↩️ Rimborsi (Clienti / Voucher)',
+                        'straordinari' => '⏱️ Straordinari (Staff)',
+                        'altre_uscite' => '📦 Altre Uscite',
+                        'entrate' => '💰 Solo Entrate',
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (empty($data['value'])) return;
+                        if ($data['value'] === 'google_ads') {
+                            $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%google%');
+                        } elseif ($data['value'] === 'facebook_ads') {
+                            $query->where('tipoOperazione', 'U')->where(function ($q) {
+                                $q->where('causale', 'LIKE', '%facebook%')
+                                  ->orWhere('causale', 'LIKE', '%meta%')
+                                  ->orWhere('causale', 'LIKE', '%fb%');
+                            });
+                        } elseif ($data['value'] === 'rimborsi') {
+                            $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%rimbors%');
+                        } elseif ($data['value'] === 'straordinari') {
+                            $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%straordinar%');
+                        } elseif ($data['value'] === 'altre_uscite') {
+                            $query->where('tipoOperazione', 'U')
+                                ->where('causale', 'NOT LIKE', '%google%')
+                                ->where('causale', 'NOT LIKE', '%facebook%')
+                                ->where('causale', 'NOT LIKE', '%meta%')
+                                ->where('causale', 'NOT LIKE', '%fb%')
+                                ->where('causale', 'NOT LIKE', '%rimbors%')
+                                ->where('causale', 'NOT LIKE', '%straordinar%');
+                        } elseif ($data['value'] === 'entrate') {
+                            $query->where('tipoOperazione', 'E');
+                        }
+                    }),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
-            ->filtersFormColumns(2)
+            ->filtersFormColumns(3)
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
