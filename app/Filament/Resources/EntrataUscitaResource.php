@@ -45,8 +45,11 @@ class EntrataUscitaResource extends Resource
                         'Rimborso Voucher #',
                         'Rimborso Cliente ',
                         'Straordinari ',
+                        'Commissioni',
+                        'Commissioni POS',
+                        'Commissioni Bancarie',
                     ])
-                    ->helperText('Suggerimenti: Google ADS, Facebook ADS, Rimborso [Voucher/Cliente], Straordinari [Nome]')
+                    ->helperText('Suggerimenti: Google ADS, Facebook ADS, Rimborso [Voucher/Cliente], Straordinari [Nome], Commissioni')
                     ->maxLength(255)
                     ->required(),
                 Forms\Components\TextInput::make('importo')
@@ -86,6 +89,7 @@ class EntrataUscitaResource extends Resource
                         if (str_contains($c, 'facebook') || str_contains($c, 'meta') || str_contains($c, 'fb')) return 'Facebook ADS';
                         if (str_contains($c, 'rimbors')) return 'Rimborso';
                         if (str_contains($c, 'straordinar')) return 'Straordinari';
+                        if (str_contains($c, 'commission')) return 'Commissioni';
                         return 'Altro';
                     })
                     ->colors([
@@ -94,6 +98,7 @@ class EntrataUscitaResource extends Resource
                         'primary' => 'Facebook ADS',
                         'danger' => 'Rimborso',
                         'warning' => 'Straordinari',
+                        'success' => 'Commissioni',
                         'gray' => 'Altro',
                     ]),
                 Tables\Columns\TextColumn::make('causale')
@@ -138,6 +143,7 @@ class EntrataUscitaResource extends Resource
                         'facebook_ads' => '📱 Facebook ADS',
                         'rimborsi' => '↩️ Rimborsi (Clienti / Voucher)',
                         'straordinari' => '⏱️ Straordinari (Staff)',
+                        'commissioni' => '💳 Commissioni',
                         'altre_uscite' => '📦 Altre Uscite',
                         'entrate' => '💰 Solo Entrate',
                     ])
@@ -155,6 +161,8 @@ class EntrataUscitaResource extends Resource
                             $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%rimbors%');
                         } elseif ($data['value'] === 'straordinari') {
                             $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%straordinar%');
+                        } elseif ($data['value'] === 'commissioni') {
+                            $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%commission%');
                         } elseif ($data['value'] === 'altre_uscite') {
                             $query->where('tipoOperazione', 'U')
                                 ->where('causale', 'NOT LIKE', '%google%')
@@ -162,7 +170,8 @@ class EntrataUscitaResource extends Resource
                                 ->where('causale', 'NOT LIKE', '%meta%')
                                 ->where('causale', 'NOT LIKE', '%fb%')
                                 ->where('causale', 'NOT LIKE', '%rimbors%')
-                                ->where('causale', 'NOT LIKE', '%straordinar%');
+                                ->where('causale', 'NOT LIKE', '%straordinar%')
+                                ->where('causale', 'NOT LIKE', '%commission%');
                         } elseif ($data['value'] === 'entrate') {
                             $query->where('tipoOperazione', 'E');
                         }

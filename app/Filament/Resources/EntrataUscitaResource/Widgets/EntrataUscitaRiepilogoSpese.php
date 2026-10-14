@@ -23,7 +23,7 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
 
     protected function getColumns(): int
     {
-        return 5;
+        return 6;
     }
 
     protected function getStats(): array
@@ -58,14 +58,20 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
         $straordinari = (float)(clone $straordinariQuery)->sum('importo');
         $straordinariCount = (int)(clone $straordinariQuery)->count();
 
-        // 5. Altre Uscite
+        // 5. Commissioni
+        $commissioniQuery = (clone $usciteQuery)->where('causale', 'LIKE', '%commission%');
+        $commissioni = (float)(clone $commissioniQuery)->sum('importo');
+        $commissioniCount = (int)(clone $commissioniQuery)->count();
+
+        // 6. Altre Uscite
         $altreSpeseQuery = (clone $usciteQuery)
             ->where('causale', 'NOT LIKE', '%google%')
             ->where('causale', 'NOT LIKE', '%facebook%')
             ->where('causale', 'NOT LIKE', '%meta%')
             ->where('causale', 'NOT LIKE', '%fb%')
             ->where('causale', 'NOT LIKE', '%rimbors%')
-            ->where('causale', 'NOT LIKE', '%straordinar%');
+            ->where('causale', 'NOT LIKE', '%straordinar%')
+            ->where('causale', 'NOT LIKE', '%commission%');
         $altreSpese = (float)(clone $altreSpeseQuery)->sum('importo');
         $altreCount = (int)(clone $altreSpeseQuery)->count();
 
@@ -96,6 +102,11 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
                 ->description($calcDesc($straordinari, $straordinariCount, $totaleUscite))
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning'),
+
+            Stat::make('Commissioni', '€ ' . number_format($commissioni, 2, ',', '.'))
+                ->description($calcDesc($commissioni, $commissioniCount, $totaleUscite))
+                ->descriptionIcon('heroicon-m-credit-card')
+                ->color('success'),
 
             Stat::make('Altre Uscite', '€ ' . number_format($altreSpese, 2, ',', '.'))
                 ->description($calcDesc($altreSpese, $altreCount, $totaleUscite))
