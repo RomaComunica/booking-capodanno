@@ -381,18 +381,16 @@
                         <div class="ticket-name">{{ $line->nomeIngressoOrdine }}</div>
                         <div class="ticket-date">
                             @php 
-                                $tipologia = $line->tipologiaIngresso;
-                                $dataIngressoRaw = $line->dataIngressoOrdine ?: ($tipologia?->dataIngresso ? (\is_string($tipologia->dataIngresso) ? $tipologia->dataIngresso : $tipologia->dataIngresso->format('Y-m-d')) : null);
-                                $dataIngressoFormatted = $dataIngressoRaw ? \Carbon\Carbon::parse($dataIngressoRaw)->format('d/m/Y') : null;
-                                $orarioIngressoRaw = $line->orarioIngressoOrdine ?: ($tipologia?->orarioIngresso ? (\is_string($tipologia->orarioIngresso) ? $tipologia->orarioIngresso : \Carbon\Carbon::parse($tipologia->orarioIngresso)->format('H:i')) : null);
-                                $orarioIngressoFormatted = $orarioIngressoRaw ? \Carbon\Carbon::parse($orarioIngressoRaw)->format('H:i') : null;
+                                $tipologia = $line->tipologia;
                                 $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
                                 $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
+                                $dataVisualizzata = $line->data_visualizzata;
+                                $orarioVisualizzato = $line->orario_visualizzato;
                             @endphp
                             @if($isSenzaData)
-                                {{ $etichetta ?: 'Data aperta' }} {{ $orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00' ? '- Ore ' . $orarioIngressoFormatted : '' }}
+                                {{ $etichetta ?: 'Data aperta' }} {{ $orarioVisualizzato ? '- Ore ' . $orarioVisualizzato : '' }}
                             @else
-                                {{ $dataIngressoFormatted ?: 'Data non specificata' }} {{ $orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00' ? '- Ore ' . $orarioIngressoFormatted : '' }}
+                                {{ $dataVisualizzata ?: 'Data non specificata' }} {{ $orarioVisualizzato ? '- Ore ' . $orarioVisualizzato : '' }}
                             @endif
                         </div>
                     </div>

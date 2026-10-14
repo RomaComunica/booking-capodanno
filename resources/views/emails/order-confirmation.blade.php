@@ -107,29 +107,23 @@
             </tr>
             @foreach($orderLines as $line)
             @php 
-                $tipologia = $line->tipologiaIngresso;
-                $dataIngressoRaw = $line->dataIngressoOrdine ?: ($tipologia?->dataIngresso ? (\is_string($tipologia->dataIngresso) ? $tipologia->dataIngresso : $tipologia->dataIngresso->format('Y-m-d')) : null);
-                $dataIngressoFormatted = $dataIngressoRaw ? \Carbon\Carbon::parse($dataIngressoRaw)->format('d/m/Y') : null;
-                $orarioIngressoRaw = $line->orarioIngressoOrdine ?: ($tipologia?->orarioIngresso ? (\is_string($tipologia->orarioIngresso) ? $tipologia->orarioIngresso : \Carbon\Carbon::parse($tipologia->orarioIngresso)->format('H:i')) : null);
-                $orarioIngressoFormatted = $orarioIngressoRaw ? \Carbon\Carbon::parse($orarioIngressoRaw)->format('H:i') : null;
+                $tipologia = $line->tipologia;
                 $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
                 $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
+                $dataVisualizzata = $line->data_visualizzata;
+                $orarioVisualizzato = $line->orario_visualizzato;
             @endphp
             <tr>
                 <td>
                     @if($isSenzaData)
                         {{ $etichetta ?: 'Data aperta' }}
-                        @if($orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00')
-                            - {{ $orarioIngressoFormatted }}
+                        @if($orarioVisualizzato)
+                            - {{ $orarioVisualizzato }}
                         @endif
                     @else
-                        @if($dataIngressoFormatted)
-                            {{ $dataIngressoFormatted }}
-                            @if($orarioIngressoFormatted)
-                                - {{ $orarioIngressoFormatted }}
-                            @endif
-                        @else
-                            -
+                        {{ $dataVisualizzata ?: '-' }}
+                        @if($orarioVisualizzato)
+                            - {{ $orarioVisualizzato }}
                         @endif
                     @endif
                 </td>

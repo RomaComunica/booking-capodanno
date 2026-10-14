@@ -38,13 +38,8 @@ class IngressiRelationManager extends RelationManager
                     ->numeric()
                     ->default(0),
                 
-                Forms\Components\Toggle::make('ingressoSenzaData')
-                    ->label('Senza Data')
-                    ->reactive(),
-                
                 Forms\Components\DatePicker::make('dataIngresso')
-                    ->label('Data')
-                    ->hidden(fn ($get) => $get('ingressoSenzaData')),
+                    ->label('Data'),
                 
                 Forms\Components\TimePicker::make('orarioIngresso')
                     ->label('Orario')

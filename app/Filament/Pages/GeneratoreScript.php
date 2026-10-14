@@ -155,15 +155,11 @@ class GeneratoreScript extends Page
         if ($tipo === 'link') {
             $code = $url;
         } elseif ($tipo === 'button') {
-            $testo = $data['testo_pulsante'] ?? 'Prenota Ora';
+            $testo = trim($data['testo_pulsante'] ?? 'Prenota Ora');
             $bg = $data['colore_sfondo'] ?? '#000000';
             $color = $data['colore_testo'] ?? '#ffffff';
             
-            $code = <<<HTML
-<a href="#iframenew" style="display:inline-block; padding:12px 24px; background-color:{$bg}; color:{$color}; text-decoration:none; border-radius:4px; font-weight:bold; font-family:sans-serif;">
-    {$testo}
-</a>
-HTML;
+            $code = '<a href="#iframenew" style="display:inline-block; padding:12px 24px; background-color:' . $bg . '; color:' . $color . '; text-decoration:none; border-radius:30px; font-weight:bold; font-family:sans-serif;">' . $testo . '</a>';
         } elseif ($tipo === 'iframe') {
             $code = <<<HTML
 <iframe id="iframenew" src="{$url}" width="100%" height="800" frameborder="0" style="border:none; width:100%; min-height:800px;"></iframe>
