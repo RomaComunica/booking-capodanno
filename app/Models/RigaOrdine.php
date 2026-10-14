@@ -40,36 +40,65 @@ class RigaOrdine extends Model
 
     public function getTipologiaAttribute()
     {
-        if ($this->tipologiaIngresso) {
-            return $this->tipologiaIngresso;
-        }
-
-        if (!empty($this->idIngressoOrdine)) {
-            $byCont = TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first();
-            if ($byCont) return $byCont;
-
-            $locationId = $this->ordine?->idLocationOrdine;
-            if ($locationId) {
-                $byIdAndLoc = TipologiaIngresso::where('idLocation', $locationId)
-                    ->where('idIngresso', $this->idIngressoOrdine)
-                    ->first();
-                if ($byIdAndLoc) return $byIdAndLoc;
-            }
-
-            $byId = TipologiaIngresso::where('idIngresso', $this->idIngressoOrdine)->first();
-            if ($byId) return $byId;
+        if ($this->relationLoaded('tipologiaIngresso') && $this->getRelation('tipologiaIngresso')) {
+            return $this->getRelation('tipologiaIngresso');
         }
 
         $locationId = $this->ordine?->idLocationOrdine;
-        if ($locationId && !empty($this->nomeIngressoOrdine)) {
-            $byNameAndLoc = TipologiaIngresso::where('idLocation', $locationId)
-                ->where('nomeIngresso', $this->nomeIngressoOrdine)
-                ->first();
-            if ($byNameAndLoc) return $byNameAndLoc;
+        if (!$locationId && !empty($this->numeroOrdine)) {
+            $locationId = Ordine::where('numeroOrdine', $this->numeroOrdine)->value('idLocationOrdine');
         }
 
-        if (!empty($this->nomeIngressoOrdine)) {
-            return TipologiaIngresso::where('nomeIngresso', $this->nomeIngressoOrdine)->first();
+        $nome = trim((string)$this->nomeIngressoOrdine);
+
+        // 1. PRIORITÀ ASSOLUTA: Match per Location e Nome Biglietto (es. "Sport City" + "Cena di Gala Halloween")
+        if ($locationId && !empty($nome)) {
+            $match = TipologiaIngresso::where('idLocation', $locationId)
+                ->where('nomeIngresso', $nome)
+                ->first();
+            if ($match) return $match;
+
+            $match = TipologiaIngresso::where('idLocation', $locationId)
+                ->whereRaw('TRIM(LOWER(nomeIngresso)) = ?', [strtolower($nome)])
+                ->first();
+            if ($match) return $match;
+
+            $match = TipologiaIngresso::where('idLocation', $locationId)
+                ->where('nomeIngresso', 'LIKE', '%' . $nome . '%')
+                ->first();
+            if ($match) return $match;
+        }
+
+        // 2. Match per Location e idIngresso (l'indice biglietto della location)
+        if ($locationId && !empty($this->idIngressoOrdine)) {
+            $match = TipologiaIngresso::where('idLocation', $locationId)
+                ->where('idIngresso', $this->idIngressoOrdine)
+                ->first();
+            if ($match) return $match;
+
+            $match = TipologiaIngresso::where('idLocation', $locationId)
+                ->where('idIngressoCont', $this->idIngressoOrdine)
+                ->first();
+            if ($match) return $match;
+        }
+
+        // 3. Match per Nome Biglietto (case-insensitive) anche senza location
+        if (!empty($nome)) {
+            $match = TipologiaIngresso::whereRaw('TRIM(LOWER(nomeIngresso)) = ?', [strtolower($nome)])->first();
+            if ($match) return $match;
+
+            $match = TipologiaIngresso::where('nomeIngresso', 'LIKE', '%' . $nome . '%')->first();
+            if ($match) return $match;
+        }
+
+        // 4. Solo come ultimo fallback controlla idIngressoCont (verificando preferibilmente che non appartenga a location diversa se nota)
+        if (!empty($this->idIngressoOrdine)) {
+            $match = TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first();
+            if ($match) {
+                if (!$locationId || $match->idLocation == $locationId) {
+                    return $match;
+                }
+            }
         }
 
         return null;
@@ -82,7 +111,8 @@ class RigaOrdine extends Model
         $tRaw = $tip ? ($tip->getAttributes()['dataIngresso'] ?? $tip->dataIngresso) : null;
         if (!empty($tRaw)) {
             try {
-                return \Carbon\Carbon::parse($tRaw)->format('d/m/Y');
+                $formatted = \Carbon\Carbon::parse($tRaw)->format('d/m/Y');
+                if ($formatted) return $formatted;
             } catch (\Throwable $e) {}
         }
 
@@ -116,6 +146,16 @@ class RigaOrdine extends Model
         $tRaw = $tip ? ($tip->getAttributes()['orarioIngresso'] ?? $tip->orarioIngresso) : null;
         $tipTime = $extractTime($tRaw);
         if (!empty($tipTime) && $tipTime !== '00:00') {
+            // Aggiorna anche la riga ordine nel DB per renderla permanente
+            $rawDb = $this->attributes['orarioIngressoOrdine'] ?? null;
+            if ($rawDb === '00:00' || empty($rawDb)) {
+                $this->attributes['orarioIngressoOrdine'] = $tipTime;
+                try {
+                    \DB::table('righe_ordine')
+                        ->where('idRigaOrdine', $this->idRigaOrdine)
+                        ->update(['orarioIngressoOrdine' => $tipTime]);
+                } catch (\Throwable $e) {}
+            }
             return $tipTime;
         }
 

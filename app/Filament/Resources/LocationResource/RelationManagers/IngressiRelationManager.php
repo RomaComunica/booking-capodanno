@@ -43,7 +43,15 @@ class IngressiRelationManager extends RelationManager
                 
                 Forms\Components\TimePicker::make('orarioIngresso')
                     ->label('Orario')
-                    ->seconds(false),
+                    ->seconds(false)
+                    ->format('H:i')
+                    ->dehydrateStateUsing(function ($state) {
+                        if (empty($state)) return null;
+                        if (preg_match('/(\d{1,2})[:.](\d{2})/', trim((string)$state), $m)) {
+                            return sprintf('%02d:%02d:00', $m[1], $m[2]);
+                        }
+                        return $state;
+                    }),
                 
                 Forms\Components\TextInput::make('etichettaIngresso')
                     ->label('Etichetta')

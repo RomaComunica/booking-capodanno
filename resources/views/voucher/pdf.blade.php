@@ -110,10 +110,24 @@
                 @foreach($orderLines as $line)
                 @php 
                     $tipologia = $line->tipologia;
+                    if (!$tipologia && isset($location) && $location) {
+                        $tipologia = \App\Models\TipologiaIngresso::where('idLocation', $location->idLocation)
+                            ->where('nomeIngresso', $line->nomeIngressoOrdine)
+                            ->first();
+                    }
                     $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
                     $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
-                    $dataVisualizzata = $line->data_visualizzata;
+                    $dataVisualizzata = $line->data_visualizzata ?: ($tipologia?->dataIngresso ? \Carbon\Carbon::parse($tipologia->dataIngresso)->format('d/m/Y') : null);
                     $orarioVisualizzato = $line->orario_visualizzato;
+                    if ((empty($orarioVisualizzato) || $orarioVisualizzato === '00:00') && $tipologia) {
+                        $rawTipOrario = $tipologia->getAttributes()['orarioIngresso'] ?? $tipologia->orarioIngresso;
+                        if (!empty($rawTipOrario) && preg_match('/(\d{1,2})[:.](\d{2})/', (string)$rawTipOrario, $m)) {
+                            $parsedTime = sprintf('%02d:%02d', $m[1], $m[2]);
+                            if ($parsedTime !== '00:00') {
+                                $orarioVisualizzato = $parsedTime;
+                            }
+                        }
+                    }
                 @endphp
                 <tr>
                     <td>
