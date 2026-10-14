@@ -40,26 +40,57 @@ class RigaOrdine extends Model
 
     public function getTipologiaAttribute()
     {
-        return $this->tipologiaIngresso
-            ?? TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first()
-            ?? TipologiaIngresso::where('idIngresso', $this->idIngressoOrdine)->first()
-            ?? TipologiaIngresso::where('nomeIngresso', $this->nomeIngressoOrdine)->first();
+        if ($this->tipologiaIngresso) {
+            return $this->tipologiaIngresso;
+        }
+
+        if (!empty($this->idIngressoOrdine)) {
+            $byCont = TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first();
+            if ($byCont) return $byCont;
+
+            $locationId = $this->ordine?->idLocationOrdine;
+            if ($locationId) {
+                $byIdAndLoc = TipologiaIngresso::where('idLocation', $locationId)
+                    ->where('idIngresso', $this->idIngressoOrdine)
+                    ->first();
+                if ($byIdAndLoc) return $byIdAndLoc;
+            }
+
+            $byId = TipologiaIngresso::where('idIngresso', $this->idIngressoOrdine)->first();
+            if ($byId) return $byId;
+        }
+
+        $locationId = $this->ordine?->idLocationOrdine;
+        if ($locationId && !empty($this->nomeIngressoOrdine)) {
+            $byNameAndLoc = TipologiaIngresso::where('idLocation', $locationId)
+                ->where('nomeIngresso', $this->nomeIngressoOrdine)
+                ->first();
+            if ($byNameAndLoc) return $byNameAndLoc;
+        }
+
+        if (!empty($this->nomeIngressoOrdine)) {
+            return TipologiaIngresso::where('nomeIngresso', $this->nomeIngressoOrdine)->first();
+        }
+
+        return null;
     }
 
     public function getDataVisualizzataAttribute()
     {
-        $raw = $this->attributes['dataIngressoOrdine'] ?? null;
-        if (!empty($raw)) {
-            try {
-                return \Carbon\Carbon::parse($raw)->format('d/m/Y');
-            } catch (\Throwable $e) {}
-        }
-        
+        // 1. Controlla prima la tipologia se ha una data impostata
         $tip = $this->tipologia;
         $tRaw = $tip ? ($tip->getAttributes()['dataIngresso'] ?? $tip->dataIngresso) : null;
         if (!empty($tRaw)) {
             try {
                 return \Carbon\Carbon::parse($tRaw)->format('d/m/Y');
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Altrimenti la data salvata nella riga d'ordine
+        $raw = $this->attributes['dataIngressoOrdine'] ?? null;
+        if (!empty($raw)) {
+            try {
+                return \Carbon\Carbon::parse($raw)->format('d/m/Y');
             } catch (\Throwable $e) {}
         }
         
@@ -68,26 +99,43 @@ class RigaOrdine extends Model
 
     public function getOrarioVisualizzatoAttribute()
     {
-        $raw = $this->attributes['orarioIngressoOrdine'] ?? null;
-        if (!empty($raw)) {
-            $clean = trim((string)$raw);
-            if (preg_match('/(\d{1,2}:\d{2})/', $clean, $m)) {
-                return strlen($m[1]) === 4 ? '0' . $m[1] : $m[1];
+        $extractTime = function ($val) {
+            if (empty($val)) return null;
+            if ($val instanceof \DateTimeInterface) {
+                return $val->format('H:i');
             }
-        }
-        
+            $clean = trim((string)$val);
+            if (preg_match('/(\d{1,2})[:.](\d{2})/', $clean, $m)) {
+                return sprintf('%02d:%02d', $m[1], $m[2]);
+            }
+            return null;
+        };
+
+        // 1. Controlla prima la tipologia biglietto: se la tipologia ha un orario valido (es. 20:30), quello è il dato autorevole aggiornato dall'amministratore!
         $tip = $this->tipologia;
         $tRaw = $tip ? ($tip->getAttributes()['orarioIngresso'] ?? $tip->orarioIngresso) : null;
-        if (!empty($tRaw)) {
-            if ($tRaw instanceof \DateTimeInterface) {
-                return $tRaw->format('H:i');
-            }
-            $clean = trim((string)$tRaw);
-            if (preg_match('/(\d{1,2}:\d{2})/', $clean, $m)) {
-                return strlen($m[1]) === 4 ? '0' . $m[1] : $m[1];
-            }
+        $tipTime = $extractTime($tRaw);
+        if (!empty($tipTime) && $tipTime !== '00:00') {
+            return $tipTime;
         }
-        
+
+        // 2. Controlla la riga d'ordine se ha un orario valido diverso da 00:00
+        $raw = $this->attributes['orarioIngressoOrdine'] ?? null;
+        $orderLineTime = $extractTime($raw);
+        if (!empty($orderLineTime) && $orderLineTime !== '00:00') {
+            return $orderLineTime;
+        }
+
+        // 3. Se la tipologia ha esplicitamente 00:00
+        if ($tipTime === '00:00') {
+            return '00:00';
+        }
+
+        // 4. Se la riga ordine ha 00:00
+        if ($orderLineTime === '00:00') {
+            return '00:00';
+        }
+
         return null;
     }
 

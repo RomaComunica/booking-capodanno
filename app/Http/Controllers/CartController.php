@@ -50,7 +50,24 @@ class CartController extends Controller
                 // ...
 
                 $dataIngresso = $request->input("dataIngresso_{$idIngresso}") ?: ($ingresso->dataIngresso ? (\is_string($ingresso->dataIngresso) ? $ingresso->dataIngresso : $ingresso->dataIngresso->format('Y-m-d')) : null);
-                $orarioIngresso = $request->input("orarioIngresso_{$idIngresso}") ?: ($ingresso->orarioIngresso ? (\is_string($ingresso->orarioIngresso) ? $ingresso->orarioIngresso : \Carbon\Carbon::parse($ingresso->orarioIngresso)->format('H:i')) : null);
+                $rawOrario = $ingresso->getAttributes()['orarioIngresso'] ?? $ingresso->orarioIngresso;
+                $orarioIngresso = null;
+                if (!empty($rawOrario)) {
+                    if ($rawOrario instanceof \DateTimeInterface) {
+                        $orarioIngresso = $rawOrario->format('H:i');
+                    } else {
+                        $clean = trim((string)$rawOrario);
+                        if (preg_match('/(\d{1,2})[:.](\d{2})/', $clean, $m)) {
+                            $orarioIngresso = sprintf('%02d:%02d', $m[1], $m[2]);
+                        }
+                    }
+                }
+                if (empty($orarioIngresso) || $orarioIngresso === '00:00') {
+                    $reqOrario = $request->input("orarioIngresso_{$idIngresso}");
+                    if (!empty($reqOrario) && preg_match('/(\d{1,2})[:.](\d{2})/', trim((string)$reqOrario), $m)) {
+                        $orarioIngresso = sprintf('%02d:%02d', $m[1], $m[2]);
+                    }
+                }
                 $ingressoSenzaData = $request->has("ingressoSenzaData_{$idIngresso}") ? ($request->input("ingressoSenzaData_{$idIngresso}") ? 1 : 0) : ($ingresso->ingressoSenzaData ? 1 : 0);
                 $etichettaIngresso = $request->input("etichettaIngresso_{$idIngresso}") ?: $ingresso->etichettaIngresso;
 
