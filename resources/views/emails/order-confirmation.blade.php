@@ -106,12 +106,31 @@
                 <th class="text-center">Quantità</th>
             </tr>
             @foreach($orderLines as $line)
+            @php 
+                $tipologia = $line->tipologiaIngresso;
+                $dataIngressoRaw = $line->dataIngressoOrdine ?: ($tipologia?->dataIngresso ? (\is_string($tipologia->dataIngresso) ? $tipologia->dataIngresso : $tipologia->dataIngresso->format('Y-m-d')) : null);
+                $dataIngressoFormatted = $dataIngressoRaw ? \Carbon\Carbon::parse($dataIngressoRaw)->format('d/m/Y') : null;
+                $orarioIngressoRaw = $line->orarioIngressoOrdine ?: ($tipologia?->orarioIngresso ? (\is_string($tipologia->orarioIngresso) ? $tipologia->orarioIngresso : \Carbon\Carbon::parse($tipologia->orarioIngresso)->format('H:i')) : null);
+                $orarioIngressoFormatted = $orarioIngressoRaw ? \Carbon\Carbon::parse($orarioIngressoRaw)->format('H:i') : null;
+                $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
+                $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
+            @endphp
             <tr>
                 <td>
-                    @if($line->ingressoSenzaDataOrdine)
-                        {{ $line->etichettaIngressoOrdine }} - {{ $line->orarioIngressoOrdine ? \Carbon\Carbon::parse($line->orarioIngressoOrdine)->format('H:i') : '' }}
+                    @if($isSenzaData)
+                        {{ $etichetta ?: 'Data aperta' }}
+                        @if($orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00')
+                            - {{ $orarioIngressoFormatted }}
+                        @endif
                     @else
-                        {{ $line->dataIngressoOrdine ? \Carbon\Carbon::parse($line->dataIngressoOrdine)->format('d/m/Y') : '' }} - {{ $line->orarioIngressoOrdine ? \Carbon\Carbon::parse($line->orarioIngressoOrdine)->format('H:i') : '' }}
+                        @if($dataIngressoFormatted)
+                            {{ $dataIngressoFormatted }}
+                            @if($orarioIngressoFormatted)
+                                - {{ $orarioIngressoFormatted }}
+                            @endif
+                        @else
+                            -
+                        @endif
                     @endif
                 </td>
                 <td>{{ $line->nomeIngressoOrdine }}</td>

@@ -10,6 +10,18 @@ class ListClientes extends ListRecords
 {
     protected static string $resource = ClienteResource::class;
 
+    public function getTitle(): string
+    {
+        $count = \App\Models\Cliente::count();
+        return "Clienti ({$count})";
+    }
+
+    public function getHeading(): string
+    {
+        $count = \App\Models\Cliente::count();
+        return "Clienti ({$count})";
+    }
+
     protected function getHeaderActions(): array
     {
         return [

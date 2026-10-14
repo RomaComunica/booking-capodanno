@@ -49,15 +49,22 @@ class CartController extends Controller
                 // Calculate subtotal
                 // ...
 
+                $dataIngresso = $request->input("dataIngresso_{$idIngresso}") ?: ($ingresso->dataIngresso ? (\is_string($ingresso->dataIngresso) ? $ingresso->dataIngresso : $ingresso->dataIngresso->format('Y-m-d')) : null);
+                $orarioIngresso = $request->input("orarioIngresso_{$idIngresso}") ?: ($ingresso->orarioIngresso ? (\is_string($ingresso->orarioIngresso) ? $ingresso->orarioIngresso : \Carbon\Carbon::parse($ingresso->orarioIngresso)->format('H:i')) : null);
+                $ingressoSenzaData = $request->has("ingressoSenzaData_{$idIngresso}") ? ($request->input("ingressoSenzaData_{$idIngresso}") ? 1 : 0) : ($ingresso->ingressoSenzaData ? 1 : 0);
+                $etichettaIngresso = $request->input("etichettaIngresso_{$idIngresso}") ?: $ingresso->etichettaIngresso;
+
                 $cart[] = [
                     'idIngresso' => $idIngresso,
                     'nomeIngresso' => $ingresso->nomeIngresso,
                     'prezzoIngresso' => $prezzo,
                     'quantita' => $qty,
-                    'dataIngresso' => $request->input("dataIngresso_{$idIngresso}"),
-                    'orarioIngresso' => $request->input("orarioIngresso_{$idIngresso}"),
-                    'ingressoSenzaData' => $request->input("ingressoSenzaData_{$idIngresso}"),
-                    'etichettaIngresso' => $request->input("etichettaIngresso_{$idIngresso}"),
+                    'dataIngresso' => $dataIngresso,
+                    'orarioIngresso' => $orarioIngresso,
+                    'ingressoSenzaData' => $ingressoSenzaData,
+                    'senzaData' => $ingressoSenzaData,
+                    'etichettaIngresso' => $etichettaIngresso,
+                    'etichetta' => $etichettaIngresso,
                     'rimborso' => $request->has("rimborso_{$idIngresso}") ? 1 : 0,
                     'rimborsoValore' => $request->has("rimborso_{$idIngresso}") && $ingresso->opzioneRimborso ? floatval($ingresso->rimborsoValorePersona) : 0,
                     'subtotale' => ($prezzo * $qty) + (($request->has("rimborso_{$idIngresso}") && $ingresso->opzioneRimborso ? floatval($ingresso->rimborsoValorePersona) : 0) * $qty)

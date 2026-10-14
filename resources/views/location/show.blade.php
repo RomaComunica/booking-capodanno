@@ -184,8 +184,8 @@
                                 {{-- Quantità --}}
                                 <td class="text-center col-qty">
                                     {{-- Hidden fields for this ticket --}}
-                                    <input type="hidden" name="dataIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->dataIngresso }}">
-                                    <input type="hidden" name="orarioIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->orarioIngresso }}">
+                                    <input type="hidden" name="dataIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->dataIngresso ? (\is_string($ingresso->dataIngresso) ? $ingresso->dataIngresso : $ingresso->dataIngresso->format('Y-m-d')) : '' }}">
+                                    <input type="hidden" name="orarioIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->orarioIngresso ? (\is_string($ingresso->orarioIngresso) ? $ingresso->orarioIngresso : \Carbon\Carbon::parse($ingresso->orarioIngresso)->format('H:i')) : '' }}">
                                     <input type="hidden" name="prezzoIngresso_{{ $ingresso->idIngressoCont }}" id="prezzoIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->prezzoIngresso }}">
                                     <input type="hidden" name="idIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->idIngressoCont }}">
                                     <input type="hidden" name="ingressoSenzaData_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->ingressoSenzaData ? '1' : '0' }}">

@@ -104,9 +104,7 @@
 
         <h3>INTESTATARIO</h3>
         <p>
-            <strong>Nome:</strong> {{ $voucher->nomeVoucher }} {{ $voucher->cognomeVoucher }}<br>
-            <strong>Email:</strong> {{ $voucher->emailVoucher }}<br>
-            <strong>Telefono:</strong> {{ $voucher->telefonoVoucher }}
+            <strong>Nome:</strong> {{ trim(($voucher->nomeVoucher ?? '') . ' ' . ($voucher->cognomeVoucher ?? '')) ?: trim(($order->nomeClienteOrdine ?? '') . ' ' . ($order->cognomeClienteOrdine ?? '')) }}
         </p>
 
         <hr>
@@ -124,13 +122,40 @@
             <tbody>
                 @php $totaleBigliettiVoucher = 0; @endphp
                 @foreach($orderLines as $line)
-                @php $totaleBigliettiVoucher += ((float)$line->prezzoIngressoOrdine * (int)$line->quantitaIngressoOrdine); @endphp
+                @php 
+                    $totaleBigliettiVoucher += ((float)$line->prezzoIngressoOrdine * (int)$line->quantitaIngressoOrdine);
+                    $tipologia = $line->tipologiaIngresso;
+                    
+                    // Risoluzione data ingresso
+                    $dataIngressoRaw = $line->dataIngressoOrdine ?: ($tipologia?->dataIngresso ? (\is_string($tipologia->dataIngresso) ? $tipologia->dataIngresso : $tipologia->dataIngresso->format('Y-m-d')) : null);
+                    $dataIngressoFormatted = $dataIngressoRaw ? \Carbon\Carbon::parse($dataIngressoRaw)->format('d/m/Y') : null;
+
+                    // Risoluzione orario ingresso
+                    $orarioIngressoRaw = $line->orarioIngressoOrdine ?: ($tipologia?->orarioIngresso ? (\is_string($tipologia->orarioIngresso) ? $tipologia->orarioIngresso : \Carbon\Carbon::parse($tipologia->orarioIngresso)->format('H:i')) : null);
+                    $orarioIngressoFormatted = $orarioIngressoRaw ? \Carbon\Carbon::parse($orarioIngressoRaw)->format('H:i') : null;
+
+                    $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
+                    $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
+                @endphp
                 <tr>
                     <td>
-                        @if($line->ingressoSenzaDataOrdine)
-                            {{ $line->etichettaIngressoOrdine }} - {{ $line->orarioIngressoOrdine ? \Carbon\Carbon::parse($line->orarioIngressoOrdine)->format('H:i') : '' }}
+                        @if($isSenzaData)
+                            {{ $etichetta ?: 'Ingresso senza data' }}
+                            @if($orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00')
+                                - {{ $orarioIngressoFormatted }}
+                            @endif
                         @else
-                            {{ $line->dataIngressoOrdine ? \Carbon\Carbon::parse($line->dataIngressoOrdine)->format('d/m/Y') : '' }} - {{ $line->orarioIngressoOrdine ? \Carbon\Carbon::parse($line->orarioIngressoOrdine)->format('H:i') : '' }}
+                            @if($dataIngressoFormatted)
+                                {{ $dataIngressoFormatted }}
+                                @if($orarioIngressoFormatted)
+                                    - {{ $orarioIngressoFormatted }}
+                                @endif
+                            @else
+                                Data non specificata
+                                @if($orarioIngressoFormatted && $orarioIngressoFormatted !== '00:00')
+                                    - {{ $orarioIngressoFormatted }}
+                                @endif
+                            @endif
                         @endif
                     </td>
                     <td>{{ $line->nomeIngressoOrdine }}</td>
@@ -184,7 +209,7 @@
         <hr>
 
         <div style="font-size: 11px; color: #555; text-align: center; margin-top: 20px; background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-            {!! nl2br(e(\App\Models\Setting::getVal('voucher_footer_text') ?: "Servizio booking online: Romacomunica srls\nRomacomunica non si occupa dell'organizzazione dell'evento, tutte le informazioni riportate sono state ricevute dal legittimo proprietario, responsabile nei confronti del cliente.\nVia dei Carraresi 12 - 00164 - Roma (RM) - Tel.: 06.45495920 - Cell.: 3273103225\nWebsite: romacomunicaweb.it - E-mail: info@romacomunicaweb.it - P.Iva: 15995221007")) !!}
+            {!! nl2br(e(\App\Models\Setting::getVal('voucher_footer_text') ?: "Servizio booking online: Romacomunica srls\nRomacomunica non si occupa dell'organizzazione dell'evento, tutte le informazioni riportate sono state ricevute dal legittimo proprietario, responsabile nei confronti del cliente.\nVia dei Carraresi 12 - 00164 - Roma (RM) - Tel.: 06.45495920 - Cell.: 3394642099\nWebsite: capodannoromacentro.it - E-mail: info@capodannoromacentro.it - P.Iva: 15995221007")) !!}
         </div>
 
     </div>

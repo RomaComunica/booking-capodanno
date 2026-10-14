@@ -24,6 +24,11 @@ class ClienteResource extends Resource
     protected static ?string $navigationGroup = 'Gestione';
     protected static ?int $navigationSort = 4;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Cliente::count();
+    }
+
     public static function canCreate(): bool
     {
         return false;

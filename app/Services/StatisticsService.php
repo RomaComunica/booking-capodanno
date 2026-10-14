@@ -578,7 +578,7 @@ class StatisticsService
     /**
      * Get revenue for the last N years
      */
-    public function getRevenueLastNYears($years = 4)
+    public function getRevenueLastNYears($years = 5)
     {
         $currentYear = date('Y');
         $data = [];
