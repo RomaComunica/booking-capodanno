@@ -139,6 +139,64 @@ class OrdineResource extends Resource
                     ->schema([
                         Forms\Components\Repeater::make('righe')
                             ->relationship('righe')
+                            ->mutateRelationshipDataBeforeFillUsing(function (array $data): array {
+                                $qty = max(1, (int) ($data['quantitaIngressoOrdine'] ?? $data['quantitaIngressoordine'] ?? 1));
+                                $totaleRiga = (float) ($data['totaleRiga'] ?? $data['totaleriga'] ?? 0);
+                                $prezzo = (float) ($data['prezzoIngressoOrdine'] ?? $data['prezzoIngressoordine'] ?? 0);
+
+                                if ($prezzo <= 0 && $totaleRiga > 0) {
+                                    $opzRimborso = (int) ($data['opzioneRimborso'] ?? 0);
+                                    $rimborsoVal = $opzRimborso ? (float) ($data['rimborsoValore'] ?? 0) : 0.0;
+                                    $calc = round(($totaleRiga / $qty) - $rimborsoVal, 2);
+                                    $prezzo = $calc > 0 ? $calc : round($totaleRiga / $qty, 2);
+                                }
+
+                                if ($prezzo <= 0 && !empty($data['idIngressoOrdine'])) {
+                                    $tip = \App\Models\TipologiaIngresso::find($data['idIngressoOrdine']);
+                                    if ($tip && $tip->prezzoIngresso > 0) {
+                                        $prezzo = (float) $tip->prezzoIngresso;
+                                    }
+                                }
+
+                                if ($totaleRiga <= 0 && $prezzo > 0) {
+                                    $totaleRiga = round($prezzo * $qty, 2);
+                                }
+
+                                $nome = $data['nomeIngressoOrdine'] ?? $data['nomeIngressoordine'] ?? '';
+                                if (empty($nome) && !empty($data['idIngressoOrdine'])) {
+                                    $tip = \App\Models\TipologiaIngresso::find($data['idIngressoOrdine']);
+                                    $nome = $tip?->nomeIngresso ?? 'Biglietto';
+                                }
+
+                                $data['quantitaIngressoOrdine'] = $qty;
+                                $data['prezzoIngressoOrdine'] = $prezzo;
+                                $data['totaleRiga'] = $totaleRiga;
+                                $data['nomeIngressoOrdine'] = $nome ?: 'Biglietto';
+
+                                return $data;
+                            })
+                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data): array {
+                                $qty = max(1, (int) ($data['quantitaIngressoOrdine'] ?? 1));
+                                $totaleRiga = (float) ($data['totaleRiga'] ?? 0);
+                                $prezzo = (float) ($data['prezzoIngressoOrdine'] ?? 0);
+
+                                if ($prezzo <= 0 && $totaleRiga > 0) {
+                                    $prezzo = round($totaleRiga / $qty, 2);
+                                }
+                                if ($totaleRiga <= 0 && $prezzo > 0) {
+                                    $totaleRiga = round($prezzo * $qty, 2);
+                                }
+
+                                $data['quantitaIngressoOrdine'] = $qty;
+                                $data['prezzoIngressoOrdine'] = $prezzo;
+                                $data['totaleRiga'] = $totaleRiga;
+                                if (empty($data['nomeIngressoOrdine']) && !empty($data['idIngressoOrdine'])) {
+                                    $tip = \App\Models\TipologiaIngresso::find($data['idIngressoOrdine']);
+                                    $data['nomeIngressoOrdine'] = $tip?->nomeIngresso ?? 'Biglietto';
+                                }
+
+                                return $data;
+                            })
                             ->schema([
                                 Forms\Components\Select::make('idIngressoOrdine')
                                     ->label('Biglietto / Ingresso')
@@ -148,9 +206,18 @@ class OrdineResource extends Resource
                                         if ($locationId) {
                                             $query->where('idLocation', $locationId);
                                         }
-                                        return $query->orderBy('nomeIngresso')->get()->mapWithKeys(function ($t) {
+                                        $opts = $query->orderBy('nomeIngresso')->get()->mapWithKeys(function ($t) {
                                             return [$t->idIngressoCont => $t->nomeIngresso . ' (€' . number_format($t->prezzoIngresso, 2, ',', '.') . ')'];
-                                        });
+                                        })->toArray();
+
+                                        $currentId = $get('idIngressoOrdine');
+                                        if ($currentId && !isset($opts[$currentId])) {
+                                            $nome = $get('nomeIngressoOrdine') ?: 'Biglietto #' . $currentId;
+                                            $prezzo = (float) ($get('prezzoIngressoOrdine') ?: 0);
+                                            $opts[$currentId] = $nome . ($prezzo > 0 ? ' (€' . number_format($prezzo, 2, ',', '.') . ')' : '');
+                                        }
+
+                                        return $opts;
                                     })
                                     ->searchable()
                                     ->required()
@@ -169,7 +236,7 @@ class OrdineResource extends Resource
                                     ->columnSpan(2),
 
                                 Forms\Components\Hidden::make('nomeIngressoOrdine')
-                                    ->required(),
+                                    ->default('Biglietto'),
 
                                 Forms\Components\TextInput::make('quantitaIngressoOrdine')
                                     ->label('Quantità')
@@ -188,9 +255,29 @@ class OrdineResource extends Resource
                                     ->label('Prezzo Unit.')
                                     ->numeric()
                                     ->prefix('€')
-                                    ->disabled()
-                                    ->dehydrated()
-                                    ->required(),
+                                    ->default(0)
+                                    ->formatStateUsing(function ($state, Forms\Get $get, $record) {
+                                        if ($state !== null && (float) $state > 0) {
+                                            return $state;
+                                        }
+                                        if ($record && $record->prezzoIngressoOrdine > 0) {
+                                            return $record->prezzoIngressoOrdine;
+                                        }
+                                        $tot = (float) ($get('totaleRiga') ?: ($record?->totaleRiga ?? 0));
+                                        $qty = max(1, (int) ($get('quantitaIngressoOrdine') ?: ($record?->quantitaIngressoOrdine ?? 1)));
+                                        if ($tot > 0) {
+                                            return round($tot / $qty, 2);
+                                        }
+                                        return $state ?? 0;
+                                    })
+                                    ->dehydrateStateUsing(function ($state, Forms\Get $get) {
+                                        if ($state !== null && (float) $state > 0) {
+                                            return (float) $state;
+                                        }
+                                        $tot = (float) ($get('totaleRiga') ?: 0);
+                                        $qty = max(1, (int) ($get('quantitaIngressoOrdine') ?: 1));
+                                        return $tot > 0 ? round($tot / $qty, 2) : 0;
+                                    }),
 
                                 Forms\Components\TextInput::make('totaleRiga')
                                     ->label('Totale Riga')
@@ -207,7 +294,8 @@ class OrdineResource extends Resource
                                 foreach ($righe as $riga) {
                                     $price = (float)($riga['prezzoIngressoOrdine'] ?? 0);
                                     $qty = (int)($riga['quantitaIngressoOrdine'] ?? 1);
-                                    $total += ($price * $qty);
+                                    $rowTot = (float)($riga['totaleRiga'] ?? 0);
+                                    $total += ($price > 0 ? ($price * $qty) : $rowTot);
                                 }
                                 $set('totaleOrdine', $total);
                             }),
@@ -717,6 +805,9 @@ class OrdineResource extends Resource
                         ->exporter(\App\Filament\Exports\OrdineExporter::class),
                 ]),
             ])
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession()
             ->defaultSort('numeroOrdine', 'desc');
     }
 

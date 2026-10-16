@@ -41,8 +41,12 @@ class CartController extends Controller
                 }
                 
                 // ... rest of logic ...
-                // Get data from hidden fields
-                $prezzo = floatval($request->input("prezzoIngresso_{$idIngresso}"));
+                // Get data from hidden fields (with fallback to DB price)
+                $rawPrezzo = str_replace(',', '.', (string) $request->input("prezzoIngresso_{$idIngresso}", ''));
+                $prezzo = floatval($rawPrezzo);
+                if ($prezzo <= 0 && $ingresso->prezzoIngresso > 0) {
+                    $prezzo = (float) $ingresso->prezzoIngresso;
+                }
                 
                 // ...
                 

@@ -12,6 +12,18 @@ class ListLocations extends ListRecords
 {
     protected static string $resource = LocationResource::class;
 
+    public function getTitle(): string
+    {
+        $count = \App\Models\Location::count();
+        return "Locations ({$count})";
+    }
+
+    public function getHeading(): string
+    {
+        $count = \App\Models\Location::count();
+        return "Locations ({$count})";
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -90,10 +90,17 @@ class GlobalSettings extends Page implements HasForms
 
         $this->form->fill([
             'anno_riferimento' => Setting::getVal('anno_riferimento', date('Y')),
-            'email_notifiche' => Setting::getVal('email_notifiche', 'info@capodannoroma.it'),
+            'email_notifiche' => Setting::getVal('email_notifiche', 'info@capodannoromacentro.it'),
             'nome_mittente' => Setting::getVal('nome_mittente', 'Capodanno Roma'),
             'paypal_enabled' => Setting::getVal('paypal_enabled', true),
+            'paypal_mode' => Setting::getVal('paypal_mode', 'live'),
+            'paypal_username' => Setting::getVal('paypal_username', ''),
+            'paypal_password' => Setting::getVal('paypal_password', ''),
+            'paypal_signature' => Setting::getVal('paypal_signature', ''),
             'nexi_enabled' => Setting::getVal('nexi_enabled', true),
+            'nexi_mode' => Setting::getVal('nexi_mode', 'production'),
+            'nexi_alias' => Setting::getVal('nexi_alias', ''),
+            'nexi_secret_key' => Setting::getVal('nexi_secret_key', ''),
             'bonifico_enabled' => Setting::getVal('bonifico_enabled', true),
             'iban_bonifico' => Setting::getVal('iban_bonifico', ''),
             'intestatario_bonifico' => Setting::getVal('intestatario_bonifico', ''),
@@ -137,11 +144,59 @@ class GlobalSettings extends Page implements HasForms
                             ]),
                         Tabs\Tab::make('Gateway Pagamento')
                             ->schema([
-                                Toggle::make('paypal_enabled')
-                                    ->label('Abilita PayPal (+2€ Costi Gestione)'),
+                                Section::make('PayPal (+2€ Costi Gestione)')
+                                    ->schema([
+                                        Toggle::make('paypal_enabled')
+                                            ->label('Abilita PayPal (+2€ Costi Gestione)')
+                                            ->columnSpanFull(),
+                                        \Filament\Forms\Components\Select::make('paypal_mode')
+                                            ->label('Modalità Ambiente PayPal')
+                                            ->options([
+                                                'live' => 'Produzione / Live (Attivo - Pagamenti Reali)',
+                                                'sandbox' => 'Test / Sandbox',
+                                            ])
+                                            ->default('live')
+                                            ->required(),
+                                        TextInput::make('paypal_username')
+                                            ->label('API Username PayPal')
+                                            ->placeholder('Inserisci API Username PayPal'),
+                                        TextInput::make('paypal_password')
+                                            ->label('API Password PayPal')
+                                            ->password()
+                                            ->revealable()
+                                            ->placeholder('Inserisci API Password PayPal'),
+                                        TextInput::make('paypal_signature')
+                                            ->label('API Signature PayPal')
+                                            ->password()
+                                            ->revealable()
+                                            ->placeholder('Inserisci API Signature PayPal')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->columns(3),
                                 
-                                Toggle::make('nexi_enabled')
-                                    ->label('Abilita Nexi XPay (Carta di Credito o Poste Pay)'),
+                                Section::make('Nexi XPay (Carta di Credito o PostePay)')
+                                    ->schema([
+                                        Toggle::make('nexi_enabled')
+                                            ->label('Abilita Nexi XPay (Carta di Credito o Poste Pay)')
+                                            ->columnSpanFull(),
+                                        \Filament\Forms\Components\Select::make('nexi_mode')
+                                            ->label('Modalità Ambiente Nexi')
+                                            ->options([
+                                                'production' => 'Produzione (Attivo - Pagamenti Reali)',
+                                                'test' => 'Test / Sandbox',
+                                            ])
+                                            ->default('production')
+                                            ->required(),
+                                        TextInput::make('nexi_alias')
+                                            ->label('Alias Terminale Nexi')
+                                            ->placeholder('Inserisci Alias Nexi'),
+                                        TextInput::make('nexi_secret_key')
+                                            ->label('Chiave Segreta MAC Nexi')
+                                            ->password()
+                                            ->revealable()
+                                            ->placeholder('Inserisci Chiave Segreta MAC Nexi'),
+                                    ])
+                                    ->columns(3),
                                 
                                 Section::make('Bonifico Bancario')
                                     ->schema([
@@ -206,7 +261,14 @@ class GlobalSettings extends Page implements HasForms
         Setting::setVal('email', 'email_notifiche', $data['email_notifiche'], 'string');
         Setting::setVal('email', 'nome_mittente', $data['nome_mittente'], 'string');
         Setting::setVal('pagamenti', 'paypal_enabled', $data['paypal_enabled'], 'boolean');
+        Setting::setVal('pagamenti', 'paypal_mode', $data['paypal_mode'] ?? 'live', 'string');
+        Setting::setVal('pagamenti', 'paypal_username', trim((string) ($data['paypal_username'] ?? '')), 'string');
+        Setting::setVal('pagamenti', 'paypal_password', trim((string) ($data['paypal_password'] ?? '')), 'string');
+        Setting::setVal('pagamenti', 'paypal_signature', trim((string) ($data['paypal_signature'] ?? '')), 'string');
         Setting::setVal('pagamenti', 'nexi_enabled', $data['nexi_enabled'], 'boolean');
+        Setting::setVal('pagamenti', 'nexi_mode', $data['nexi_mode'] ?? 'production', 'string');
+        Setting::setVal('pagamenti', 'nexi_alias', trim((string) ($data['nexi_alias'] ?? '')), 'string');
+        Setting::setVal('pagamenti', 'nexi_secret_key', trim((string) ($data['nexi_secret_key'] ?? '')), 'string');
         Setting::setVal('pagamenti', 'bonifico_enabled', $data['bonifico_enabled'], 'boolean');
         Setting::setVal('pagamenti', 'iban_bonifico', $data['iban_bonifico'], 'string');
         Setting::setVal('pagamenti', 'intestatario_bonifico', $data['intestatario_bonifico'], 'string');

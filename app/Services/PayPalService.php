@@ -16,14 +16,37 @@ class PayPalService
 
     public function __construct()
     {
-        $mode = config('paypal.mode', 'sandbox');
-        $config = config("paypal.{$mode}");
+        $mode = \App\Models\Setting::getVal('paypal_mode', config('paypal.mode', 'live'));
+        if (!in_array($mode, ['live', 'sandbox'], true)) {
+            $mode = 'live';
+        }
 
-        $this->apiUsername = $config['username'];
-        $this->apiPassword = $config['password'];
-        $this->apiSignature = $config['signature'];
-        $this->apiEndpoint = $config['endpoint'];
-        $this->redirectUrl = $config['redirect_url'];
+        $config = config("paypal.{$mode}", []);
+
+        $dbUser = \App\Models\Setting::getVal('paypal_username', '');
+        $dbPass = \App\Models\Setting::getVal('paypal_password', '');
+        $dbSig = \App\Models\Setting::getVal('paypal_signature', '');
+
+        $this->apiUsername = $this->resolveCredential($dbUser, $config['username'] ?? '');
+        $this->apiPassword = $this->resolveCredential($dbPass, $config['password'] ?? '');
+        $this->apiSignature = $this->resolveCredential($dbSig, $config['signature'] ?? '');
+        $this->apiEndpoint = $config['endpoint'] ?? ($mode === 'live' ? 'https://api-3t.paypal.com/nvp' : 'https://api-3t.sandbox.paypal.com/nvp');
+        $this->redirectUrl = $config['redirect_url'] ?? ($mode === 'live' ? 'https://www.paypal.com/cgi-bin/webscr' : 'https://www.sandbox.paypal.com/cgi-bin/webscr');
+    }
+
+    private function resolveCredential(?string $dbVal, ?string $cfgVal): string
+    {
+        $dbVal = trim((string) $dbVal);
+        if ($dbVal !== '' && !str_starts_with($dbVal, 'your_')) {
+            return $dbVal;
+        }
+
+        $cfgVal = trim((string) $cfgVal);
+        if ($cfgVal !== '' && !str_starts_with($cfgVal, 'your_')) {
+            return $cfgVal;
+        }
+
+        return '';
     }
 
     /**

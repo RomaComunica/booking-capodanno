@@ -48,22 +48,30 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
         $facebookAds = (float)(clone $facebookAdsQuery)->sum('importo');
         $facebookCount = (int)(clone $facebookAdsQuery)->count();
 
-        // 3. Rimborsi
+        // 3. TikTok ADS
+        $tiktokAdsQuery = (clone $usciteQuery)->where(function ($q) {
+            $q->where('causale', 'LIKE', '%tiktok%')
+              ->orWhere('causale', 'LIKE', '%tik tok%');
+        });
+        $tiktokAds = (float)(clone $tiktokAdsQuery)->sum('importo');
+        $tiktokCount = (int)(clone $tiktokAdsQuery)->count();
+
+        // 4. Rimborsi
         $rimborsiQuery = (clone $usciteQuery)->where('causale', 'LIKE', '%rimbors%');
         $rimborsi = (float)(clone $rimborsiQuery)->sum('importo');
         $rimborsiCount = (int)(clone $rimborsiQuery)->count();
 
-        // 4. Straordinari
+        // 5. Straordinari
         $straordinariQuery = (clone $usciteQuery)->where('causale', 'LIKE', '%straordinar%');
         $straordinari = (float)(clone $straordinariQuery)->sum('importo');
         $straordinariCount = (int)(clone $straordinariQuery)->count();
 
-        // 5. Commissioni
+        // 6. Commissioni
         $commissioniQuery = (clone $usciteQuery)->where('causale', 'LIKE', '%commission%');
         $commissioni = (float)(clone $commissioniQuery)->sum('importo');
         $commissioniCount = (int)(clone $commissioniQuery)->count();
 
-        // 6. Rinnovi Domini
+        // 7. Rinnovi Domini
         $rinnoviQuery = (clone $usciteQuery)->where(function ($q) {
             $q->where('causale', 'LIKE', '%rinnov%')
               ->orWhere('causale', 'LIKE', '%domini%');
@@ -71,12 +79,14 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
         $rinnovi = (float)(clone $rinnoviQuery)->sum('importo');
         $rinnoviCount = (int)(clone $rinnoviQuery)->count();
 
-        // 7. Altre Uscite
+        // 8. Altre Uscite
         $altreSpeseQuery = (clone $usciteQuery)
             ->where('causale', 'NOT LIKE', '%google%')
             ->where('causale', 'NOT LIKE', '%facebook%')
             ->where('causale', 'NOT LIKE', '%meta%')
             ->where('causale', 'NOT LIKE', '%fb%')
+            ->where('causale', 'NOT LIKE', '%tiktok%')
+            ->where('causale', 'NOT LIKE', '%tik tok%')
             ->where('causale', 'NOT LIKE', '%rimbors%')
             ->where('causale', 'NOT LIKE', '%straordinar%')
             ->where('causale', 'NOT LIKE', '%commission%')
@@ -102,6 +112,11 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
                 ->description($calcDesc($facebookAds, $facebookCount, $totaleUscite))
                 ->descriptionIcon('heroicon-m-globe-alt')
                 ->color('primary'),
+
+            Stat::make('TikTok ADS', '€ ' . number_format($tiktokAds, 2, ',', '.'))
+                ->description($calcDesc($tiktokAds, $tiktokCount, $totaleUscite))
+                ->descriptionIcon('heroicon-m-video-camera')
+                ->color('info'),
 
             Stat::make('Rimborsi', '€ ' . number_format($rimborsi, 2, ',', '.'))
                 ->description($calcDesc($rimborsi, $rimborsiCount, $totaleUscite))

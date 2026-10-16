@@ -11,9 +11,26 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
-        \Log::info('OrderController::create called');
+        \Log::info('OrderController::create called', ['tx' => $request->query('tx')]);
+
+        $tx = $request->query('tx');
+
+        // If this transaction token was already completed, redirect straight to its signed success URL
+        if ($tx && \Illuminate\Support\Facades\Cache::has('checkout_done_' . $tx)) {
+            \Log::info('Order already completed for tx, redirecting to cached success URL', ['tx' => $tx]);
+            return redirect()->to(\Illuminate\Support\Facades\Cache::get('checkout_done_' . $tx));
+        }
+
+        // Restore session from cache if partitioned iframe cookie was lost on redirect
+        if ($tx && (empty(session('cart')) || empty(session('customer')))) {
+            $cached = \Illuminate\Support\Facades\Cache::get('checkout_tx_' . $tx);
+            if (is_array($cached)) {
+                session($cached);
+                \Log::info('Restored session data from cache in OrderController::create', ['tx' => $tx]);
+            }
+        }
         
         // Check if order already completed (prevent duplicates)
         if (session('ordinecompletato') == 1) {
@@ -134,17 +151,26 @@ class OrderController extends Controller
                 \Log::error('Failed to send order confirmation email: ' . $e->getMessage());
             }
             
+            $successUrl = \Illuminate\Support\Facades\URL::signedRoute('order.success', [
+                'numeroOrdine' => $numeroOrdine,
+                'numeroVoucher' => $numeroVoucher
+            ]);
+
+            // Cache the success URL for this transaction to prevent duplicates on page reload
+            $cacheKeys = array_filter([$tx, session('nexi_cod_trans'), session('paypal_token')]);
+            foreach ($cacheKeys as $ck) {
+                \Illuminate\Support\Facades\Cache::put('checkout_done_' . $ck, $successUrl, now()->addHours(6));
+                \Illuminate\Support\Facades\Cache::forget('checkout_tx_' . $ck);
+            }
+
             // Mark order as completed in session
             session(['ordinecompletato' => 1]);
             
             // Clear cart, customer data, and payment session variables
-            session()->forget(['cart', 'customer', 'totaleAcquisto', 'paypal_transaction_id', 'nexi_transaction_id']);
+            session()->forget(['cart', 'customer', 'totaleAcquisto', 'paypal_transaction_id', 'nexi_transaction_id', 'nexi_cod_trans', 'paypal_token']);
             
             // Redirect to success page (signed URL)
-            return redirect()->to(\Illuminate\Support\Facades\URL::signedRoute('order.success', [
-                'numeroOrdine' => $numeroOrdine,
-                'numeroVoucher' => $numeroVoucher
-            ]));
+            return redirect()->to($successUrl);
             
         } catch (\Exception $e) {
             DB::rollBack();

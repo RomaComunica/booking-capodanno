@@ -146,20 +146,29 @@ class CheckoutController extends Controller
         
         // Save customer data to session
         session(['customer' => $validated]);
+
+        // Also cache checkout state with a token so iframe / strict-cookie browsers never lose session on redirect
+        $tx = 'INIT_' . Str::random(20);
+        \Illuminate\Support\Facades\Cache::put('checkout_tx_' . $tx, [
+            'cart' => session('cart', []),
+            'customer' => $validated,
+            'idLocation' => session('idLocation'),
+            'nomeLocation' => session('nomeLocation'),
+            'idPartner' => session('idPartner', 5),
+            'totaleAcquisto' => session('totaleAcquisto', 0),
+            'iframe' => session('iframe', false),
+        ], now()->addHours(6));
         
         // Redirect based on payment method
-        // For Phase 4A, we'll create order directly for all methods except PayPal/Nexi
         // PayPal = 1, Nexi = 5
         if ($validated['tipoPagamento'] == 1) {
-            // PayPal - will implement in Phase 4C
-            return redirect()->route('payment.paypal.init');
+            return redirect()->route('payment.paypal.init', ['tx' => $tx]);
         } elseif ($validated['tipoPagamento'] == 5) {
-            // Nexi - will implement in Phase 4D
-            return redirect()->route('payment.nexi.init');
+            return redirect()->route('payment.nexi.init', ['tx' => $tx]);
         } else {
             // Other payments: create order directly
             \Log::info('Redirecting to order.create');
-            return redirect()->route('order.create');
+            return redirect()->route('order.create', ['tx' => $tx]);
         }
     }
 

@@ -10,25 +10,81 @@ class RigaOrdine extends Model
     protected $guarded = [];
 
     /**
-     * Accessor: bridge legacy column name `prezzoIngressoordine` (lowercase o)
-     * with the name used throughout the app `prezzoIngressoOrdine` (uppercase O)
+     * Bridge legacy column names (`prezzoIngressoordine`, `quantitaIngressoordine`, `nomeIngressoordine`)
+     * with the camelCase names (`prezzoIngressoOrdine`, `quantitaIngressoOrdine`, `nomeIngressoOrdine`)
+     * used in Filament forms and Blade views.
      */
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+
+        $attributes['quantitaIngressoOrdine'] = $this->quantitaIngressoOrdine;
+        $attributes['prezzoIngressoOrdine'] = $this->prezzoIngressoOrdine;
+        $attributes['nomeIngressoOrdine'] = $this->nomeIngressoOrdine;
+
+        return $attributes;
+    }
+
     public function getPrezzoIngressoOrdineAttribute($value)
     {
-        if ($value !== null && $value != 0) return $value;
-        return $this->attributes['prezzoIngressoordine'] ?? $this->attributes['prezzoIngressoOrdine'] ?? 0;
+        $raw = $value ?? ($this->attributes['prezzoIngressoOrdine'] ?? ($this->attributes['prezzoIngressoordine'] ?? null));
+        if ($raw !== null && (float) $raw > 0) {
+            return (float) $raw;
+        }
+
+        // Fallback: compute unit price from totaleRiga / quantita if available
+        $totale = (float) ($this->attributes['totaleRiga'] ?? ($this->attributes['totaleriga'] ?? 0));
+        $qty = max(1, (int) ($this->attributes['quantitaIngressoOrdine'] ?? ($this->attributes['quantitaIngressoordine'] ?? 1)));
+        if ($totale > 0) {
+            $opzRimborso = (int) ($this->attributes['opzioneRimborso'] ?? 0);
+            $rimborsoVal = $opzRimborso ? (float) ($this->attributes['rimborsoValore'] ?? 0) : 0.0;
+            $unit = round(($totale / $qty) - $rimborsoVal, 2);
+            return $unit > 0 ? $unit : round($totale / $qty, 2);
+        }
+
+        return (float) ($raw ?? 0);
+    }
+
+    public function setPrezzoIngressoOrdineAttribute($value)
+    {
+        if (array_key_exists('prezzoIngressoordine', $this->attributes)) {
+            $this->attributes['prezzoIngressoordine'] = $value;
+            unset($this->attributes['prezzoIngressoOrdine']);
+        } else {
+            $this->attributes['prezzoIngressoOrdine'] = $value;
+        }
     }
 
     public function getQuantitaIngressoOrdineAttribute($value)
     {
-        if ($value !== null && $value != 0) return $value;
-        return $this->attributes['quantitaIngressoordine'] ?? $this->attributes['quantitaIngressoOrdine'] ?? 0;
+        if ($value !== null && $value != 0) return (int) $value;
+        return (int) ($this->attributes['quantitaIngressoordine'] ?? $this->attributes['quantitaIngressoOrdine'] ?? 1);
+    }
+
+    public function setQuantitaIngressoOrdineAttribute($value)
+    {
+        if (array_key_exists('quantitaIngressoordine', $this->attributes)) {
+            $this->attributes['quantitaIngressoordine'] = $value;
+            unset($this->attributes['quantitaIngressoOrdine']);
+        } else {
+            $this->attributes['quantitaIngressoOrdine'] = $value;
+        }
     }
 
     public function getNomeIngressoOrdineAttribute($value)
     {
         if (!empty($value)) return $value;
         return $this->attributes['nomeIngressoordine'] ?? $this->attributes['nomeIngressoOrdine'] ?? '';
+    }
+
+    public function setNomeIngressoOrdineAttribute($value)
+    {
+        if (array_key_exists('nomeIngressoordine', $this->attributes)) {
+            $this->attributes['nomeIngressoordine'] = $value;
+            unset($this->attributes['nomeIngressoOrdine']);
+        } else {
+            $this->attributes['nomeIngressoOrdine'] = $value;
+        }
     }
 
     public function ordine() {

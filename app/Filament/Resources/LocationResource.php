@@ -25,6 +25,11 @@ class LocationResource extends Resource
     
     protected static ?string $modelLabel = 'Location';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Location::count();
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -168,7 +173,10 @@ class LocationResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession();
     }
 
     public static function getRelations(): array

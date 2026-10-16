@@ -73,6 +73,12 @@
             <div class="flex-between mt-6 pt-4 border-top" style="gap: 1rem;">
                 <form action="{{ route('payment.paypal.confirm') }}" method="POST" style="flex: 2;">
                     @csrf
+                    @if(!empty($token))
+                        <input type="hidden" name="token" value="{{ $token }}">
+                    @endif
+                    @if(!empty($payerId))
+                        <input type="hidden" name="payer_id" value="{{ $payerId }}">
+                    @endif
                     <button type="submit" class="btn btn-primary btn-block py-3">
                         Conferma e Completa Ordine
                     </button>

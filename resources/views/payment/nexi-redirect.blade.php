@@ -68,23 +68,34 @@
         <div class="spinner"></div>
         <h3>Reindirizzamento a Nexi...</h3>
         <p>Attendere prego, verrai reindirizzato al gateway di pagamento sicuro.</p>
+        <button type="submit" form="nexiForm" style="margin-top: 1.5rem; padding: 10px 22px; background-color: var(--accent-gold); color: #121212; border: none; border-radius: 30px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+            Procedi al pagamento &rarr;
+        </button>
     </div>
     
-    <form id="nexiForm" method="POST" action="{{ $gatewayUrl }}">
-        <input type="hidden" name="alias" value="{{ $alias }}">
-        <input type="hidden" name="importo" value="{{ $importo }}">
-        <input type="hidden" name="divisa" value="{{ $divisa }}">
-        <input type="hidden" name="codTrans" value="{{ $codTrans }}">
-        <input type="hidden" name="url" value="{{ $returnUrl }}">
-        <input type="hidden" name="url_back" value="{{ $cancelUrl }}">
-        <input type="hidden" name="mac" value="{{ $mac }}">
+    <form id="nexiForm" method="POST" action="{{ $gatewayUrl }}" target="_top">
+        @if(!empty($params) && is_array($params))
+            @foreach($params as $key => $val)
+                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+            @endforeach
+        @else
+            <input type="hidden" name="alias" value="{{ $alias }}">
+            <input type="hidden" name="importo" value="{{ $importo }}">
+            <input type="hidden" name="divisa" value="{{ $divisa }}">
+            <input type="hidden" name="codTrans" value="{{ $codTrans }}">
+            <input type="hidden" name="url" value="{{ $returnUrl }}">
+            <input type="hidden" name="url_back" value="{{ $cancelUrl }}">
+            <input type="hidden" name="mac" value="{{ $mac }}">
+        @endif
     </form>
     
     <script>
-        // Auto-submit form after 1.5 second
         setTimeout(function() {
-            document.getElementById('nexiForm').submit();
-        }, 1500);
+            var form = document.getElementById('nexiForm');
+            if (form) {
+                form.submit();
+            }
+        }, 600);
     </script>
 </body>
 </html>

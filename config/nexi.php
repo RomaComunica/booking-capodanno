@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'mode' => env('NEXI_MODE', 'test'),
+    'mode' => env('NEXI_MODE', 'production'),
 
     /*
     |--------------------------------------------------------------------------
@@ -42,10 +42,10 @@ return [
     | Currency Code
     |--------------------------------------------------------------------------
     |
-    | EUR = 978
+    | Nexi XPay DispatcherServlet requires 'EUR'
     |
     */
 
-    'currency_code' => '978',
+    'currency_code' => env('NEXI_CURRENCY_CODE', 'EUR'),
 
 ];

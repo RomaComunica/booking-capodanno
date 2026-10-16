@@ -20,6 +20,11 @@ class PartnerResource extends Resource
     
     protected static ?string $modelLabel = 'Partner';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Partner::count();
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -159,7 +164,10 @@ class PartnerResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession();
     }
 
     public static function getRelations(): array

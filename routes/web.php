@@ -70,9 +70,9 @@ Route::prefix('payment/paypal')->name('payment.paypal.')->group(function () {
 // Nexi Payment Routes
 Route::prefix('payment/nexi')->name('payment.nexi.')->group(function () {
     Route::get('/init', [App\Http\Controllers\NexiController::class, 'init'])->name('init');
-    Route::post('/callback', [App\Http\Controllers\NexiController::class, 'callback'])->name('callback');
-    Route::post('/notify', [App\Http\Controllers\NexiController::class, 'notify'])->name('notify');
-    Route::get('/cancel', [App\Http\Controllers\NexiController::class, 'cancel'])->name('cancel');
+    Route::match(['get', 'post'], '/callback', [App\Http\Controllers\NexiController::class, 'callback'])->name('callback');
+    Route::match(['get', 'post'], '/notify', [App\Http\Controllers\NexiController::class, 'notify'])->name('notify');
+    Route::match(['get', 'post'], '/cancel', [App\Http\Controllers\NexiController::class, 'cancel'])->name('cancel');
 });
 
 Route::get('/clear-cache', function () {
