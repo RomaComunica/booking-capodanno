@@ -77,16 +77,30 @@ class PartnerResource extends Resource
                     ->schema([
                         Forms\Components\FileUpload::make('logo_dummy')
                             ->label('Logo Partner (Apparirà nei Voucher e nelle E-mail)')
+                            ->helperText('Formati accettati: JPG, JPEG, PNG, WebP, GIF (fino a 10 MB).')
                             ->image()
                             ->imageEditor()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                            ->maxSize(2048)
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+                            ->maxSize(10240)
                             ->disk('partner_loghi')
                             ->directory('')
-                            ->getUploadedFileNameForStorageUsing(
-                                fn (\Illuminate\Http\UploadedFile $file, $record): string => 
-                                    ($record ? $record->idPartner : 'temp_' . uniqid()) . '.' . $file->getClientOriginalExtension()
-                            )
+                            ->visibility('public')
+                            ->openable()
+                            ->downloadable()
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record): string {
+                                $ext = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
+                                if ($record && $record->idPartner) {
+                                    foreach (['jpg', 'jpeg', 'png', 'webp', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP', 'GIF'] as $oldExt) {
+                                        if ($oldExt !== $ext) {
+                                            @unlink(public_path("partner/loghi/{$record->idPartner}.{$oldExt}"));
+                                            @unlink(storage_path("app/public/partner/loghi/{$record->idPartner}.{$oldExt}"));
+                                            @unlink(public_path("storage/partner/loghi/{$record->idPartner}.{$oldExt}"));
+                                        }
+                                    }
+                                    return $record->idPartner . '.' . $ext;
+                                }
+                                return 'temp_' . uniqid() . '.' . $ext;
+                            }),
                     ])
                     ->collapsible(),
             ]);
@@ -99,6 +113,11 @@ class PartnerResource extends Resource
                 Tables\Columns\IconColumn::make('attivoPartner')
                     ->label('Attivo')
                     ->boolean(),
+
+                Tables\Columns\ImageColumn::make('logo_url')
+                    ->label('Logo')
+                    ->height(36)
+                    ->defaultImageUrl(asset('partner/loghi/default.jpg')),
                 
                 Tables\Columns\TextColumn::make('nomePartner')
                     ->label('Nome')

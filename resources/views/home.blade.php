@@ -10,7 +10,9 @@
     {{-- Header with Partner Logo --}}
     <div class="page-header flex-between mb-2">
         <div class="header-titles">
-            @if($partner && file_exists(public_path("partner/loghi/{$partnerId}.jpg")))
+            @if($partner && $partner->logo_url)
+                <img src="{{ $partner->logo_url }}" alt="{{ $partner->nomePartner ?? 'Partner' }}" class="partner-logo">
+            @elseif($partner && file_exists(public_path("partner/loghi/{$partnerId}.jpg")))
                 <img src="{{ asset("partner/loghi/{$partnerId}.jpg") }}" alt="{{ $partner->nomePartner ?? 'Partner' }}" class="partner-logo">
             @else
                 <img src="{{ asset('partner/loghi/default.jpg') }}" alt="Booking" class="partner-logo default-logo" onerror="this.style.display='none'">

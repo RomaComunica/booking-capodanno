@@ -63,9 +63,10 @@ return [
         'partner_loghi' => [
             'driver' => 'local',
             'root' => public_path('partner/loghi'),
-            'url' => '/partner/loghi',
+            'url' => rtrim(env('APP_URL', ''), '/') . '/partner/loghi',
             'visibility' => 'public',
-            'throw' => true,
+            'throw' => false,
+            'report' => false,
         ],
 
     ],

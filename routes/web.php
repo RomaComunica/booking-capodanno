@@ -119,8 +119,10 @@ Route::get('/storage/{path}', function ($path) {
     $candidates = [
         storage_path('app/public/' . $path),
         public_path('img/locations/' . basename($path)),
+        public_path('partner/loghi/' . basename($path)),
         public_path('storage/' . $path),
         storage_path('app/public/locations/' . basename($path)),
+        storage_path('app/public/partner/loghi/' . basename($path)),
         storage_path('app/private/locations/' . basename($path)),
         storage_path('app/locations/' . basename($path)),
     ];
@@ -147,4 +149,47 @@ Route::get('/storage/{path}', function ($path) {
 
     abort(404);
 })->where('path', '.*');
+
+// Fallback route to serve partner logos if webroot is separated from public_path on shared hosting
+Route::get('/partner/loghi/{filename}', function ($filename) {
+    $base = basename($filename);
+    $candidates = [
+        public_path('partner/loghi/' . $base),
+        storage_path('app/public/partner/loghi/' . $base),
+        public_path('storage/partner/loghi/' . $base),
+    ];
+
+    // If requested as e.g. 5.jpg, also check other extensions for that partner ID
+    $idPart = pathinfo($base, PATHINFO_FILENAME);
+    if (is_numeric($idPart)) {
+        foreach (['jpg', 'jpeg', 'png', 'webp', 'gif', 'JPG', 'JPEG', 'PNG', 'WEBP', 'GIF'] as $ext) {
+            $candidates[] = public_path("partner/loghi/{$idPart}.{$ext}");
+            $candidates[] = storage_path("app/public/partner/loghi/{$idPart}.{$ext}");
+            $candidates[] = public_path("storage/partner/loghi/{$idPart}.{$ext}");
+        }
+    }
+
+    foreach ($candidates as $filePath) {
+        if (file_exists($filePath) && !is_dir($filePath)) {
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'webp' => 'image/webp',
+                'jpg'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'svg'  => 'image/svg+xml',
+            ];
+            $contentType = $mimeTypes[$extension] ?? (mime_content_type($filePath) ?: 'application/octet-stream');
+
+            return response()->file($filePath, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'public, max-age=3600',
+            ]);
+        }
+    }
+
+    abort(404);
+})->where('filename', '.*');
+
 

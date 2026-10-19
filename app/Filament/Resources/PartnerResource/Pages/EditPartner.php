@@ -19,6 +19,13 @@ class EditPartner extends EditRecord
         return $this->getResource()::getUrl('index');
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['logo_dummy'] = $this->record->logo_dummy;
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

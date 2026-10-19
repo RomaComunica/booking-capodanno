@@ -75,6 +75,8 @@
                         <div style="margin-top: 20px;">
                             @if($location->image_url)
                                 <img src="{{ $location->image_url }}" alt="{{ $location->nomeLocation }}" style="max-height: 120px; object-fit: contain;">
+                            @elseif($partner && $partner->logo_url)
+                                <img src="{{ $partner->logo_url }}" alt="{{ $partner->nomePartner }}" style="max-height: 80px;">
                             @elseif($partner && file_exists(public_path("partner/loghi/{$partner->idPartner}.jpg")))
                                 <img src="{{ asset("partner/loghi/{$partner->idPartner}.jpg") }}" alt="{{ $partner->nomePartner }}" style="max-height: 80px;">
                             @else
