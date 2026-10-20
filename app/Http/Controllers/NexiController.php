@@ -67,8 +67,7 @@ class NexiController extends Controller
             'nexi_amount' => $totalAmount,
         ]);
 
-        // Persist checkout session data in Cache keyed by codTrans so cross-site / _top return never loses session
-        Cache::put('checkout_tx_' . $codTrans, [
+        $txData = [
             'cart' => $cart,
             'customer' => $customer,
             'idLocation' => $idLocation,
@@ -78,18 +77,34 @@ class NexiController extends Controller
             'iframe' => session('iframe', false),
             'nexi_cod_trans' => $codTrans,
             'nexi_amount' => $totalAmount,
-        ], now()->addHours(6));
+            'created_at' => now()->toDateTimeString(),
+        ];
 
-        // Set return and cancel URLs
+        // Persist checkout session data in Cache keyed by codTrans (48h) so cross-site / _top return or S2S notify never loses session
+        Cache::put('checkout_tx_' . $codTrans, $txData, now()->addHours(48));
+
+        // Keep an index of recent Nexi transactions for diagnostics / recovery
+        $recentList = Cache::get('nexi_recent_cod_trans', []);
+        if (!is_array($recentList)) {
+            $recentList = [];
+        }
+        array_unshift($recentList, $codTrans);
+        Cache::put('nexi_recent_cod_trans', array_slice(array_unique($recentList), 0, 50), now()->addDays(7));
+
+        // Set return, cancel, and Server-to-Server notify URLs
         $returnUrl = route('payment.nexi.callback');
         $cancelUrl = route('payment.nexi.cancel', ['codTrans' => $codTrans]);
+        $notifyUrl = route('payment.nexi.notify');
 
         // Prepare payment data
-        $paymentData = $this->nexiService->preparePaymentData($totalAmount, $codTrans, $returnUrl, $cancelUrl, $customer);
+        $paymentData = $this->nexiService->preparePaymentData($totalAmount, $codTrans, $returnUrl, $cancelUrl, $customer, $notifyUrl);
 
         Log::info('Nexi payment initiated', [
             'codTrans' => $codTrans,
             'amount' => $totalAmount,
+            'customer_email' => $customer['email'] ?? null,
+            'idLocation' => $idLocation,
+            'cart' => $cart,
         ]);
 
         // Show redirect form
@@ -128,7 +143,7 @@ class NexiController extends Controller
             }
         }
 
-        // If this transaction was already processed into an order, redirect straight to its success URL
+        // If this transaction was already processed into an order (e.g. via S2S notify), redirect straight to its success URL
         if ($codTrans && Cache::has('checkout_done_' . $codTrans)) {
             return redirect()->to(Cache::get('checkout_done_' . $codTrans));
         }
@@ -145,7 +160,6 @@ class NexiController extends Controller
                 'amount' => $result['amount'],
             ]);
 
-            // Save transaction ID in session and update cache
             session([
                 'nexi_transaction_id' => $txId,
                 'nexi_cod_trans' => $codTrans,
@@ -155,10 +169,20 @@ class NexiController extends Controller
             if ($codTrans && Cache::has('checkout_tx_' . $codTrans)) {
                 $cached = Cache::get('checkout_tx_' . $codTrans);
                 $cached['nexi_transaction_id'] = $txId;
-                Cache::put('checkout_tx_' . $codTrans, $cached, now()->addHours(6));
+                Cache::put('checkout_tx_' . $codTrans, $cached, now()->addHours(48));
             }
 
-            // Create order (pass tx key so OrderController can also recover session if needed)
+            // Finalize order directly (and send confirmation email) without needing an extra redirect hop
+            $orderResult = app(OrderController::class)->finalizeOrderFromSessionOrCache($codTrans, [
+                'nexi_transaction_id' => $txId,
+                'nexi_cod_trans' => $codTrans,
+            ]);
+
+            if (!empty($orderResult['success']) && !empty($orderResult['success_url'])) {
+                return redirect()->to($orderResult['success_url']);
+            }
+
+            // Fallback redirect if needed
             return redirect()->route('order.create', ['tx' => $codTrans]);
         }
 
@@ -173,19 +197,33 @@ class NexiController extends Controller
     }
 
     /**
-     * Server-to-server notification (optional)
+     * Server-to-server notification from Nexi (urlpost)
+     * Creates the order immediately if not yet created, so even if the user closes the browser on Nexi's receipt screen,
+     * the order and confirmation email are never lost.
      */
     public function notify(Request $request)
     {
         $params = $request->all();
+        $codTrans = $params['codTrans'] ?? null;
 
         Log::info('Nexi S2S notification received', $params);
 
-        // Parse and verify
         $result = $this->nexiService->parseCallback($params);
 
         if ($result['success']) {
-            Log::info('Nexi S2S notification processed', $result);
+            $txId = $result['transaction_id'] ?: $codTrans;
+
+            if ($codTrans && !Cache::has('checkout_done_' . $codTrans) && Cache::has('checkout_tx_' . $codTrans)) {
+                $orderResult = app(OrderController::class)->finalizeOrderFromSessionOrCache($codTrans, [
+                    'nexi_transaction_id' => $txId,
+                    'nexi_cod_trans' => $codTrans,
+                ]);
+                Log::info('Nexi S2S notification finalized order', [
+                    'codTrans' => $codTrans,
+                    'orderResult' => $orderResult,
+                ]);
+            }
+
             return response('OK', 200);
         }
 
@@ -216,4 +254,3 @@ class NexiController extends Controller
         return redirect()->route('checkout.index')->with('info', 'Pagamento con carta annullato. Puoi riprovare o scegliere un altro metodo di pagamento.');
     }
 }
-

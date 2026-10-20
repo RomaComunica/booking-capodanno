@@ -40,6 +40,18 @@ class OrderConfirmation extends Mailable
     public function envelope(): Envelope
     {
         $bccs = [];
+
+        // Aggiungi sempre l'email notifiche globale in copia nascosta (es. booking@romacomunica.it)
+        $adminEmail = \App\Models\Setting::getVal('email_notifiche', 'booking@romacomunica.it');
+        if (!empty($adminEmail)) {
+            $emails = preg_split('/[,;\s]+/', $adminEmail, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($emails as $email) {
+                $clean = trim($email);
+                if (filter_var($clean, FILTER_VALIDATE_EMAIL)) {
+                    $bccs[] = $clean;
+                }
+            }
+        }
         
         // Aggiungi email della location in copia (supporta email multiple separate da virgola, punto e virgola o spazio)
         if ($this->location) {
@@ -80,7 +92,7 @@ class OrderConfirmation extends Mailable
                 \App\Models\Setting::getVal('nome_mittente', 'Booking Online')
             ),
             subject: 'Riepilogo ordine #' . $this->order->numeroOrdine,
-            bcc: array_unique($bccs),
+            bcc: array_values(array_unique($bccs)),
         );
     }
 
