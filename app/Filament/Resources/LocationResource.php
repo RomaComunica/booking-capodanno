@@ -64,22 +64,6 @@ class LocationResource extends Resource
                     ])
                     ->columns(3),
 
-                Forms\Components\Section::make('Media')
-                    ->schema([
-                        Forms\Components\FileUpload::make('immagineLocation')
-                            ->label('Immagine / Locandina')
-                            ->helperText('Formati accettati: WebP, JPG, JPEG, PNG, GIF (fino a 20 MB).')
-                            ->image()
-                            ->imageEditor()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'])
-                            ->maxSize(20480)
-                            ->disk('public')
-                            ->directory('locations')
-                            ->visibility('public')
-                            ->openable()
-                            ->downloadable(),
-                    ]),
-                
                 Forms\Components\Section::make('Riferimento')
                     ->schema([
                         Forms\Components\TextInput::make('riferimentoLocation')
@@ -115,6 +99,23 @@ class LocationResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => strtoupper(str_replace(' ', '', trim((string) $state)))),
                     ])
                     ->columns(2)
+                    ->collapsible(),
+
+                Forms\Components\Section::make('Media')
+                    ->schema([
+                        Forms\Components\FileUpload::make('immagineLocation')
+                            ->label('Immagine / Locandina')
+                            ->helperText('Formati accettati: WebP, JPG, JPEG, PNG, GIF (fino a 20 MB).')
+                            ->image()
+                            ->imageEditor()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'])
+                            ->maxSize(20480)
+                            ->disk('public')
+                            ->directory('locations')
+                            ->visibility('public')
+                            ->openable()
+                            ->downloadable(),
+                    ])
                     ->collapsible(),
                 
                 /*
