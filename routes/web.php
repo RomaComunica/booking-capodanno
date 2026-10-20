@@ -82,6 +82,10 @@ Route::get('/clear-cache', function () {
     \Illuminate\Support\Facades\Artisan::call('view:clear');
     \Illuminate\Support\Facades\Artisan::call('cache:clear');
     \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    if (function_exists('opcache_reset')) {
+        @opcache_reset();
+    }
     
     if (request()->headers->get('referer')) {
         return redirect()->back();
