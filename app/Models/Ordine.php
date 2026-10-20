@@ -61,10 +61,10 @@ class Ordine extends Model
         });
     }
 
-    protected static function sendAutoEmail($model)
+    public static function sendAutoEmail($model)
     {
         try {
-            $model->loadMissing(['righe', 'location', 'partner']);
+            $model->load(['righe', 'location', 'partner']);
             $voucher = \App\Models\Voucher::where('numeroOrdineVoucher', $model->numeroOrdine)->first();
             
             if ($voucher) {

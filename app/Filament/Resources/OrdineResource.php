@@ -226,10 +226,22 @@ class OrdineResource extends Resource
                                         if ($state) {
                                             $tipologia = \App\Models\TipologiaIngresso::find($state);
                                             if ($tipologia) {
+                                                $unitPrice = (float) $tipologia->prezzoIngresso;
+                                                $qty = max(1, (int) ($get('quantitaIngressoOrdine') ?: 1));
+                                                $rowTot = round($unitPrice * $qty, 2);
                                                 $set('nomeIngressoOrdine', $tipologia->nomeIngresso);
-                                                $set('prezzoIngressoOrdine', (float)$tipologia->prezzoIngresso);
-                                                $qty = (int)($get('quantitaIngressoOrdine') ?: 1);
-                                                $set('totaleRiga', (float)$tipologia->prezzoIngresso * $qty);
+                                                $set('prezzoIngressoOrdine', $unitPrice);
+                                                $set('totaleRiga', $rowTot);
+
+                                                $righe = $get('../../righe') ?? [];
+                                                $total = 0;
+                                                foreach ($righe as $riga) {
+                                                    $p = (float) ($riga['prezzoIngressoOrdine'] ?? 0);
+                                                    $q = max(1, (int) ($riga['quantitaIngressoOrdine'] ?? 1));
+                                                    $rt = (float) ($riga['totaleRiga'] ?? 0);
+                                                    $total += ($p > 0 ? ($p * $q) : $rt);
+                                                }
+                                                $set('../../totaleOrdine', round($total, 2));
                                             }
                                         }
                                     })
@@ -246,9 +258,19 @@ class OrdineResource extends Resource
                                     ->required()
                                     ->live(debounce: 300)
                                     ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                        $price = (float)($get('prezzoIngressoOrdine') ?: 0);
-                                        $qty = (int)($state ?: 1);
-                                        $set('totaleRiga', $price * $qty);
+                                        $price = (float) ($get('prezzoIngressoOrdine') ?: 0);
+                                        $qty = max(1, (int) ($state ?: 1));
+                                        $set('totaleRiga', round($price * $qty, 2));
+
+                                        $righe = $get('../../righe') ?? [];
+                                        $total = 0;
+                                        foreach ($righe as $riga) {
+                                            $p = (float) ($riga['prezzoIngressoOrdine'] ?? 0);
+                                            $q = max(1, (int) ($riga['quantitaIngressoOrdine'] ?? 1));
+                                            $rt = (float) ($riga['totaleRiga'] ?? 0);
+                                            $total += ($p > 0 ? ($p * $q) : $rt);
+                                        }
+                                        $set('../../totaleOrdine', round($total, 2));
                                     }),
 
                                 Forms\Components\TextInput::make('prezzoIngressoOrdine')
@@ -256,6 +278,22 @@ class OrdineResource extends Resource
                                     ->numeric()
                                     ->prefix('€')
                                     ->default(0)
+                                    ->live(debounce: 300)
+                                    ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                        $price = (float) ($state ?: 0);
+                                        $qty = max(1, (int) ($get('quantitaIngressoOrdine') ?: 1));
+                                        $set('totaleRiga', round($price * $qty, 2));
+
+                                        $righe = $get('../../righe') ?? [];
+                                        $total = 0;
+                                        foreach ($righe as $riga) {
+                                            $p = (float) ($riga['prezzoIngressoOrdine'] ?? 0);
+                                            $q = max(1, (int) ($riga['quantitaIngressoOrdine'] ?? 1));
+                                            $rt = (float) ($riga['totaleRiga'] ?? 0);
+                                            $total += ($p > 0 ? ($p * $q) : $rt);
+                                        }
+                                        $set('../../totaleOrdine', round($total, 2));
+                                    })
                                     ->formatStateUsing(function ($state, Forms\Get $get, $record) {
                                         if ($state !== null && (float) $state > 0) {
                                             return $state;
@@ -297,14 +335,30 @@ class OrdineResource extends Resource
                                     $rowTot = (float)($riga['totaleRiga'] ?? 0);
                                     $total += ($price > 0 ? ($price * $qty) : $rowTot);
                                 }
-                                $set('totaleOrdine', $total);
+                                $set('totaleOrdine', round($total, 2));
                             }),
 
                         Forms\Components\TextInput::make('totaleOrdine')
                             ->label('Totale Complessivo Ordine')
                             ->numeric()
                             ->prefix('€')
-                            ->required(),
+                            ->default(0)
+                            ->required()
+                            ->dehydrateStateUsing(function ($state, Forms\Get $get) {
+                                $val = (float) ($state ?? 0);
+                                if ($val > 0) {
+                                    return $val;
+                                }
+                                $righe = $get('righe') ?? [];
+                                $total = 0;
+                                foreach ($righe as $riga) {
+                                    $price = (float) ($riga['prezzoIngressoOrdine'] ?? 0);
+                                    $qty = max(1, (int) ($riga['quantitaIngressoOrdine'] ?? 1));
+                                    $rowTot = (float) ($riga['totaleRiga'] ?? 0);
+                                    $total += ($price > 0 ? ($price * $qty) : $rowTot);
+                                }
+                                return round($total, 2);
+                            }),
                     ]),
             ]);
     }
