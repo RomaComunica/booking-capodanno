@@ -368,7 +368,8 @@ class NexiController extends Controller
                 $timestamp = $timeMatch[1] ?? '';
 
                 if (str_contains($line, 'CartController::add called')) {
-                    $pos = strpos($line, '{');
+                    $marker = 'CartController::add called';
+                    $pos = strpos($line, '{', strpos($line, $marker));
                     if ($pos !== false) {
                         $data = json_decode(substr($line, $pos), true);
                         if (is_array($data)) {
@@ -377,14 +378,17 @@ class NexiController extends Controller
                             $lastTotale = $data['totaleAcquisto'] ?? $lastTotale;
                         }
                     }
+                    $logEntries[] = $line;
                 } elseif (str_contains($line, 'Cart content:')) {
-                    $pos = strpos($line, '[');
+                    $marker = 'Cart content:';
+                    $pos = strpos($line, '[', strpos($line, $marker));
                     if ($pos !== false) {
                         $c = json_decode(substr($line, $pos), true);
                         if (is_array($c)) {
                             $lastCart = $c;
                         }
                     }
+                    $logEntries[] = $line;
                 } elseif (str_contains($line, 'Checkout process called')) {
                     $pos = strpos($line, '{');
                     if ($pos !== false) {
