@@ -45,6 +45,17 @@ class Location extends Model
 
     protected static function booted()
     {
+        static::saving(function ($location) {
+            try {
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('location', 'ibanLocation')) {
+                    \Illuminate\Support\Facades\Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('ibanLocation', 50)->nullable()->default('');
+                        $table->string('intestatarioLocation', 255)->nullable()->default('');
+                    });
+                }
+            } catch (\Throwable $e) {}
+        });
+
         static::saved(function ($location) {
             if ($location->immagineLocation) {
                 $filename = basename($location->immagineLocation);

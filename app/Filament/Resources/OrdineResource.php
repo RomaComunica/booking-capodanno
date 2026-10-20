@@ -320,6 +320,12 @@ class OrdineResource extends Resource
                     ->weight(FontWeight::Bold)
                     ->copyable()
                     ->copyMessage('Numero ordine copiato'),
+
+                Tables\Columns\TextColumn::make('provincia_partner')
+                    ->label('Prov.')
+                    ->html()
+                    ->alignCenter()
+                    ->getStateUsing(fn ($record) => $record->partner?->badge_citta_html ?? ''),
                 
                 Tables\Columns\BadgeColumn::make('statoOrdine')
                     ->label('Stato')
@@ -727,8 +733,6 @@ class OrdineResource extends Resource
                     )
                     ->openUrlInNewTab()
                     ->visible(fn ($record) => $record->vouchers()->exists()),
-                
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

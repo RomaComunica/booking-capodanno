@@ -86,6 +86,15 @@ Route::get('/clear-cache', function () {
     if (function_exists('opcache_reset')) {
         @opcache_reset();
     }
+
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasTable('location') && !\Illuminate\Support\Facades\Schema::hasColumn('location', 'ibanLocation')) {
+            \Illuminate\Support\Facades\Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('ibanLocation', 50)->nullable()->default('');
+                $table->string('intestatarioLocation', 255)->nullable()->default('');
+            });
+        }
+    } catch (\Throwable $e) {}
     
     if (request()->headers->get('referer')) {
         return redirect()->back();

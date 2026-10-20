@@ -99,6 +99,23 @@ class LocationResource extends Resource
                     ])
                     ->columns(3)
                     ->collapsible(),
+
+                Forms\Components\Section::make('Dati Bancari')
+                    ->schema([
+                        Forms\Components\TextInput::make('intestatarioLocation')
+                            ->label('Intestatario')
+                            ->placeholder('Es. Mario Rossi S.r.l.')
+                            ->maxLength(255)
+                            ->dehydrateStateUsing(fn ($state) => $state ?? ''),
+
+                        Forms\Components\TextInput::make('ibanLocation')
+                            ->label('IBAN')
+                            ->placeholder('Es. IT60X0542811101000000123456')
+                            ->maxLength(50)
+                            ->dehydrateStateUsing(fn ($state) => strtoupper(str_replace(' ', '', trim((string) $state)))),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
                 
                 /*
                 Forms\Components\Section::make('Classificazione')
