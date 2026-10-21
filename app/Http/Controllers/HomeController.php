@@ -48,8 +48,29 @@ class HomeController extends Controller
         }
 
         // Search by name
-        if ($request->has('search') && $request->search) {
-            $query->where('nomeLocation', 'LIKE', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $searchTerm = trim((string) $request->search);
+            $query->where('nomeLocation', 'LIKE', '%' . $searchTerm . '%');
+
+            // If search matches a single location (or exact name match), redirect straight to its tickets page
+            $exactMatch = (clone $query)
+                ->whereRaw('LOWER(TRIM(nomeLocation)) = ?', [strtolower($searchTerm)])
+                ->first();
+
+            if ($exactMatch) {
+                return redirect()->route('location.show', array_filter([
+                    'id' => $exactMatch->idLocation,
+                    'iframe' => $iframe ? '1' : null,
+                ]));
+            }
+
+            $matchingLocations = (clone $query)->limit(2)->get();
+            if ($matchingLocations->count() === 1) {
+                return redirect()->route('location.show', array_filter([
+                    'id' => $matchingLocations->first()->idLocation,
+                    'iframe' => $iframe ? '1' : null,
+                ]));
+            }
         }
 
         $locations = $query->paginate(12);
