@@ -258,6 +258,7 @@ class Partner extends Model
             'NA' => ['bg' => '#0284c7', 'text' => '#ffffff'], // Azzurro Napoli
             'TO' => ['bg' => '#b45309', 'text' => '#ffffff'], // Ambra/Granata Torino
             'VE' => ['bg' => '#0d9488', 'text' => '#ffffff'], // Verde Laguna Venezia
+            'RN' => ['bg' => '#e11d48', 'text' => '#ffffff'], // Rosso Corallo Rimini
             'BO' => ['bg' => '#dc2626', 'text' => '#ffffff'],
             'GE' => ['bg' => '#1d4ed8', 'text' => '#ffffff'],
             'BA' => ['bg' => '#e11d48', 'text' => '#ffffff'],
