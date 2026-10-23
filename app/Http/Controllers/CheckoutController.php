@@ -33,37 +33,37 @@ class CheckoutController extends Controller
         
         // Load location
         $location = Location::find($idLocation);
-        
-        // Load payment methods available for this location
-        $paymentMethods = TipoPagamento::whereHas('locations', function($q) use ($idLocation) {
-            $q->where('idLocationPagamento', $idLocation)
-              ->where('pagamentoLocationAttivo', 1);
-        })->get();
+        $locationPaymentMap = $location
+            ? $location->getPagamentiStatoMap()
+            : [1 => true, 2 => true, 3 => true, 4 => true, 5 => true];
 
-        // Fallback: if no location cross entries exist yet, load all standard payment methods
-        if ($paymentMethods->isEmpty()) {
-            $paymentMethods = TipoPagamento::whereIn('idTipoPagamento', [1, 2, 3, 4, 5])->get();
-        }
-        
-        // Filter out globally disabled methods
-        $paymentMethods = $paymentMethods->filter(function ($method) {
-            if ($method->idTipoPagamento == 1 && !\App\Models\Setting::getVal('paypal_enabled', true)) {
-                return false;
-            }
-            if ($method->idTipoPagamento == 2 && !\App\Models\Setting::getVal('bonifico_enabled', true)) {
-                return false;
-            }
-            if ($method->idTipoPagamento == 3 && !\App\Models\Setting::getVal('contanti_enabled', true)) {
-                return false;
-            }
-            if ($method->idTipoPagamento == 4 && !\App\Models\Setting::getVal('postepay_enabled', true)) {
-                return false;
-            }
-            if ($method->idTipoPagamento == 5 && !\App\Models\Setting::getVal('nexi_enabled', true)) {
-                return false;
-            }
-            return true;
-        })->values();
+        // Load standard payment methods and filter by Global Settings + Location Settings
+        $paymentMethods = TipoPagamento::whereIn('idTipoPagamento', [1, 2, 3, 4, 5])
+            ->get()
+            ->filter(function ($method) use ($locationPaymentMap) {
+                $id = (int) $method->idTipoPagamento;
+
+                // 1. Check Global Settings (Impostazioni Globali)
+                if ($id === 1 && !\App\Models\Setting::getVal('paypal_enabled', true)) {
+                    return false;
+                }
+                if ($id === 2 && !\App\Models\Setting::getVal('bonifico_enabled', true)) {
+                    return false;
+                }
+                if ($id === 3 && !\App\Models\Setting::getVal('contanti_enabled', true)) {
+                    return false;
+                }
+                if ($id === 4 && !\App\Models\Setting::getVal('postepay_enabled', true)) {
+                    return false;
+                }
+                if ($id === 5 && !\App\Models\Setting::getVal('nexi_enabled', true)) {
+                    return false;
+                }
+
+                // 2. Check Per-Location Settings (cross_pagamenti_location)
+                return !empty($locationPaymentMap[$id]);
+            })
+            ->values();
         
         // Load shipping methods available for this location
         $shippingMethods = TipoSpedizione::whereHas('locations', function($q) use ($idLocation) {
@@ -130,6 +130,24 @@ class CheckoutController extends Controller
             'tipoSpedizione.required' => 'Seleziona un metodo di spedizione',
             'privacy.accepted' => 'È obbligatorio accettare l\'informativa sulla privacy e le condizioni di vendita per procedere.',
         ]);
+
+        // Verify that the selected payment method is enabled both globally and for this location
+        $idLocationSession = session('idLocation');
+        $locationForCheck = $idLocationSession ? Location::find($idLocationSession) : null;
+        $selectedPaymentId = (int) $validated['tipoPagamento'];
+        $globalEnabledMap = [
+            1 => (bool) \App\Models\Setting::getVal('paypal_enabled', true),
+            2 => (bool) \App\Models\Setting::getVal('bonifico_enabled', true),
+            3 => (bool) \App\Models\Setting::getVal('contanti_enabled', true),
+            4 => (bool) \App\Models\Setting::getVal('postepay_enabled', true),
+            5 => (bool) \App\Models\Setting::getVal('nexi_enabled', true),
+        ];
+
+        if (empty($globalEnabledMap[$selectedPaymentId]) || ($locationForCheck && !$locationForCheck->isPagamentoAttivo($selectedPaymentId))) {
+            return redirect()->back()->withInput()->withErrors([
+                'tipoPagamento' => 'Il metodo di pagamento selezionato non è disponibile per questa location.',
+            ]);
+        }
 
         // Enforcement: Se viene scelto il pagamento in Contanti (ID 3), il metodo di spedizione DEVE essere Ritiro in sede (non Voucher via email)
         if ((int)$validated['tipoPagamento'] === 3) {

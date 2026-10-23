@@ -13,6 +13,94 @@ class Location extends Model
         'attivaLocation' => 'boolean',
     ];
 
+    public array $pendingPagamentiStato = [];
+
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+        if ($this->exists && $this->idLocation) {
+            $map = $this->getPagamentiStatoMap();
+            foreach ([1, 2, 3, 4, 5] as $idPag) {
+                $attributes['pagamento_' . $idPag] = $map[$idPag] ?? true;
+            }
+        }
+        return $attributes;
+    }
+
+    public function getPagamentiStatoMap(): array
+    {
+        $defaults = [
+            1 => true,
+            2 => true,
+            3 => true,
+            4 => true,
+            5 => true,
+        ];
+
+        if (!$this->idLocation) {
+            return $defaults;
+        }
+
+        try {
+            $rows = \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')
+                ->where('idLocationPagamento', $this->idLocation)
+                ->whereIn('idPagamento', [1, 2, 3, 4, 5])
+                ->get(['idPagamento', 'pagamentoLocationAttivo']);
+
+            foreach ($rows as $row) {
+                $defaults[(int) $row->idPagamento] = ((int) $row->pagamentoLocationAttivo === 1);
+            }
+        } catch (\Throwable $e) {
+            // Fallback to defaults
+        }
+
+        return $defaults;
+    }
+
+    public function isPagamentoAttivo(int $idPagamento): bool
+    {
+        $map = $this->getPagamentiStatoMap();
+        return $map[$idPagamento] ?? true;
+    }
+
+    public function syncPagamentiLocation(array $states): void
+    {
+        if (!$this->idLocation) {
+            return;
+        }
+
+        try {
+            foreach ($states as $idPagamento => $isActive) {
+                $idPagamento = (int) $idPagamento;
+                if (!in_array($idPagamento, [1, 2, 3, 4, 5], true)) {
+                    continue;
+                }
+                $attivo = $isActive ? 1 : 0;
+
+                $exists = \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')
+                    ->where('idLocationPagamento', $this->idLocation)
+                    ->where('idPagamento', $idPagamento)
+                    ->exists();
+
+                if ($exists) {
+                    \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')
+                        ->where('idLocationPagamento', $this->idLocation)
+                        ->where('idPagamento', $idPagamento)
+                        ->update(['pagamentoLocationAttivo' => $attivo]);
+                } else {
+                    \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')
+                        ->insert([
+                            'idLocationPagamento' => $this->idLocation,
+                            'idPagamento' => $idPagamento,
+                            'pagamentoLocationAttivo' => $attivo,
+                        ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Errore syncPagamentiLocation: ' . $e->getMessage());
+        }
+    }
+
     public function ingressi() {
         return $this->hasMany(TipologiaIngresso::class, 'idLocation', 'idLocation');
     }
@@ -46,6 +134,14 @@ class Location extends Model
     protected static function booted()
     {
         static::saving(function ($location) {
+            foreach ([1, 2, 3, 4, 5] as $idPag) {
+                $key = 'pagamento_' . $idPag;
+                if (array_key_exists($key, $location->attributes)) {
+                    $location->pendingPagamentiStato[$idPag] = (bool) $location->attributes[$key];
+                    unset($location->attributes[$key]);
+                }
+            }
+
             try {
                 if (!\Illuminate\Support\Facades\Schema::hasColumn('location', 'ibanLocation')) {
                     \Illuminate\Support\Facades\Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
@@ -57,6 +153,19 @@ class Location extends Model
         });
 
         static::saved(function ($location) {
+            if (!empty($location->pendingPagamentiStato)) {
+                $location->syncPagamentiLocation($location->pendingPagamentiStato);
+                $location->pendingPagamentiStato = [];
+            } elseif ($location->wasRecentlyCreated) {
+                $location->syncPagamentiLocation([
+                    1 => (bool) \App\Models\Setting::getVal('paypal_enabled', true),
+                    2 => (bool) \App\Models\Setting::getVal('bonifico_enabled', true),
+                    3 => (bool) \App\Models\Setting::getVal('contanti_enabled', true),
+                    4 => (bool) \App\Models\Setting::getVal('postepay_enabled', true),
+                    5 => (bool) \App\Models\Setting::getVal('nexi_enabled', true),
+                ]);
+            }
+
             if ($location->immagineLocation) {
                 $filename = basename($location->immagineLocation);
                 

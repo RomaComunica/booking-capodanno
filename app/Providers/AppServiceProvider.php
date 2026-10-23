@@ -23,8 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Auto-sync payment and shipping methods into database once without needing SSH migrations
         try {
-            if (!\Illuminate\Support\Facades\Cache::has('payment_shipping_synced_v3')) {
-                \Illuminate\Support\Facades\Cache::forever('payment_shipping_synced_v3', true);
+            if (!\Illuminate\Support\Facades\Cache::has('payment_shipping_synced_v4')) {
+                \Illuminate\Support\Facades\Cache::forever('payment_shipping_synced_v4', true);
                 if (Schema::hasTable('tipo_pagamenti')) {
                 DB::table('tipo_pagamenti')->updateOrInsert(
                     ['idTipoPagamento' => 1],
@@ -72,23 +72,36 @@ class AppServiceProvider extends ServiceProvider
                     ]
                 );
 
-                // Auto-attach payment methods to all locations
+                // Initialize cross_pagamenti_location once in DB (without overwriting future per-location choices)
                 if (Schema::hasTable('cross_pagamenti_location') && Schema::hasTable('location')) {
+                    $alreadyInitialized = \App\Models\Setting::getVal('location_payments_initialized_v1', false);
                     $locations = DB::table('location')->pluck('idLocation');
                     $activePaymentIds = [1, 2, 3, 4, 5];
+
                     foreach ($locations as $locId) {
                         foreach ($activePaymentIds as $pId) {
-                            DB::table('cross_pagamenti_location')->updateOrInsert(
-                                [
+                            $exists = DB::table('cross_pagamenti_location')
+                                ->where('idLocationPagamento', $locId)
+                                ->where('idPagamento', $pId)
+                                ->exists();
+
+                            if (!$exists) {
+                                DB::table('cross_pagamenti_location')->insert([
                                     'idLocationPagamento' => $locId,
                                     'idPagamento' => $pId,
-                                ],
-                                [
                                     'pagamentoLocationAttivo' => 1,
-                                    'costoPagamento' => 0,
-                                ]
-                            );
+                                ]);
+                            } elseif (!$alreadyInitialized) {
+                                DB::table('cross_pagamenti_location')
+                                    ->where('idLocationPagamento', $locId)
+                                    ->where('idPagamento', $pId)
+                                    ->update(['pagamentoLocationAttivo' => 1]);
+                            }
                         }
+                    }
+
+                    if (!$alreadyInitialized) {
+                        \App\Models\Setting::setVal('sistema', 'location_payments_initialized_v1', true, 'boolean');
                     }
                 }
             }

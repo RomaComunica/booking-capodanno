@@ -101,6 +101,47 @@ class LocationResource extends Resource
                     ->columns(2)
                     ->collapsible(),
 
+                Forms\Components\Section::make('Metodi di Pagamento')
+                    ->description('Attiva o disattiva i singoli metodi di pagamento per questa location (in subordine a quanto abilitato in Impostazioni Globali).')
+                    ->schema([
+                        Forms\Components\Toggle::make('pagamento_5')
+                            ->label('Carta di Credito o PostePay (Nexi)')
+                            ->default(fn () => (bool) \App\Models\Setting::getVal('nexi_enabled', true))
+                            ->helperText(fn () => \App\Models\Setting::getVal('nexi_enabled', true)
+                                ? 'Attivo in Impostazioni Globali'
+                                : '⚠️ Disattivato in Impostazioni Globali'),
+
+                        Forms\Components\Toggle::make('pagamento_1')
+                            ->label('PayPal (+2€ Costi Gestione)')
+                            ->default(fn () => (bool) \App\Models\Setting::getVal('paypal_enabled', true))
+                            ->helperText(fn () => \App\Models\Setting::getVal('paypal_enabled', true)
+                                ? 'Attivo in Impostazioni Globali'
+                                : '⚠️ Disattivato in Impostazioni Globali'),
+
+                        Forms\Components\Toggle::make('pagamento_2')
+                            ->label('Bonifico Bancario')
+                            ->default(fn () => (bool) \App\Models\Setting::getVal('bonifico_enabled', true))
+                            ->helperText(fn () => \App\Models\Setting::getVal('bonifico_enabled', true)
+                                ? 'Attivo in Impostazioni Globali'
+                                : '⚠️ Disattivato in Impostazioni Globali'),
+
+                        Forms\Components\Toggle::make('pagamento_4')
+                            ->label('Ricarica PostePay')
+                            ->default(fn () => (bool) \App\Models\Setting::getVal('postepay_enabled', true))
+                            ->helperText(fn () => \App\Models\Setting::getVal('postepay_enabled', true)
+                                ? 'Attivo in Impostazioni Globali'
+                                : '⚠️ Disattivato in Impostazioni Globali'),
+
+                        Forms\Components\Toggle::make('pagamento_3')
+                            ->label('Contanti (Ritiro in Sede)')
+                            ->default(fn () => (bool) \App\Models\Setting::getVal('contanti_enabled', true))
+                            ->helperText(fn () => \App\Models\Setting::getVal('contanti_enabled', true)
+                                ? 'Attivo in Impostazioni Globali'
+                                : '⚠️ Disattivato in Impostazioni Globali'),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
                 Forms\Components\Section::make('Media')
                     ->schema([
                         Forms\Components\FileUpload::make('immagineLocation')
@@ -189,6 +230,43 @@ class LocationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('configura_pagamenti')
+                        ->label('Metodi di Pagamento')
+                        ->icon('heroicon-o-credit-card')
+                        ->form([
+                            Forms\Components\Toggle::make('pagamento_5')
+                                ->label('Carta di Credito o PostePay (Nexi)')
+                                ->default(true),
+                            Forms\Components\Toggle::make('pagamento_1')
+                                ->label('PayPal (+2€ Costi Gestione)')
+                                ->default(true),
+                            Forms\Components\Toggle::make('pagamento_2')
+                                ->label('Bonifico Bancario')
+                                ->default(true),
+                            Forms\Components\Toggle::make('pagamento_4')
+                                ->label('Ricarica PostePay')
+                                ->default(true),
+                            Forms\Components\Toggle::make('pagamento_3')
+                                ->label('Contanti (Ritiro in Sede)')
+                                ->default(true),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                            $states = [
+                                1 => (bool) ($data['pagamento_1'] ?? true),
+                                2 => (bool) ($data['pagamento_2'] ?? true),
+                                3 => (bool) ($data['pagamento_3'] ?? true),
+                                4 => (bool) ($data['pagamento_4'] ?? true),
+                                5 => (bool) ($data['pagamento_5'] ?? true),
+                            ];
+                            foreach ($records as $record) {
+                                $record->syncPagamentiLocation($states);
+                            }
+                            \Filament\Notifications\Notification::make()
+                                ->title('Metodi di pagamento aggiornati per le location selezionate')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])

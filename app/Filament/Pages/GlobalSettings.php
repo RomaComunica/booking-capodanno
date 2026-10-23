@@ -68,20 +68,21 @@ class GlobalSettings extends Page implements HasForms
                 ]
             );
 
-            // Attach Ricarica PostePay (4) to all locations if not already present
+            // Attach Ricarica PostePay (4) to locations only if not already present (never overwrite existing state)
             if (\Illuminate\Support\Facades\Schema::hasTable('cross_pagamenti_location')) {
                 $locations = \Illuminate\Support\Facades\DB::table('location')->pluck('idLocation');
                 foreach ($locations as $locId) {
-                    \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')->updateOrInsert(
-                        [
+                    $exists = \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')
+                        ->where('idLocationPagamento', $locId)
+                        ->where('idPagamento', 4)
+                        ->exists();
+                    if (!$exists) {
+                        \Illuminate\Support\Facades\DB::table('cross_pagamenti_location')->insert([
                             'idLocationPagamento' => $locId,
                             'idPagamento' => 4,
-                        ],
-                        [
                             'pagamentoLocationAttivo' => 1,
-                            'costoPagamento' => 0,
-                        ]
-                    );
+                        ]);
+                    }
                 }
             }
         } catch (\Exception $e) {
