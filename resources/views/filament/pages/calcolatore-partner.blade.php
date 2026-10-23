@@ -23,8 +23,11 @@
                             printWindow.document.write('<html><head><title>Stampa Calcolatore Partner</title>');
                             printWindow.document.write('<style>');
                             printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
-                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 24px; font-weight: bold; }');
-                            printWindow.document.write('p { margin: 0 0 20px 0; color: #555; font-size: 14px; }');
+                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                            printWindow.document.write('.kpi-card { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
                             printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
                             printWindow.document.write('th, td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
                             printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 10px; color: #555; }');
@@ -59,7 +62,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                        <x-heroicon-o-user-group class="h-6 w-6 text-primary-500" />
+                        <x-heroicon-o-user-group class="h-6 w-6 text-primary-500" style="width: 22px; height: 22px;" />
                         <span>Partner: {{ $risultati['partner'] }}</span>
                     </h2>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -75,9 +78,9 @@
             </div>
 
             {{-- Financial Summary KPI Cards Grid --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="kpi-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <!-- Totale Venduto Partner -->
-                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Totale Venduto</span>
                     <div class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
                         € {{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
@@ -86,7 +89,7 @@
                 </div>
 
                 <!-- Totale Provvigione Spettante -->
-                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400">Provvigione Spettante</span>
                     <div class="text-xl font-extrabold text-primary-600 dark:text-primary-400 mt-1">
                         € {{ number_format($risultati['totaleProvvigione'], 2, ',', '.') }}
@@ -95,7 +98,7 @@
                 </div>
 
                 <!-- Provvigioni Già Pagate -->
-                <div class="bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400">Già Pagato</span>
                     <div class="text-xl font-extrabold text-green-700 dark:text-green-400 mt-1">
                         € {{ number_format($risultati['totaleGiaPagato'], 2, ',', '.') }}
@@ -104,7 +107,7 @@
                 </div>
 
                 <!-- Debito Residuo da Pagare -->
-                <div class="bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Da Pagare (Residuo)</span>
                     <div class="text-xl font-extrabold text-amber-700 dark:text-amber-400 mt-1">
                         € {{ number_format($risultati['totaleDaPagareResiduo'], 2, ',', '.') }}
@@ -113,7 +116,7 @@
                 </div>
 
                 <!-- Totale Biglietti -->
-                <div class="bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Totale Biglietti</span>
                     <div class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
                         {{ number_format($risultati['totaleQuantita'], 0, ',', '.') }}
