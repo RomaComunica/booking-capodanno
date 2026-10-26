@@ -53,8 +53,8 @@ class OrderConfirmation extends Mailable
             }
         }
         
-        // Aggiungi email della location in copia (supporta email multiple separate da virgola, punto e virgola o spazio)
-        if ($this->location) {
+        // Aggiungi email della location (struttura/locale) in copia SOLO quando l'ordine è Completato/Pagato (statoOrdine == 2)
+        if ((int) $this->order->statoOrdine === 2 && $this->location) {
             if (!empty($this->location->emailLocation)) {
                 $emails = preg_split('/[,;\s]+/', $this->location->emailLocation, -1, PREG_SPLIT_NO_EMPTY);
                 foreach ($emails as $email) {

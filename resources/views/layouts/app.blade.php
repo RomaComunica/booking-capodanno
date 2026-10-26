@@ -102,7 +102,8 @@
     @endif
 
     <main class="main-content">
-        <div class="container" style="margin-bottom: 2rem;">
+        @if(session('success') || session('error') || $errors->any())
+        <div class="container" style="margin-bottom: 1rem;">
             @if(session('success'))
                 <div class="alert alert-success animate-fade-in" role="alert">
                     <strong>Successo!</strong>&nbsp;{{ session('success') }}
@@ -126,6 +127,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         @yield('content')
     </main>

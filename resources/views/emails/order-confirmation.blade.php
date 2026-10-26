@@ -67,7 +67,11 @@
 
         <p>
             <strong>Grazie, {{ $order->nomeClienteOrdine }} {{ $order->cognomeClienteOrdine }}</strong><br><br>
-            Il tuo ordine <strong>#{{ $order->numeroOrdine }}</strong> è stato completato!<br><br>
+            @if((int) $order->statoOrdine === 2)
+                Il tuo ordine <strong>#{{ $order->numeroOrdine }}</strong> è stato completato!<br><br>
+            @else
+                Il tuo ordine <strong>#{{ $order->numeroOrdine }}</strong> è stato registrato ed è in attesa di pagamento.<br><br>
+            @endif
             
             @if(!empty($additionalMessage))
                 <div style="background-color: #f8f9fa; border-left: 4px solid #5bc0de; padding: 15px; margin: 20px 0;">
@@ -75,7 +79,7 @@
                 </div>
             @endif
 
-            @if($order->statoOrdine != 0)
+            @if((int) $order->statoOrdine === 2)
                 Per stampare il tuo voucher clicca sul link seguente:<br><br>
                 <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('voucher.show', ['numeroOrdine' => $order->numeroOrdine, 'numeroVoucher' => $voucher->numeroVoucher, 'idPartner' => $partner->idPartner ?? 1]) }}" style="color: #337ab7; text-decoration: none;">
                     <strong>Stampa il Voucher</strong>

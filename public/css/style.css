@@ -74,7 +74,11 @@ a:hover {
 
 .main-content {
     flex: 1;
-    padding: 3rem 0;
+    padding: 1rem 0 2rem 0;
+}
+
+.main-content .main-content {
+    padding: 0 !important;
 }
 
 /* Utilities */
@@ -268,11 +272,12 @@ a:hover {
 }
 
 /* Home Page Specifics */
-.mb-2 { margin-bottom: 2rem; }
-.mb-3 { margin-bottom: 3rem; }
-.mt-2 { margin-top: 1.5rem; }
-.mt-4 { margin-top: 3rem; }
-.pb-2 { padding-bottom: 2rem; }
+.mb-1 { margin-bottom: 0.75rem; }
+.mb-2 { margin-bottom: 1.25rem; }
+.mb-3 { margin-bottom: 1.75rem; }
+.mt-2 { margin-top: 1.25rem; }
+.mt-4 { margin-top: 2rem; }
+.pb-2 { padding-bottom: 1.5rem; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 
 .flex-between {
@@ -307,7 +312,7 @@ a:hover {
 .divider {
     border: 0;
     border-top: 1px solid var(--border-color);
-    margin: 2rem 0;
+    margin: 0.85rem 0;
 }
 
 .text-center { text-align: center; }
@@ -510,13 +515,35 @@ a:hover {
     .desktop-only-row { display: none !important; }
     .mobile-only-row { display: table-row !important; }
     
+    .main-content {
+        padding: 0.6rem 0 1.5rem 0;
+    }
+
+    .divider {
+        margin: 0.5rem 0;
+    }
+
+    .mb-1 { margin-bottom: 0.4rem; }
+    .mb-2 { margin-bottom: 0.75rem; }
+    .mb-3 { margin-bottom: 1rem; }
+
+    .filter-section {
+        padding: 0.85rem;
+    }
+
     .flex-between {
         flex-direction: column;
         align-items: flex-start;
+        gap: 0.5rem;
     }
     
     .page-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.92rem;
     }
     
     .filter-grid {

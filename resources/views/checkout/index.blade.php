@@ -4,16 +4,9 @@
 <div class="container main-content">
     
     @if(!$iframe)
-    {{-- Header with Partner Logo --}}
-    <div class="page-header flex-between mb-2">
+    {{-- Header --}}
+    <div class="page-header flex-between mb-1">
         <div class="header-titles">
-            @if($partner && $partner->logo_url)
-                <img src="{{ $partner->logo_url }}" alt="{{ $partner->nomePartner ?? 'Partner' }}" class="partner-logo">
-            @elseif($partner && file_exists(public_path("partner/loghi/{$partnerId}.jpg")))
-                <img src="{{ asset("partner/loghi/{$partnerId}.jpg") }}" alt="{{ $partner->nomePartner ?? 'Partner' }}" class="partner-logo">
-            @else
-                <img src="{{ asset('partner/loghi/default.jpg') }}" alt="Booking" class="partner-logo default-logo" onerror="this.style.display='none'">
-            @endif
             <h1 class="page-title">ACQUISTA ONLINE</h1>
             <p class="page-subtitle">Servizio di Booking online in 4 passi.</p>
         </div>
@@ -23,7 +16,7 @@
     </div>
     @else
     {{-- Simplified header for iframe mode --}}
-    <div class="page-header mb-2">
+    <div class="page-header mb-1">
         <h1 class="page-title">ACQUISTA ONLINE</h1>
         <p class="page-subtitle">Servizio di Booking online in 4 passi.</p>
     </div>
@@ -32,7 +25,7 @@
     <hr class="divider">
 
     {{-- Step Indicator --}}
-    <div class="step-indicator mb-3">
+    <div class="step-indicator mb-2">
         <img src="{{ asset('img/step_3.jpg') }}" alt="Step 3" class="step-img desktop-only" onerror="this.style.display='none'">
         <img src="{{ asset('img/step_3m.jpg') }}" alt="Step 3" class="step-img mobile-only" onerror="this.style.display='none'">
     </div>
