@@ -110,14 +110,18 @@ class AdvancedStatsTable extends BaseWidget
             ->filters([
                 Tables\Filters\SelectFilter::make('location')
                     ->label('Location')
-                    ->options(\App\Models\Location::pluck('nomeLocation', 'nomeLocation'))
+                    ->options(\App\Models\Location::orderBy('nomeLocation')->pluck('nomeLocation', 'nomeLocation'))
+                    ->searchable()
+                    ->preload()
                     ->query(function (Builder $query, array $data) {
                         if (empty($data['value'])) return $query;
                         return $query->where('location.nomeLocation', $data['value']);
                     }),
                 Tables\Filters\SelectFilter::make('partner')
                     ->label('Partner')
-                    ->options(\App\Models\Partner::pluck('nomePartner', 'idPartner'))
+                    ->options(\App\Models\Partner::orderBy('nomePartner')->pluck('nomePartner', 'idPartner'))
+                    ->searchable()
+                    ->preload()
                     ->query(function (Builder $query, array $data) {
                          if (empty($data['value'])) return $query;
                          return $query->where('ordini.idPartnerOrdine', $data['value']);

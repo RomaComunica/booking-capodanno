@@ -626,12 +626,16 @@ class OrdineResource extends Resource
                 // Location
                 SelectFilter::make('idLocationOrdine')
                     ->label('Location')
-                    ->options(\App\Models\Location::pluck('nomeLocation', 'idLocation')),
+                    ->options(\App\Models\Location::orderBy('nomeLocation')->pluck('nomeLocation', 'idLocation'))
+                    ->searchable()
+                    ->preload(),
                 
                 // Partner
                 SelectFilter::make('idPartnerOrdine')
                     ->label('Partner')
-                    ->options(\App\Models\Partner::pluck('nomePartner', 'idPartner')),
+                    ->options(\App\Models\Partner::orderBy('nomePartner')->pluck('nomePartner', 'idPartner'))
+                    ->searchable()
+                    ->preload(),
                 
                 // Con note
                 TernaryFilter::make('con_note')
