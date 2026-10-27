@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Services\StatisticsService;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -15,32 +16,53 @@ class AdvancedStatsTable extends BaseWidget
     protected int | string | array $columnSpan = 'full';
     
     public ?int $year = null;
+    public ?string $period = null;
+    public ?string $dateFrom = null;
+    public ?string $dateTo = null;
 
     protected $listeners = [
+        'dashboard-filter-changed' => 'updateDashboardFilter',
         'year-changed' => 'updateYear',
-        'year-changed-stats' => 'updateYear'
+        'year-changed-stats' => 'updateYear',
     ];
 
     public function mount(): void
     {
-        $this->year = (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $this->year = (int) \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $this->period = StatisticsService::getDefaultDashboardPeriod();
     }
 
-    public function updateYear($year)
+    public function updateDashboardFilter($filters): void
     {
-        $this->year = (int)$year;
+        if (is_array($filters)) {
+            $this->year = isset($filters['year']) ? (int) $filters['year'] : $this->year;
+            $this->period = $filters['period'] ?? 'tutto_anno';
+            $this->dateFrom = $filters['date_from'] ?? null;
+            $this->dateTo = $filters['date_to'] ?? null;
+            $this->resetTable();
+        }
+    }
+
+    public function updateYear($year): void
+    {
+        $this->year = (int) $year;
         $this->resetTable();
     }
     
     protected function getTableHeading(): ?string
     {
-        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
-        return "Ordini Recenti ({$year})";
+        $year = $this->year ?? (int) \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $period = $this->period ?? StatisticsService::getDefaultDashboardPeriod();
+        $range = StatisticsService::resolvePeriodRange($year, $period, $this->dateFrom, $this->dateTo);
+
+        return "Ordini Recenti ({$range['short_label']})";
     }
 
     public function table(Table $table): Table
     {
-        $year = $this->year ?? (int)\App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $year = $this->year ?? (int) \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $period = $this->period ?? StatisticsService::getDefaultDashboardPeriod();
+        $range = StatisticsService::resolvePeriodRange($year, $period, $this->dateFrom, $this->dateTo);
 
         return $table
             ->query(
@@ -57,7 +79,7 @@ class AdvancedStatsTable extends BaseWidget
                         'righe_ordine.nomeIngressoOrdine',
                         DB::raw('(righe_ordine.quantitaIngressoOrdine * COALESCE(righe_ordine.prezzoIngressoOrdine, 0)) as totaleRiga')
                     )
-                    ->whereYear('ordini.dataOrdine', $year)
+                    ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
                     ->where('ordini.statoOrdine', 2)
                     ->orderBy('ordini.dataOrdine', 'desc')
             )

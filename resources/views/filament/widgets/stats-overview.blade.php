@@ -10,7 +10,7 @@
                     </div>
                     <span class="text-sm font-bold tracking-wide">Fatturato & Ordini</span>
                 </div>
-                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $year }}</span>
+                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $periodShortLabel ?? $year }}</span>
             </div>
             <!-- Corpo Card con Respiro e Padding -->
             <div class="p-6 flex-1 flex flex-col justify-between">
@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-                        Vendite lorde complessive concluse nell'anno {{ $year }}
+                        Vendite lorde complessive concluse ({{ $periodLabel ?? ('Anno ' . $year) }})
                     </div>
                 </div>
                 <!-- Breakdown Stati Ordine -->
@@ -55,7 +55,7 @@
                     </div>
                     <span class="text-sm font-bold tracking-wide">Biglietti Venduti</span>
                 </div>
-                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $year }}</span>
+                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">{{ $periodShortLabel ?? $year }}</span>
             </div>
             <!-- Corpo Card con Respiro e Padding -->
             <div class="p-6 flex-1 flex flex-col justify-between">

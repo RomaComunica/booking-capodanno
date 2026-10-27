@@ -14,20 +14,88 @@ class StatisticsService
         1 => 'Gen', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mag', 6 => 'Giu',
         7 => 'Lug', 8 => 'Ago', 9 => 'Set', 10 => 'Ott', 11 => 'Nov', 12 => 'Dic'
     ];
-    public function getDashboardStats($year = null)
+    public static function getDefaultDashboardPeriod(): string
+    {
+        return ((int) date('n') >= 11) ? 'capodanno' : 'tutto_anno';
+    }
+
+    public static function resolvePeriodRange($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null): array
+    {
+        $year = (int) ($year ?: \App\Models\Setting::getVal('anno_riferimento', date('Y')));
+        $period = $period ?: 'tutto_anno';
+
+        switch ($period) {
+            case 'capodanno':
+                $fromDate = "{$year}-11-01";
+                $toDate = "{$year}-12-31";
+                $label = "Capodanno {$year} (1 Nov - 31 Dic)";
+                $shortLabel = "Capodanno {$year}";
+                break;
+            case 'halloween':
+                $fromDate = "{$year}-10-01";
+                $toDate = "{$year}-11-01";
+                $label = "Halloween {$year} (1 Ott - 1 Nov)";
+                $shortLabel = "Halloween {$year}";
+                break;
+            case 'san_valentino':
+                $fromDate = "{$year}-01-14";
+                $toDate = "{$year}-02-14";
+                $label = "San Valentino {$year} (14 Gen - 14 Feb)";
+                $shortLabel = "San Valentino {$year}";
+                break;
+            case 'festa_donna':
+                $fromDate = "{$year}-02-08";
+                $toDate = "{$year}-03-08";
+                $label = "Festa della Donna {$year} (8 Feb - 8 Mar)";
+                $shortLabel = "Festa della Donna {$year}";
+                break;
+            case 'personalizzato':
+                $fromDate = !empty($customFrom) ? date('Y-m-d', strtotime($customFrom)) : "{$year}-01-01";
+                $toDate = !empty($customTo) ? date('Y-m-d', strtotime($customTo)) : "{$year}-12-31";
+                if ($fromDate > $toDate) {
+                    [$fromDate, $toDate] = [$toDate, $fromDate];
+                }
+                $fmtFrom = date('d/m/Y', strtotime($fromDate));
+                $fmtTo = date('d/m/Y', strtotime($toDate));
+                $label = "Dal {$fmtFrom} al {$fmtTo}";
+                $shortLabel = "{$fmtFrom} - {$fmtTo}";
+                break;
+            case 'tutto_anno':
+            default:
+                $fromDate = "{$year}-01-01";
+                $toDate = "{$year}-12-31";
+                $label = "Tutto l'anno {$year}";
+                $shortLabel = (string) $year;
+                break;
+        }
+
+        return [
+            'year' => $year,
+            'period' => $period,
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+            'from' => $fromDate . ' 00:00:00',
+            'to' => $toDate . ' 23:59:59',
+            'label' => $label,
+            'short_label' => $shortLabel,
+        ];
+    }
+
+    public function getDashboardStats($year = null, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
         $year = $year ?? \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
 
-        $completedOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 2)->count();
-        $pendingOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 0)->count();
-        $cancelledOrders = Ordine::whereYear('dataOrdine', $year)->where('statoOrdine', 1)->count();
+        $completedOrders = Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])->where('statoOrdine', 2)->count();
+        $pendingOrders = Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])->where('statoOrdine', 0)->count();
+        $cancelledOrders = Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])->where('statoOrdine', 1)->count();
         $totalOrders = $completedOrders + $pendingOrders + $cancelledOrders;
 
         // Biglietti venduti raggruppati per metodo di pagamento con etichette uniformate e totale in €
         $payments = DB::table('tipo_pagamenti')->pluck('nomePagamento', 'idTipoPagamento')->toArray();
 
-        $rows = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->whereYear('ordini.dataOrdine', $year)
+        $rows = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'ordini.tipoPagamentoOrdine',
@@ -67,23 +135,25 @@ class StatisticsService
             return $b['tickets'] <=> $a['tickets'];
         });
 
-        $totalRevenue = $this->getTotalRevenue($year);
-        $totalTickets = $this->getTotalTickets($year);
-        $netProfitTickets = $this->getTotalCommissions($year);
-        $partnerCommissions = $this->getTotalPartnerCommissions($year);
-        $partnerOrdersCount = $this->getPartnerOrdersCount($year);
+        $totalRevenue = $this->getTotalRevenue($year, $period, $customFrom, $customTo);
+        $totalTickets = $this->getTotalTickets($year, $period, $customFrom, $customTo);
+        $netProfitTickets = $this->getTotalCommissions($year, $period, $customFrom, $customTo);
+        $partnerCommissions = $this->getTotalPartnerCommissions($year, $period, $customFrom, $customTo);
+        $partnerOrdersCount = $this->getPartnerOrdersCount($year, $period, $customFrom, $customTo);
 
-        $extraIncomes = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+        $extraIncomes = (float)\App\Models\EntrataUscita::whereDate('dataOperazione', '>=', $range['from_date'])->whereDate('dataOperazione', '<=', $range['to_date'])
             ->where('tipoOperazione', 'E')
             ->sum('importo');
 
-        $extraExpenses = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)
+        $extraExpenses = (float)\App\Models\EntrataUscita::whereDate('dataOperazione', '>=', $range['from_date'])->whereDate('dataOperazione', '<=', $range['to_date'])
             ->where('tipoOperazione', 'U')
             ->sum('importo');
 
         $profitAfterExpenses = round($netProfitTickets - $partnerCommissions + $extraIncomes - $extraExpenses, 2);
 
         return [
+            'period_label' => $range['label'],
+            'period_short_label' => $range['short_label'],
             'total_revenue' => $totalRevenue,
             'total_orders' => $totalOrders,
             'completed_orders' => $completedOrders,
@@ -109,7 +179,15 @@ class StatisticsService
     /**
      * Get total revenue for year
      */
-    public function getTotalRevenue($year)
+    public function getTotalRevenue($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        return Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])
+            ->where('statoOrdine', 2)
+            ->sum('totaleOrdine');
+    }
+
+    private function _unusedLegacyRevenue($year)
     {
         return Ordine::whereYear('dataOrdine', $year)
             ->where('statoOrdine', 2)
@@ -119,7 +197,13 @@ class StatisticsService
     /**
      * Get total orders for year
      */
-    public function getTotalOrders($year)
+    public function getTotalOrders($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        return Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])->count();
+    }
+
+    private function _unusedLegacyOrders($year)
     {
         return Ordine::whereYear('dataOrdine', $year)->count();
     }
@@ -127,10 +211,19 @@ class StatisticsService
     /**
      * Get total tickets sold for year
      */
-    public function getTotalTickets($year)
+    public function getTotalTickets($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->where('ordini.statoOrdine', 2)
+            ->sum('righe_ordine.quantitaIngressoOrdine');
+    }
+
+    private function _unusedLegacyTickets($year)
     {
         return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->whereYear('ordini.dataOrdine', $year)
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->sum('righe_ordine.quantitaIngressoOrdine');
     }
@@ -138,10 +231,12 @@ class StatisticsService
     /**
      * Calculate total commissions to partners/locations
      */
-    public function getTotalCommissions($year)
+    public function getTotalCommissions($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
         $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->whereYear('ordini.dataOrdine', $year)
+            ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'righe_ordine.prezzoIngressoOrdine',
@@ -212,12 +307,14 @@ class StatisticsService
     /**
      * Calculate total partner commissions for year
      */
-    public function getTotalPartnerCommissions($year)
+    public function getTotalPartnerCommissions($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
         $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
 
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
         $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->whereYear('ordini.dataOrdine', $year)
+            ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->whereNotNull('ordini.idPartnerOrdine')
             ->where('ordini.idPartnerOrdine', '>', 0)
@@ -297,7 +394,20 @@ class StatisticsService
     /**
      * Get count of completed orders associated with external partners for year
      */
-    public function getPartnerOrdersCount($year)
+    public function getPartnerOrdersCount($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
+
+        return Ordine::whereBetween('dataOrdine', [$range['from'], $range['to']])
+            ->where('statoOrdine', 2)
+            ->whereNotNull('idPartnerOrdine')
+            ->where('idPartnerOrdine', '>', 0)
+            ->where('idPartnerOrdine', '!=', $idPartnerGestore)
+            ->count();
+    }
+
+    private function _unusedLegacyPartnerCount($year)
     {
         $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
 
@@ -320,10 +430,10 @@ class StatisticsService
     /**
      * Calculate total net profit (net commissions - partner commissions + entrate - uscite)
      */
-    public function getTotalProfit($year)
+    public function getTotalProfit($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
-        $netProfitTickets = $this->getTotalCommissions($year);
-        $partnerCommissions = $this->getTotalPartnerCommissions($year);
+        $netProfitTickets = $this->getTotalCommissions($year, $period, $customFrom, $customTo);
+        $partnerCommissions = $this->getTotalPartnerCommissions($year, $period, $customFrom, $customTo);
 
         // Add Entrate and subtract Uscite from the new ledger table
         $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
@@ -512,11 +622,30 @@ class StatisticsService
     /**
      * Get top selling locations
      */
-    public function getTopLocations($year, $limit = 10)
+    public function getTopLocations($year, $limit = 10, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
+            ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                'location.idLocation',
+                'location.nomeLocation',
+                DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as total_tickets'),
+                DB::raw('SUM(righe_ordine.prezzoIngressoOrdine * righe_ordine.quantitaIngressoOrdine) as total_revenue'),
+            ])
+            ->groupBy('location.idLocation', 'location.nomeLocation')
+            ->orderByDesc('total_tickets')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function _unusedLegacyTopLocations($year, $limit = 10)
     {
         return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
             ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
-            ->whereYear('ordini.dataOrdine', $year)
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'location.idLocation',
@@ -535,8 +664,8 @@ class StatisticsService
      */
     public function getRevenueByPaymentMethod($year)
     {
-        return Ordine::join('tipo_pagamento', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamento.idTipoPagamento')
-            ->whereYear('ordini.dataOrdine', $year)
+        return Ordine::join('tipo_pagamento', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamento.idTipoPagamento')->whereYear('ordini.dataOrdine', (int)$year)
+            ->whereNotNull('ordini.dataOrdine')
             ->where('ordini.statoOrdine', 2)
             ->select([
                 'tipo_pagamento.nomePagamento',
@@ -616,8 +745,8 @@ class StatisticsService
         $dateLimit = $year == $currentYear ? now() : now()->subYears($currentYear - $year);
         
         return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-            ->whereYear('ordini.dataOrdine', $year)
-            ->where('ordini.dataOrdine', '<=', $dateLimit)
+            ->whereNotNull('ordini.dataOrdine')
+            ->where('ordini.dataOrdine', '<=', $dateLimit)->whereYear('ordini.dataOrdine', (int)$year)
             ->where('ordini.statoOrdine', 2)
             ->sum('righe_ordine.quantitaIngressoOrdine');
     }
@@ -754,7 +883,7 @@ class StatisticsService
                 
             $tickets1 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
                 ->whereYear('ordini.dataOrdine', $year1)
-                ->whereMonth('ordini.dataOrdine', $month)
+                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
                 ->where('ordini.statoOrdine', 2)
                 ->sum('righe_ordine.quantitaIngressoOrdine');
 
@@ -765,7 +894,7 @@ class StatisticsService
                 
             $tickets2 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
                 ->whereYear('ordini.dataOrdine', $year2)
-                ->whereMonth('ordini.dataOrdine', $month)
+                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
                 ->where('ordini.statoOrdine', 2)
                 ->sum('righe_ordine.quantitaIngressoOrdine');
 
@@ -793,8 +922,8 @@ class StatisticsService
                 ->sum('totaleOrdine');
 
             $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-                ->whereYear('ordini.dataOrdine', $year)
-                ->whereMonth('ordini.dataOrdine', $month)
+                ->whereNotNull('ordini.dataOrdine')
+                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
                 ->where('ordini.statoOrdine', 2)
                 ->select([
                     'righe_ordine.prezzoIngressoOrdine',
@@ -860,8 +989,8 @@ class StatisticsService
             // Calcolo provvigioni partner per il mese
             $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
             $partnerRighe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
-                ->whereYear('ordini.dataOrdine', $year)
-                ->whereMonth('ordini.dataOrdine', $month)
+                ->whereNotNull('ordini.dataOrdine')
+                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
                 ->where('ordini.statoOrdine', 2)
                 ->whereNotNull('ordini.idPartnerOrdine')
                 ->where('ordini.idPartnerOrdine', '>', 0)

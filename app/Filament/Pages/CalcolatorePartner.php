@@ -60,6 +60,7 @@ class CalcolatorePartner extends Page implements HasForms
                     ->placeholder('Seleziona periodo...')
                     ->options([
                         'tutto_anno' => "Tutto l'anno",
+                        'capodanno' => 'Capodanno (1 Nov - 31 Dic)',
                         'halloween' => 'Halloween (1 Ott - 1 Nov)',
                         'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
                         'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
@@ -72,6 +73,9 @@ class CalcolatorePartner extends Page implements HasForms
                         
                         if ($state === 'tutto_anno') {
                             $set('data_da', "{$year}-01-01");
+                            $set('data_a', "{$year}-12-31");
+                        } elseif ($state === 'capodanno') {
+                            $set('data_da', "{$year}-11-01");
                             $set('data_a', "{$year}-12-31");
                         } elseif ($state === 'halloween') {
                             $set('data_da', "{$year}-10-01");

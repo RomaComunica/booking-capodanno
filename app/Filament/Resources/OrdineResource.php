@@ -588,6 +588,7 @@ class OrdineResource extends Resource
                             ->label('Periodo Festività')
                             ->placeholder('Tutti i periodi')
                             ->options([
+                                'capodanno' => 'Capodanno (1 Nov - 31 Dic)',
                                 'halloween' => 'Halloween (1 Ott - 1 Nov)',
                                 'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
                                 'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
@@ -605,6 +606,7 @@ class OrdineResource extends Resource
                             : "DATE_FORMAT(dataOrdine, '%m-%d')";
 
                         return match ($periodo) {
+                            'capodanno' => $query->whereRaw("{$dateExpr} BETWEEN '11-01' AND '12-31'"),
                             'halloween' => $query->whereRaw("{$dateExpr} BETWEEN '10-01' AND '11-01'"),
                             'san_valentino' => $query->whereRaw("{$dateExpr} BETWEEN '01-14' AND '02-14'"),
                             'festa_donna' => $query->whereRaw("{$dateExpr} BETWEEN '02-08' AND '03-08'"),
@@ -613,6 +615,7 @@ class OrdineResource extends Resource
                     })
                     ->indicateUsing(function (array $data): ?string {
                         return match ($data['periodo'] ?? null) {
+                            'capodanno' => 'Periodo: Capodanno (1 Nov - 31 Dic)',
                             'halloween' => 'Periodo: Halloween (1 Ott - 1 Nov)',
                             'san_valentino' => 'Periodo: San Valentino (14 Gen - 14 Feb)',
                             'festa_donna' => 'Periodo: Festa della Donna (8 Feb - 8 Mar)',
