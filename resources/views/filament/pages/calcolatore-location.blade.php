@@ -49,6 +49,46 @@
                     >
                         Stampa / PDF
                     </x-filament::button>
+
+                    <x-filament::button
+                        type="button"
+                        size="lg"
+                        color="info"
+                        icon="heroicon-o-building-storefront"
+                        icon-position="before"
+                        x-on:click="
+                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                            printWindow.document.write('<html><head><title>Report Vendite Location</title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                            printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
+                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                            printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
+                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                            printWindow.document.write('.text-center { text-align: center; }');
+                            printWindow.document.write('.text-right { text-align: right; }');
+                            printWindow.document.write('.font-bold { font-weight: bold; }');
+                            printWindow.document.write('.text-lg { font-size: 15px; }');
+                            printWindow.document.write('.hidden-print { display: none !important; }');
+                            printWindow.document.write('.visible-print { display: inline !important; }');
+                            printWindow.document.write('</style>');
+                            printWindow.document.write('</head><body>');
+                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                            printWindow.document.write('</body></html>');
+                            printWindow.document.close();
+                            printWindow.document.querySelectorAll('.report-locale-hide').forEach(el => el.remove());
+                            printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
+                            printWindow.focus();
+                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                        "
+                    >
+                        Stampa Report Locale
+                    </x-filament::button>
                     @endif
                 </div>
             </form>
@@ -88,7 +128,7 @@
                 </div>
 
                 <!-- Ns Provvigioni -->
-                <div class="kpi-card bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card report-locale-hide bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400">Ns Provvigione</span>
                     <div class="text-xl font-extrabold text-primary-600 dark:text-primary-400 mt-1">
                         € {{ number_format($risultati['totaleProvvigioni'], 2, ',', '.') }}
@@ -97,7 +137,7 @@
                 </div>
 
                 <!-- Totale Spettante Location -->
-                <div class="kpi-card bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card report-locale-hide bg-gray-50 dark:bg-slate-800/80 rounded-xl p-4 border border-gray-200 dark:border-slate-700/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Spettante Location</span>
                     <div class="text-xl font-extrabold text-gray-900 dark:text-white mt-1">
                         € {{ number_format($risultati['totaleDare'], 2, ',', '.') }}
@@ -106,7 +146,7 @@
                 </div>
 
                 <!-- Già Pagato Location -->
-                <div class="kpi-card bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card report-locale-hide bg-green-50 dark:bg-green-950/30 rounded-xl p-4 border border-green-200 dark:border-green-800/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400">Già Pagato</span>
                     <div class="text-xl font-extrabold text-green-700 dark:text-green-400 mt-1">
                         € {{ number_format($risultati['totaleGiaPagato'], 2, ',', '.') }}
@@ -115,7 +155,7 @@
                 </div>
 
                 <!-- Debito Residuo da Pagare -->
-                <div class="kpi-card bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-sm flex flex-col justify-between">
+                <div class="kpi-card report-locale-hide bg-amber-50 dark:bg-amber-950/30 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-sm flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Da Pagare (Residuo)</span>
                     <div class="text-xl font-extrabold text-amber-700 dark:text-amber-400 mt-1">
                         € {{ number_format($risultati['totaleDaPagareResiduo'], 2, ',', '.') }}
@@ -135,7 +175,7 @@
                             <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
                                 Location
                             </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase report-locale-hide">
                                 Metodo Pag.
                             </th>
                             <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
@@ -153,13 +193,13 @@
                             <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
                                 Venduto
                             </th>
-                            <th class="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 uppercase">
+                            <th class="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 uppercase report-locale-hide">
                                 Provv.
                             </th>
-                            <th class="px-3 py-3 text-right font-bold text-gray-900 dark:text-white uppercase">
+                            <th class="px-3 py-3 text-right font-bold text-gray-900 dark:text-white uppercase report-locale-hide">
                                 Quota Loc.
                             </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase hidden-print">
+                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase hidden-print report-locale-hide">
                                 Pagata Location
                             </th>
                         </tr>
@@ -174,7 +214,7 @@
                             <td class="px-3 py-3 text-gray-900 dark:text-white font-medium">
                                 {{ $dettaglio['location'] }}
                             </td>
-                            <td class="px-3 py-3 text-center whitespace-nowrap">
+                            <td class="px-3 py-3 text-center whitespace-nowrap report-locale-hide">
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-slate-600">
                                     {{ $dettaglio['metodo_pagamento'] }}
                                 </span>
@@ -202,13 +242,13 @@
                             <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-gray-900 dark:text-white">
                                 € {{ number_format($dettaglio['venduto'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-primary-600 dark:text-primary-400">
+                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-primary-600 dark:text-primary-400 report-locale-hide">
                                 € {{ number_format($dettaglio['provvigione'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right font-extrabold text-gray-900 dark:text-white">
+                            <td class="px-3 py-3 whitespace-nowrap text-right font-extrabold text-gray-900 dark:text-white report-locale-hide">
                                 € {{ number_format($dettaglio['dare'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center hidden-print">
+                            <td class="px-3 py-3 whitespace-nowrap text-center hidden-print report-locale-hide">
                                 <button 
                                     type="button" 
                                     wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
@@ -229,7 +269,7 @@
                     </tbody>
                     <tfoot class="bg-gray-100 dark:bg-slate-900 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700">
                         <tr>
-                            <td colspan="5" class="px-3 py-4 text-right">
+                            <td colspan="5" data-locale-colspan="4" class="px-3 py-4 text-right">
                                 TOTALI COMPLESSIVI:
                             </td>
                             <td class="px-3 py-4 text-center font-extrabold">
@@ -239,13 +279,13 @@
                             <td class="px-3 py-4 text-right font-extrabold">
                                 € {{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-4 text-right font-extrabold text-primary-600 dark:text-primary-400">
+                            <td class="px-3 py-4 text-right font-extrabold text-primary-600 dark:text-primary-400 report-locale-hide">
                                 € {{ number_format($risultati['totaleProvvigioni'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-4 text-right font-extrabold text-green-600 dark:text-green-400 text-sm">
+                            <td class="px-3 py-4 text-right font-extrabold text-green-600 dark:text-green-400 text-sm report-locale-hide">
                                 € {{ number_format($risultati['totaleDare'], 2, ',', '.') }}
                             </td>
-                            <td class="px-3 py-4 hidden-print"></td>
+                            <td class="px-3 py-4 hidden-print report-locale-hide"></td>
                         </tr>
                     </tfoot>
                 </table>
