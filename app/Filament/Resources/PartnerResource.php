@@ -6,9 +6,11 @@ use App\Filament\Resources\PartnerResource\Pages;
 use App\Models\Partner;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class PartnerResource extends Resource
 {
@@ -45,12 +47,17 @@ class PartnerResource extends Resource
                             ->helperText('Diretto: canale proprio, nessuna provvigione. Agenzia e Affiliato: usano le provvigioni indicate sugli ingressi.')
                             ->formatStateUsing(fn ($state) => Partner::normalizzaTipo($state))
                             ->dehydrateStateUsing(fn ($state) => Partner::normalizzaTipo($state)),
-                        
+
+                        Forms\Components\TextInput::make('ordine')
+                            ->label('Ordine')
+                            ->numeric()
+                            ->default(0),
+
                         Forms\Components\Toggle::make('attivoPartner')
                             ->label('Attivo')
                             ->default(true),
                     ])
-                    ->columns(3),
+                    ->columns(4),
                 
                 Forms\Components\Section::make('Contatti')
                     ->schema([
@@ -110,7 +117,13 @@ class PartnerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->reorderable('ordine')
+            ->defaultSort('ordine', 'asc')
             ->columns([
+                Tables\Columns\TextColumn::make('ordine')
+                    ->label('#')
+                    ->sortable(),
+
                 Tables\Columns\IconColumn::make('attivoPartner')
                     ->label('Attivo')
                     ->boolean(),
@@ -197,6 +210,42 @@ class PartnerResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('attiva')
+                        ->label('Attiva selezionati')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Attiva partner selezionati')
+                        ->modalDescription('Vuoi attivare tutti i partner selezionati?')
+                        ->modalSubmitActionLabel('Sì, attiva')
+                        ->action(function (Collection $records): void {
+                            $records->each->update(['attivoPartner' => 1]);
+                            Notification::make()
+                                ->title('Partner attivati')
+                                ->body(count($records) . ' partner attivati con successo')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('disattiva')
+                        ->label('Disattiva selezionati')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Disattiva partner selezionati')
+                        ->modalDescription('Vuoi disattivare tutti i partner selezionati?')
+                        ->modalSubmitActionLabel('Sì, disattiva')
+                        ->action(function (Collection $records): void {
+                            $records->each->update(['attivoPartner' => 0]);
+                            Notification::make()
+                                ->title('Partner disattivati')
+                                ->body(count($records) . ' partner disattivati con successo')
+                                ->warning()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])

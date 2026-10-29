@@ -193,5 +193,20 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Ignore during setup/migrations
         }
+        // Auto-ensure partner table has 'ordine' column
+        try {
+            if (Schema::hasTable('partner') && !Schema::hasColumn('partner', 'ordine')) {
+                Schema::table('partner', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->integer('ordine')->default(0);
+                });
+                try {
+                    DB::statement('UPDATE partner SET ordine = idPartner WHERE ordine = 0 OR ordine IS NULL');
+                } catch (\Throwable $e) {
+                    // Ignore
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore during setup/migrations
+        }
     }
 }

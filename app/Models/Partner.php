@@ -21,6 +21,8 @@ class Partner extends Model
 
     protected $casts = [
         'tipoPartner' => 'integer',
+        'attivoPartner' => 'integer',
+        'ordine' => 'integer',
     ];
 
     protected $appends = ['logo_dummy'];
