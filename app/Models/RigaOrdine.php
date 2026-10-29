@@ -106,48 +106,82 @@ class RigaOrdine extends Model
         }
 
         $nome = trim((string)$this->nomeIngressoOrdine);
+        $prezzo = (float)($this->prezzoIngressoOrdine ?? 0);
 
-        // 1. PRIORITÀ ASSOLUTA: Match per Location e Nome Biglietto (es. "Sport City" + "Cena di Gala Halloween")
+        // 1. PRIORITÀ ASSOLUTA: Match per ID esatto del biglietto (idIngressoCont) per la stessa location!
+        // Quando un cliente acquista un biglietto o un admin inserisce una riga d'ordine, idIngressoOrdine
+        // punta alla specifica tipologia (idIngressoCont). Se esiste e appartiene alla location dell'ordine,
+        // questo è al 100% il biglietto esatto (evitando che omonimi di altri eventi/anni vengano agganciati).
+        if (!empty($this->idIngressoOrdine)) {
+            $exact = TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first();
+            if ($exact && (!$locationId || $exact->idLocation == $locationId)) {
+                return $exact;
+            }
+        }
+
+        // 2. Match per Location + Nome Biglietto + Prezzo (se ci sono più biglietti con lo stesso nome, es. Disco, il prezzo discrimina quello giusto)
         if ($locationId && !empty($nome)) {
+            if ($prezzo > 0) {
+                $match = TipologiaIngresso::where('idLocation', $locationId)
+                    ->where('nomeIngresso', $nome)
+                    ->where('prezzoIngresso', $prezzo)
+                    ->orderBy('ingressoAttivo', 'desc')
+                    ->orderBy('idIngressoCont', 'desc')
+                    ->first();
+                if ($match) return $match;
+            }
+
+            // Match esatto per nome (preferendo biglietto attivo e più recente)
             $match = TipologiaIngresso::where('idLocation', $locationId)
                 ->where('nomeIngresso', $nome)
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
                 ->first();
             if ($match) return $match;
 
+            // Match case-insensitive
             $match = TipologiaIngresso::where('idLocation', $locationId)
                 ->whereRaw('TRIM(LOWER(nomeIngresso)) = ?', [strtolower($nome)])
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
                 ->first();
             if ($match) return $match;
 
+            // Match LIKE
             $match = TipologiaIngresso::where('idLocation', $locationId)
                 ->where('nomeIngresso', 'LIKE', '%' . $nome . '%')
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
                 ->first();
             if ($match) return $match;
         }
 
-        // 2. Match per Location e idIngresso (l'indice biglietto della location)
+        // 3. Match per Location e idIngresso (l'indice ordinale 1, 2, 3 dei vecchi ordini legacy)
         if ($locationId && !empty($this->idIngressoOrdine)) {
             $match = TipologiaIngresso::where('idLocation', $locationId)
                 ->where('idIngresso', $this->idIngressoOrdine)
-                ->first();
-            if ($match) return $match;
-
-            $match = TipologiaIngresso::where('idLocation', $locationId)
-                ->where('idIngressoCont', $this->idIngressoOrdine)
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
                 ->first();
             if ($match) return $match;
         }
 
-        // 3. Match per Nome Biglietto (case-insensitive) anche senza location
+        // 4. Match per Nome Biglietto anche senza location (preferendo attivo e più recente)
         if (!empty($nome)) {
-            $match = TipologiaIngresso::whereRaw('TRIM(LOWER(nomeIngresso)) = ?', [strtolower($nome)])->first();
+            $match = TipologiaIngresso::whereRaw('TRIM(LOWER(nomeIngresso)) = ?', [strtolower($nome)])
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
+                ->first();
             if ($match) return $match;
 
-            $match = TipologiaIngresso::where('nomeIngresso', 'LIKE', '%' . $nome . '%')->first();
+            $match = TipologiaIngresso::where('nomeIngresso', 'LIKE', '%' . $nome . '%')
+                ->orderBy('ingressoAttivo', 'desc')
+                ->orderBy('idIngressoCont', 'desc')
+                ->first();
             if ($match) return $match;
         }
 
-        // 4. Solo come ultimo fallback controlla idIngressoCont (verificando preferibilmente che non appartenga a location diversa se nota)
+        // 5. Fallback finale per idIngressoCont generico
         if (!empty($this->idIngressoOrdine)) {
             $match = TipologiaIngresso::where('idIngressoCont', $this->idIngressoOrdine)->first();
             if ($match) {

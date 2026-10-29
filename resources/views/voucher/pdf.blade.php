@@ -113,6 +113,8 @@
                     if (!$tipologia && isset($location) && $location) {
                         $tipologia = \App\Models\TipologiaIngresso::where('idLocation', $location->idLocation)
                             ->where('nomeIngresso', $line->nomeIngressoOrdine)
+                            ->orderBy('ingressoAttivo', 'desc')
+                            ->orderBy('idIngressoCont', 'desc')
                             ->first();
                     }
                     $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));

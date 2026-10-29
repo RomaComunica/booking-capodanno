@@ -190,9 +190,19 @@ class OrdineResource extends Resource
                                 $data['quantitaIngressoOrdine'] = $qty;
                                 $data['prezzoIngressoOrdine'] = $prezzo;
                                 $data['totaleRiga'] = $totaleRiga;
-                                if (empty($data['nomeIngressoOrdine']) && !empty($data['idIngressoOrdine'])) {
+                                if (!empty($data['idIngressoOrdine'])) {
                                     $tip = \App\Models\TipologiaIngresso::find($data['idIngressoOrdine']);
-                                    $data['nomeIngressoOrdine'] = $tip?->nomeIngresso ?? 'Biglietto';
+                                    if ($tip) {
+                                        if (empty($data['nomeIngressoOrdine'])) {
+                                            $data['nomeIngressoOrdine'] = $tip->nomeIngresso ?? 'Biglietto';
+                                        }
+                                        if (empty($data['dataIngressoOrdine']) && !empty($tip->dataIngresso)) {
+                                            $data['dataIngressoOrdine'] = is_string($tip->dataIngresso) ? $tip->dataIngresso : $tip->dataIngresso->format('Y-m-d');
+                                        }
+                                        if (empty($data['orarioIngressoOrdine']) && !empty($tip->orarioIngresso)) {
+                                            $data['orarioIngressoOrdine'] = $tip->orarioIngresso;
+                                        }
+                                    }
                                 }
 
                                 return $data;

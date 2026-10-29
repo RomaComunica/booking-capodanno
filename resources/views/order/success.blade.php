@@ -109,7 +109,9 @@
                                 if (!$tipologia && isset($order) && $order->location) {
                                     $tipologia = \App\Models\TipologiaIngresso::where('idLocation', $order->idLocationOrdine)
                                         ->where('nomeIngresso', $line->nomeIngressoOrdine)
-                                        ->first();
+                            ->orderBy('ingressoAttivo', 'desc')
+                            ->orderBy('idIngressoCont', 'desc')
+                            ->first();
                                 }
                                 $isSenzaData = (bool)($line->ingressoSenzaDataOrdine || ($tipologia && $tipologia->ingressoSenzaData));
                                 $etichetta = $line->etichettaIngressoOrdine ?: ($tipologia?->etichettaIngresso ?: '');
