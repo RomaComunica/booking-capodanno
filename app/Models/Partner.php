@@ -4,10 +4,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Partner extends Model
 {
+    public const TIPO_AGENZIA = 1;
+    public const TIPO_AFFILIATO = 2;
+    public const TIPO_DIRETTO = 3;
+
+    public const TIPI = [
+        self::TIPO_AGENZIA => 'Agenzia',
+        self::TIPO_AFFILIATO => 'Affiliato',
+        self::TIPO_DIRETTO => 'Diretto',
+    ];
+
     protected $table = 'partner';
     protected $primaryKey = 'idPartner';
     public $timestamps = false;
     protected $guarded = [];
+
+    protected $casts = [
+        'tipoPartner' => 'integer',
+    ];
 
     protected $appends = ['logo_dummy'];
 
@@ -109,6 +123,64 @@ class Partner extends Model
 
     public function ordini() {
         return $this->hasMany(Ordine::class, 'idPartnerOrdine', 'idPartner');
+    }
+
+    public static function normalizzaTipo(mixed $tipo): int
+    {
+        $tipo = (int) $tipo;
+
+        if (in_array($tipo, [self::TIPO_AGENZIA, self::TIPO_AFFILIATO, self::TIPO_DIRETTO], true)) {
+            return $tipo;
+        }
+
+        // 0 o valori legacy/invalidi: canale proprio, nessuna provvigione
+        return self::TIPO_DIRETTO;
+    }
+
+    public static function labelTipo(mixed $tipo): string
+    {
+        return self::TIPI[self::normalizzaTipo($tipo)] ?? 'Diretto';
+    }
+
+    public static function tipoPrendeProvvigione(mixed $tipo): bool
+    {
+        return in_array(self::normalizzaTipo($tipo), [self::TIPO_AGENZIA, self::TIPO_AFFILIATO], true);
+    }
+
+    public function prendeProvvigione(): bool
+    {
+        return self::tipoPrendeProvvigione($this->tipoPartner);
+    }
+
+    /**
+     * Calcola l'importo da riconoscere al partner sulla riga, in base al tipo ingresso.
+     * Per i partner Diretto restituisce sempre 0.
+     */
+    public static function calcolaImportoProvvigione(
+        mixed $tipoPartner,
+        float $venduto,
+        int $quantita,
+        mixed $tipoProvvigioneIngresso,
+        mixed $valoreProvvigioneIngresso
+    ): float {
+        if (!self::tipoPrendeProvvigione($tipoPartner)) {
+            return 0.0;
+        }
+
+        $valore = (float) $valoreProvvigioneIngresso;
+
+        if ((int) $tipoProvvigioneIngresso === 1) {
+            return ($venduto / 100) * $valore;
+        }
+
+        return $valore * $quantita;
+    }
+
+    public static function idsConProvvigione()
+    {
+        return static::query()
+            ->whereIn('tipoPartner', [self::TIPO_AGENZIA, self::TIPO_AFFILIATO])
+            ->pluck('idPartner');
     }
 
     /**

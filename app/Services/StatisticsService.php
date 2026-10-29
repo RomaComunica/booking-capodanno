@@ -310,6 +310,7 @@ class StatisticsService
     public function getTotalPartnerCommissions($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
         $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
+        $partnerConProvvigione = Partner::idsConProvvigione();
 
         $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
         $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
@@ -319,6 +320,7 @@ class StatisticsService
             ->whereNotNull('ordini.idPartnerOrdine')
             ->where('ordini.idPartnerOrdine', '>', 0)
             ->where('ordini.idPartnerOrdine', '!=', $idPartnerGestore)
+            ->whereIn('ordini.idPartnerOrdine', $partnerConProvvigione)
             ->select([
                 DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
                 'righe_ordine.quantitaIngressoOrdine',
@@ -365,6 +367,8 @@ class StatisticsService
             ->toArray();
 
         $totalPartnerCommissions = 0.0;
+        $tipiPartner = Partner::whereIn('idPartner', $righe->pluck('idPartnerOrdine')->unique()->filter())
+            ->pluck('tipoPartner', 'idPartner');
 
         foreach ($righe as $riga) {
             $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
@@ -377,15 +381,13 @@ class StatisticsService
             $tipoProv = $tipologia ? (int)$tipologia->tipoProvvigionePartner : 0;
             $valoreProv = $tipologia ? (float)$tipologia->valoreProvvigionePartner : 0.0;
 
-            if ($tipoProv == 1) {
-                // Percentuale
-                $commission = ($subtotal / 100) * $valoreProv;
-            } else {
-                // Fisso per biglietto
-                $commission = $valoreProv * (int)$riga->quantitaIngressoOrdine;
-            }
-
-            $totalPartnerCommissions += $commission;
+            $totalPartnerCommissions += Partner::calcolaImportoProvvigione(
+                $tipiPartner[$riga->idPartnerOrdine] ?? Partner::TIPO_DIRETTO,
+                $subtotal,
+                (int) $riga->quantitaIngressoOrdine,
+                $tipoProv,
+                $valoreProv
+            );
         }
 
         return round($totalPartnerCommissions, 2);
@@ -404,6 +406,7 @@ class StatisticsService
             ->whereNotNull('idPartnerOrdine')
             ->where('idPartnerOrdine', '>', 0)
             ->where('idPartnerOrdine', '!=', $idPartnerGestore)
+            ->whereIn('idPartnerOrdine', Partner::idsConProvvigione())
             ->count();
     }
 
@@ -995,16 +998,21 @@ class StatisticsService
                 ->whereNotNull('ordini.idPartnerOrdine')
                 ->where('ordini.idPartnerOrdine', '>', 0)
                 ->where('ordini.idPartnerOrdine', '!=', $idPartnerGestore)
+                ->whereIn('ordini.idPartnerOrdine', Partner::idsConProvvigione())
                 ->select([
                     DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
                     'righe_ordine.quantitaIngressoOrdine',
                     'righe_ordine.idIngressoOrdine',
                     'righe_ordine.nomeIngressoOrdine',
                     'ordini.idLocationOrdine',
+                    'ordini.idPartnerOrdine',
                 ])
                 ->get();
 
             $partnerCommissions = 0.0;
+            $tipiPartnerMese = Partner::whereIn('idPartner', $partnerRighe->pluck('idPartnerOrdine')->unique()->filter())
+                ->pluck('tipoPartner', 'idPartner');
+
             foreach ($partnerRighe as $riga) {
                 $subtotal = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
                 $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
@@ -1015,11 +1023,13 @@ class StatisticsService
                 $tipoProv = $tipologia ? (int)$tipologia->tipoProvvigionePartner : 0;
                 $valoreProv = $tipologia ? (float)$tipologia->valoreProvvigionePartner : 0.0;
 
-                if ($tipoProv == 1) {
-                    $partnerCommissions += ($subtotal / 100) * $valoreProv;
-                } else {
-                    $partnerCommissions += $valoreProv * (int)$riga->quantitaIngressoOrdine;
-                }
+                $partnerCommissions += Partner::calcolaImportoProvvigione(
+                    $tipiPartnerMese[$riga->idPartnerOrdine] ?? Partner::TIPO_DIRETTO,
+                    $subtotal,
+                    (int) $riga->quantitaIngressoOrdine,
+                    $tipoProv,
+                    $valoreProv
+                );
             }
 
             $entrate = (float)\App\Models\EntrataUscita::whereYear('dataOperazione', $year)

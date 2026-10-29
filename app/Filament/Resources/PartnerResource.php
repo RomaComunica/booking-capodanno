@@ -38,12 +38,13 @@ class PartnerResource extends Resource
                         
                         Forms\Components\Select::make('tipoPartner')
                             ->label('Tipo')
-                            ->options([
-                                'agenzia' => 'Agenzia',
-                                'affiliato' => 'Affiliato',
-                                'diretto' => 'Diretto',
-                            ])
-                            ->required(),
+                            ->options(Partner::TIPI)
+                            ->default(Partner::TIPO_DIRETTO)
+                            ->required()
+                            ->native(false)
+                            ->helperText('Diretto: canale proprio, nessuna provvigione. Agenzia e Affiliato: usano le provvigioni indicate sugli ingressi.')
+                            ->formatStateUsing(fn ($state) => Partner::normalizzaTipo($state))
+                            ->dehydrateStateUsing(fn ($state) => Partner::normalizzaTipo($state)),
                         
                         Forms\Components\Toggle::make('attivoPartner')
                             ->label('Attivo')
@@ -124,13 +125,15 @@ class PartnerResource extends Resource
                     ->searchable()
                     ->sortable(),
                 
-                Tables\Columns\BadgeColumn::make('tipoPartner')
+                Tables\Columns\TextColumn::make('tipoPartner')
                     ->label('Tipo')
-                    ->colors([
-                        'primary' => 'agenzia',
-                        'success' => 'affiliato',
-                        'warning' => 'diretto',
-                    ]),
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => Partner::labelTipo($state))
+                    ->color(fn ($state) => match (Partner::normalizzaTipo($state)) {
+                        Partner::TIPO_AGENZIA => 'primary',
+                        Partner::TIPO_AFFILIATO => 'success',
+                        default => 'warning',
+                    }),
                 
                 Tables\Columns\TextColumn::make('emailPartner')
                     ->label('Email')
@@ -152,11 +155,24 @@ class PartnerResource extends Resource
                 
                 Tables\Filters\SelectFilter::make('tipoPartner')
                     ->label('Tipo')
-                    ->options([
-                        'agenzia' => 'Agenzia',
-                        'affiliato' => 'Affiliato',
-                        'diretto' => 'Diretto',
-                    ]),
+                    ->options(Partner::TIPI)
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if ($value === null || $value === '') {
+                            return $query;
+                        }
+
+                        $tipo = (int) $value;
+                        if ($tipo === Partner::TIPO_DIRETTO) {
+                            return $query->where(function ($q) {
+                                $q->where('tipoPartner', Partner::TIPO_DIRETTO)
+                                    ->orWhere('tipoPartner', 0)
+                                    ->orWhereNull('tipoPartner');
+                            });
+                        }
+
+                        return $query->where('tipoPartner', $tipo);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

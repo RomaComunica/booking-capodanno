@@ -27,7 +27,8 @@ class CalcolatorePartnerTest extends TestCase
             'idPartner' => 1,
             'nomePartner' => 'Partner Test',
             'emailPartner' => 'partner@test.com',
-            'attivoPartner' => 1
+            'attivoPartner' => 1,
+            'tipoPartner' => Partner::TIPO_AGENZIA,
         ]);
 
         $this->location = Location::create([
@@ -93,5 +94,87 @@ class CalcolatorePartnerTest extends TestCase
             ->assertSet('risultati.totaleVenduto', 200.00)
             ->assertSet('risultati.totaleProvvigione', 20.00) // 10% of 200 = 20
             ->assertHasNoErrors();
+    }
+
+    /** @test */
+    public function test_calcolatore_partner_affiliato_usa_provvigione_ingresso()
+    {
+        $this->actingAs(\App\Models\User::factory()->create());
+
+        $this->partner->update(['tipoPartner' => Partner::TIPO_AFFILIATO]);
+        $this->creaOrdineConProvvigionePercentuale(20002);
+
+        Livewire::test(CalcolatorePartner::class)
+            ->set('data.idPartner', $this->partner->idPartner)
+            ->set('data.data_da', now()->subDays(1)->format('Y-m-d'))
+            ->set('data.data_a', now()->addDays(1)->format('Y-m-d'))
+            ->call('calcola')
+            ->assertSet('risultati.totaleVenduto', 200.00)
+            ->assertSet('risultati.totaleProvvigione', 20.00);
+    }
+
+    /** @test */
+    public function test_calcolatore_partner_diretto_non_calcola_provvigione()
+    {
+        $this->actingAs(\App\Models\User::factory()->create());
+
+        $this->partner->update(['tipoPartner' => Partner::TIPO_DIRETTO]);
+        $this->creaOrdineConProvvigionePercentuale(20003);
+
+        Livewire::test(CalcolatorePartner::class)
+            ->set('data.idPartner', $this->partner->idPartner)
+            ->set('data.data_da', now()->subDays(1)->format('Y-m-d'))
+            ->set('data.data_a', now()->addDays(1)->format('Y-m-d'))
+            ->call('calcola')
+            ->assertSet('risultati.totaleVenduto', 200.00)
+            ->assertSet('risultati.totaleProvvigione', 0)
+            ->assertSet('risultati.totaleDaPagareResiduo', 0);
+    }
+
+    /** @test */
+    public function test_calcolatore_partner_legacy_tipo_zero_trattato_come_diretto()
+    {
+        $this->actingAs(\App\Models\User::factory()->create());
+
+        $this->partner->update(['tipoPartner' => 0]);
+        $this->creaOrdineConProvvigionePercentuale(20004);
+
+        Livewire::test(CalcolatorePartner::class)
+            ->set('data.idPartner', $this->partner->idPartner)
+            ->set('data.data_da', now()->subDays(1)->format('Y-m-d'))
+            ->set('data.data_a', now()->addDays(1)->format('Y-m-d'))
+            ->call('calcola')
+            ->assertSet('risultati.totaleProvvigione', 0);
+    }
+
+    private function creaOrdineConProvvigionePercentuale(int $numeroOrdine): void
+    {
+        $ingresso = TipologiaIngresso::create([
+            'idLocation' => $this->location->idLocation,
+            'idIngresso' => $numeroOrdine,
+            'nomeIngresso' => 'Ingresso VIP ' . $numeroOrdine,
+            'prezzoIngresso' => 100.00,
+            'ingressoAttivo' => 1,
+            'tipoProvvigionePartner' => 1,
+            'valoreProvvigionePartner' => 10.00,
+        ]);
+
+        $order = Ordine::create([
+            'numeroOrdine' => $numeroOrdine,
+            'idLocationOrdine' => $this->location->idLocation,
+            'idPartnerOrdine' => $this->partner->idPartner,
+            'statoOrdine' => 2,
+            'totaleOrdine' => 200.00,
+            'dataOrdine' => now(),
+        ]);
+
+        RigaOrdine::create([
+            'numeroOrdine' => $order->numeroOrdine,
+            'idIngressoOrdine' => $ingresso->idIngressoCont,
+            'quantitaIngressoOrdine' => 2,
+            'prezzoIngressoOrdine' => 100.00,
+            'nomeIngressoOrdine' => $ingresso->nomeIngresso,
+            'totaleRiga' => 200.00,
+        ]);
     }
 }

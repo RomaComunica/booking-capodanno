@@ -156,19 +156,27 @@ class CalcolatorePartner extends Page implements HasForms
         $totaleQuantita = 0;
         $dettagli = [];
         $statoPagamento = $data['stato_pagamento'] ?? 'tutti';
+        $partner = Partner::find($data['idPartner']);
+        $tipoPartner = $partner?->tipoPartner ?? Partner::TIPO_DIRETTO;
+        $partnerPrendeProvvigione = Partner::tipoPrendeProvvigione($tipoPartner);
 
         foreach ($righe as $riga) {
             $venduto = (float)$riga->venduto;
             
-            // Calcola provvigione partner
-            if ($riga->tipoProvvigionePartner == 1) {
-                // Percentuale
-                $provvigione = ($venduto / 100) * $riga->valoreProvvigionePartner;
+            $provvigione = Partner::calcolaImportoProvvigione(
+                $tipoPartner,
+                $venduto,
+                (int) $riga->quantitaIngressoOrdine,
+                $riga->tipoProvvigionePartner,
+                $riga->valoreProvvigionePartner
+            );
+
+            if (!$partnerPrendeProvvigione) {
+                $provvigioneLabel = 'Diretto';
+            } elseif ($riga->tipoProvvigionePartner == 1) {
                 $provvigioneLabel = $riga->valoreProvvigionePartner . '%';
             } else {
-                // Fissa per biglietto
-                $provvigione = $riga->valoreProvvigionePartner * $riga->quantitaIngressoOrdine;
-                $provvigioneLabel = '€' . number_format($riga->valoreProvvigionePartner, 2, ',', '.');
+                $provvigioneLabel = '€' . number_format((float) $riga->valoreProvvigionePartner, 2, ',', '.');
             }
             
             $isPaid = !empty($riga->dataPagamentoOrdinePartner) 
@@ -209,10 +217,10 @@ class CalcolatorePartner extends Page implements HasForms
 
         $totaleDaPagareResiduo = max(0, $totaleProvvigione - $totaleGiaPagato);
 
-        $partner = Partner::find($data['idPartner']);
-
         $this->risultati = [
             'partner' => $partner ? $partner->nomePartner : 'N/D',
+            'tipo_partner' => Partner::labelTipo($tipoPartner),
+            'prende_provvigione' => $partnerPrendeProvvigione,
             'location' => !empty($data['idLocation']) ? (Location::find($data['idLocation'])->nomeLocation ?? 'Tutte') : 'Tutte',
             'periodo' => date('d/m/Y', strtotime($data['data_da'])) . ' - ' . date('d/m/Y', strtotime($data['data_a'])),
             'dettagli' => $dettagli,

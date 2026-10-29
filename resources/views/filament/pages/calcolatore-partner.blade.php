@@ -66,9 +66,15 @@
                         <span>Partner: {{ $risultati['partner'] }}</span>
                     </h2>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Tipo: <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['tipo_partner'] ?? 'N/D' }}</span> |
                         Location: <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['location'] }}</span> | 
                         Periodo: <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo'] }}</span>
                     </p>
+                    @if(empty($risultati['prende_provvigione']))
+                    <p class="text-sm text-amber-700 dark:text-amber-300 mt-2">
+                        Partner Diretto: nessuna provvigione calcolata (canale proprio).
+                    </p>
+                    @endif
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="px-3 py-1 bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 font-bold rounded-lg text-xs border border-primary-200 dark:border-primary-800">
