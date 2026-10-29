@@ -252,15 +252,15 @@
                                 <button 
                                     type="button" 
                                     wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all cursor-pointer {{ $dettaglio['is_pagata_location'] ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 hover:bg-green-200' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200' }}"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all cursor-pointer {{ $dettaglio['is_pagata_location'] ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 hover:bg-green-200' : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200' }}"
                                     title="Clicca per cambiare lo stato di pagamento alla location"
                                 >
                                     @if($dettaglio['is_pagata_location'])
                                         <x-heroicon-s-check-circle class="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                         <span>Pagata</span>
                                     @else
-                                        <x-heroicon-s-clock class="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Da Pagare</span>
+                                        <x-heroicon-s-x-circle class="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                                        <span>Non Pagata</span>
                                     @endif
                                 </button>
                             </td>

@@ -1,5 +1,5 @@
 <x-filament-widgets::widget>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-7">
         <!-- 1. Fatturato & Ordini Totali (Uniti) -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary-500/40">
             <!-- Header Banda Superiore Colorata -->
@@ -144,7 +144,79 @@
             </div>
         </div>
 
-        <!-- 5. Uscite Extra -->
+        <!-- 5. Spettante Location (Nuovo) -->
+        <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-teal-500/40">
+            <!-- Header Banda Superiore Colorata -->
+            <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-1 rounded-lg bg-white/15">
+                        <x-heroicon-o-building-storefront class="h-5 w-5 text-white" />
+                    </div>
+                    <span class="text-sm font-bold tracking-wide">Spettante Location</span>
+                </div>
+                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">Location</span>
+            </div>
+            <!-- Corpo Card con Respiro e Padding -->
+            <div class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="text-3xl lg:text-4xl font-extrabold text-teal-600 dark:text-teal-400 tracking-tight my-1">
+                        € {{ number_format($stats['location_financials']['totale_spettante'] ?? 0, 2, ',', '.') }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                        Quote totali da dare alle strutture sui biglietti venduti
+                    </div>
+                </div>
+                <!-- Breakdown Pagato vs Da Pagare -->
+                <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Pagato: € {{ number_format($stats['location_financials']['gia_pagato'] ?? 0, 2, ',', '.') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Da Pagare: € {{ number_format($stats['location_financials']['da_pagare_residuo'] ?? 0, 2, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Spettante Partner (Nuovo) -->
+        <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-purple-500/40">
+            <!-- Header Banda Superiore Colorata -->
+            <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-1 rounded-lg bg-white/15">
+                        <x-heroicon-o-user-group class="h-5 w-5 text-white" />
+                    </div>
+                    <span class="text-sm font-bold tracking-wide">Spettante Partner</span>
+                </div>
+                <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">Partner</span>
+            </div>
+            <!-- Corpo Card con Respiro e Padding -->
+            <div class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="text-3xl lg:text-4xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight my-1">
+                        € {{ number_format($stats['partner_financials']['totale_spettante'] ?? 0, 2, ',', '.') }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+                        Quote provvigionali totali spettanti ai partner esterni
+                    </div>
+                </div>
+                <!-- Breakdown Pagato vs Da Pagare -->
+                <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Pagato: € {{ number_format($stats['partner_financials']['gia_pagato'] ?? 0, 2, ',', '.') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Da Pagare: € {{ number_format($stats['partner_financials']['da_pagare_residuo'] ?? 0, 2, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Uscite Extra -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-pink-500/40">
             <!-- Header Banda Superiore Colorata -->
             <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #be123c 0%, #DD076D 100%);">
@@ -176,7 +248,7 @@
             </div>
         </div>
 
-        <!-- 6. Utile al Netto delle Spese -->
+        <!-- 8. Utile al Netto delle Spese -->
         <div class="glossy-card overflow-hidden rounded-2xl flex flex-col justify-between border border-gray-200/80 dark:border-slate-700/70 shadow-sm transition-all duration-200 hover:shadow-md hover:border-indigo-500/40">
             <!-- Header Banda Superiore Colorata -->
             <div class="px-6 py-4 flex items-center justify-between text-white font-bold text-sm tracking-wide shadow-inner" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">

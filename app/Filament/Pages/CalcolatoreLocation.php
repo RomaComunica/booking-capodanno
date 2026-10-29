@@ -290,7 +290,7 @@ class CalcolatoreLocation extends Page implements HasForms
             $this->calcola();
             
             Notification::make()
-                ->title($isPaid ? 'Ordine #' . $numeroOrdine . ': Pagamento Location rimosso (Da Pagare)' : 'Ordine #' . $numeroOrdine . ': Pagamento Location registrato (PAGATO)')
+                ->title($isPaid ? 'Ordine #' . $numeroOrdine . ': Pagamento Location rimosso (Non Pagata)' : 'Ordine #' . $numeroOrdine . ': Pagamento Location registrato (PAGATO)')
                 ->success()
                 ->send();
         }

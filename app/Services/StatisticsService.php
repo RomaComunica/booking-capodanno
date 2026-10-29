@@ -138,7 +138,9 @@ class StatisticsService
         $totalRevenue = $this->getTotalRevenue($year, $period, $customFrom, $customTo);
         $totalTickets = $this->getTotalTickets($year, $period, $customFrom, $customTo);
         $netProfitTickets = $this->getTotalCommissions($year, $period, $customFrom, $customTo);
-        $partnerCommissions = $this->getTotalPartnerCommissions($year, $period, $customFrom, $customTo);
+        $locationFinancials = $this->getLocationFinancials($year, $period, $customFrom, $customTo);
+        $partnerFinancials = $this->getPartnerFinancials($year, $period, $customFrom, $customTo);
+        $partnerCommissions = $partnerFinancials['totale_spettante'];
         $partnerOrdersCount = $this->getPartnerOrdersCount($year, $period, $customFrom, $customTo);
 
         $extraIncomes = (float)\App\Models\EntrataUscita::whereDate('dataOperazione', '>=', $range['from_date'])->whereDate('dataOperazione', '<=', $range['to_date'])
@@ -165,6 +167,8 @@ class StatisticsService
             'total_margin' => round($totalRevenue - $netProfitTickets, 2),
             'net_profit_tickets' => $netProfitTickets,
             'partner_commissions' => $partnerCommissions,
+            'location_financials' => $locationFinancials,
+            'partner_financials' => $partnerFinancials,
             'partner_orders_count' => $partnerOrdersCount,
             'extra_incomes' => $extraIncomes,
             'extra_expenses' => $extraExpenses,
@@ -305,9 +309,107 @@ class StatisticsService
     }
 
     /**
-     * Calculate total partner commissions for year
+     * Get location financials (spettante, gia pagato, da pagare residuo)
      */
-    public function getTotalPartnerCommissions($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    public function getLocationFinancials($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null): array
+    {
+        $range = self::resolvePeriodRange($year, $period, $customFrom, $customTo);
+        $righe = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            ->whereBetween('ordini.dataOrdine', [$range['from'], $range['to']])
+            ->whereNotNull('ordini.dataOrdine')
+            ->where('ordini.statoOrdine', 2)
+            ->select([
+                DB::raw('COALESCE(righe_ordine.prezzoIngressoOrdine, righe_ordine.prezzoIngressoordine, 0) as prezzoIngressoOrdine'),
+                'righe_ordine.quantitaIngressoOrdine',
+                'righe_ordine.idIngressoOrdine',
+                'righe_ordine.nomeIngressoOrdine',
+                'ordini.idLocationOrdine',
+                'ordini.dataPagamentoOrdineFornitore',
+            ])
+            ->get();
+
+        if ($righe->isEmpty()) {
+            return [
+                'totale_spettante' => 0.0,
+                'gia_pagato' => 0.0,
+                'da_pagare_residuo' => 0.0,
+            ];
+        }
+
+        $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
+        $ticketNames = $righe->pluck('nomeIngressoOrdine')->unique()->filter()->toArray();
+
+        $tipologieByCont = DB::table('tipologia_ingresso')
+            ->whereIn('idIngressoCont', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngressoCont')
+            ->toArray();
+
+        $tipologieById = DB::table('tipologia_ingresso')
+            ->whereIn('idIngresso', $idIngressoOrdini)
+            ->get()
+            ->keyBy('idIngresso')
+            ->toArray();
+
+        $tipologieByNameLoc = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso) . '_' . $item->idLocation;
+            })
+            ->toArray();
+
+        $tipologieByName = DB::table('tipologia_ingresso')
+            ->whereIn('nomeIngresso', $ticketNames)
+            ->get()
+            ->keyBy(function ($item) {
+                return trim($item->nomeIngresso);
+            })
+            ->toArray();
+
+        $totaleDare = 0.0;
+        $totaleGiaPagato = 0.0;
+
+        foreach ($righe as $riga) {
+            $venduto = (float)$riga->prezzoIngressoOrdine * (int)$riga->quantitaIngressoOrdine;
+
+            $tipologia = $tipologieByCont[$riga->idIngressoOrdine]
+                ?? $tipologieById[$riga->idIngressoOrdine]
+                ?? ($tipologieByNameLoc[trim($riga->nomeIngressoOrdine) . '_' . $riga->idLocationOrdine] ?? null)
+                ?? ($tipologieByName[trim($riga->nomeIngressoOrdine)] ?? null);
+
+            $tipoProvvigione = $tipologia ? (int)$tipologia->tipoProvvigione : 0;
+            $valoreProvvigione = $tipologia ? (float)$tipologia->valoreProvvigione : 0.0;
+
+            if ($tipoProvvigione == 1) {
+                $commission = ($venduto / 100) * $valoreProvvigione;
+            } else {
+                $commission = $valoreProvvigione * (int)$riga->quantitaIngressoOrdine;
+            }
+
+            $dare = max(0, $venduto - $commission);
+            $totaleDare += $dare;
+
+            $isPaid = !empty($riga->dataPagamentoOrdineFornitore)
+                && $riga->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00'
+                && $riga->dataPagamentoOrdineFornitore !== '';
+
+            if ($isPaid) {
+                $totaleGiaPagato += $dare;
+            }
+        }
+
+        return [
+            'totale_spettante' => round($totaleDare, 2),
+            'gia_pagato' => round($totaleGiaPagato, 2),
+            'da_pagare_residuo' => round(max(0, $totaleDare - $totaleGiaPagato), 2),
+        ];
+    }
+
+    /**
+     * Get partner financials (spettante, gia pagato, da pagare residuo)
+     */
+    public function getPartnerFinancials($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null): array
     {
         $idPartnerGestore = (int)\App\Models\Setting::getVal('id_partner_gestore', 5);
         $partnerConProvvigione = Partner::idsConProvvigione();
@@ -328,11 +430,16 @@ class StatisticsService
                 'righe_ordine.nomeIngressoOrdine',
                 'ordini.idLocationOrdine',
                 'ordini.idPartnerOrdine',
+                'ordini.dataPagamentoOrdinePartner',
             ])
             ->get();
 
         if ($righe->isEmpty()) {
-            return 0.0;
+            return [
+                'totale_spettante' => 0.0,
+                'gia_pagato' => 0.0,
+                'da_pagare_residuo' => 0.0,
+            ];
         }
 
         $idIngressoOrdini = $righe->pluck('idIngressoOrdine')->unique()->filter()->toArray();
@@ -367,6 +474,7 @@ class StatisticsService
             ->toArray();
 
         $totalPartnerCommissions = 0.0;
+        $totaleGiaPagatoPartner = 0.0;
         $tipiPartner = Partner::whereIn('idPartner', $righe->pluck('idPartnerOrdine')->unique()->filter())
             ->pluck('tipoPartner', 'idPartner');
 
@@ -381,16 +489,38 @@ class StatisticsService
             $tipoProv = $tipologia ? (int)$tipologia->tipoProvvigionePartner : 0;
             $valoreProv = $tipologia ? (float)$tipologia->valoreProvvigionePartner : 0.0;
 
-            $totalPartnerCommissions += Partner::calcolaImportoProvvigione(
+            $commission = Partner::calcolaImportoProvvigione(
                 $tipiPartner[$riga->idPartnerOrdine] ?? Partner::TIPO_DIRETTO,
                 $subtotal,
                 (int) $riga->quantitaIngressoOrdine,
                 $tipoProv,
                 $valoreProv
             );
+
+            $totalPartnerCommissions += $commission;
+
+            $isPaid = !empty($riga->dataPagamentoOrdinePartner)
+                && $riga->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00'
+                && $riga->dataPagamentoOrdinePartner !== '';
+
+            if ($isPaid) {
+                $totaleGiaPagatoPartner += $commission;
+            }
         }
 
-        return round($totalPartnerCommissions, 2);
+        return [
+            'totale_spettante' => round($totalPartnerCommissions, 2),
+            'gia_pagato' => round($totaleGiaPagatoPartner, 2),
+            'da_pagare_residuo' => round(max(0, $totalPartnerCommissions - $totaleGiaPagatoPartner), 2),
+        ];
+    }
+
+    /**
+     * Calculate total partner commissions for year
+     */
+    public function getTotalPartnerCommissions($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
+    {
+        return $this->getPartnerFinancials($year, $period, $customFrom, $customTo)['totale_spettante'];
     }
 
     /**
@@ -436,7 +566,9 @@ class StatisticsService
     public function getTotalProfit($year, ?string $period = 'tutto_anno', ?string $customFrom = null, ?string $customTo = null)
     {
         $netProfitTickets = $this->getTotalCommissions($year, $period, $customFrom, $customTo);
-        $partnerCommissions = $this->getTotalPartnerCommissions($year, $period, $customFrom, $customTo);
+        $locationFinancials = $this->getLocationFinancials($year, $period, $customFrom, $customTo);
+        $partnerFinancials = $this->getPartnerFinancials($year, $period, $customFrom, $customTo);
+        $partnerCommissions = $partnerFinancials['totale_spettante'];
 
         // Add Entrate and subtract Uscite from the new ledger table
         $entrate = \App\Models\EntrataUscita::whereYear('dataOperazione', $year)
