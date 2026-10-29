@@ -252,15 +252,16 @@
                                 <button 
                                     type="button" 
                                     wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all cursor-pointer {{ $dettaglio['is_pagata_location'] ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 hover:bg-green-200' : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200' }}"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                    style="{{ $dettaglio['is_pagata_location'] ? 'background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;' : 'background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;' }}"
                                     title="Clicca per cambiare lo stato di pagamento alla location"
                                 >
                                     @if($dettaglio['is_pagata_location'])
-                                        <x-heroicon-s-check-circle class="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                                        <span>Pagata</span>
+                                        <x-heroicon-s-check-circle class="h-4 w-4" style="color: #16a34a !important; flex-shrink: 0;" />
+                                        <span style="color: #15803d !important; font-weight: 700 !important;">Pagata</span>
                                     @else
-                                        <x-heroicon-s-x-circle class="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                                        <span>Non Pagata</span>
+                                        <x-heroicon-s-x-circle class="h-4 w-4" style="color: #dc2626 !important; flex-shrink: 0;" />
+                                        <span style="color: #b91c1c !important; font-weight: 700 !important;">Non Pagata</span>
                                     @endif
                                 </button>
                             </td>

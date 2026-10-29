@@ -200,15 +200,16 @@
                                 <button 
                                     type="button" 
                                     wire:click="togglePagamentoPartner({{ $dettaglio['numeroOrdine'] }})" 
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm transition-all cursor-pointer {{ $dettaglio['is_pagato_partner'] ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 hover:bg-green-200' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200' }}"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                    style="{{ $dettaglio['is_pagato_partner'] ? 'background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;' : 'background-color: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fcd34d !important;' }}"
                                     title="Clicca per cambiare lo stato di pagamento al partner"
                                 >
                                     @if($dettaglio['is_pagato_partner'])
-                                        <x-heroicon-s-check-circle class="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                                        <span>Pagato</span>
+                                        <x-heroicon-s-check-circle class="h-4 w-4" style="color: #16a34a !important; flex-shrink: 0;" />
+                                        <span style="color: #15803d !important; font-weight: 700 !important;">Pagato</span>
                                     @else
-                                        <x-heroicon-s-clock class="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Da Pagare</span>
+                                        <x-heroicon-s-clock class="h-4 w-4" style="color: #d97706 !important; flex-shrink: 0;" />
+                                        <span style="color: #b45309 !important; font-weight: 700 !important;">Da Pagare</span>
                                     @endif
                                 </button>
                             </td>
