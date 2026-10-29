@@ -29,16 +29,16 @@
                 </div>
                 <!-- Breakdown Stati Ordine -->
                 <div class="flex flex-wrap items-center gap-1.5 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #16a34a !important; flex-shrink: 0;"></span>
                         Compl: {{ number_format($stats['completed_orders'] ?? 0, 0, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fcd34d !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #f59e0b !important; flex-shrink: 0;"></span>
                         In Corso: {{ number_format($stats['pending_orders'] ?? 0, 0, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg font-bold bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-danger-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #ef4444 !important; flex-shrink: 0;"></span>
                         Ann: {{ number_format($stats['cancelled_orders'] ?? 0, 0, ',', '.') }}
                     </span>
                 </div>
@@ -133,8 +133,8 @@
                 </div>
                 <!-- Breakdown Info Partner -->
                 <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #fef3c7 !important; color: #b45309 !important; border: 1px solid #fcd34d !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #f59e0b !important; flex-shrink: 0;"></span>
                         Ordini Partner: {{ number_format($stats['partner_orders_count'] ?? 0, 0, ',', '.') }}
                     </span>
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium text-gray-600 dark:text-gray-400">
@@ -168,12 +168,12 @@
                 </div>
                 <!-- Breakdown Pagato vs Da Pagare -->
                 <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #16a34a !important; flex-shrink: 0;"></span>
                         Pagato: € {{ number_format($stats['location_financials']['gia_pagato'] ?? 0, 2, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #ef4444 !important; flex-shrink: 0;"></span>
                         Da Pagare: € {{ number_format($stats['location_financials']['da_pagare_residuo'] ?? 0, 2, ',', '.') }}
                     </span>
                 </div>
@@ -204,12 +204,12 @@
                 </div>
                 <!-- Breakdown Pagato vs Da Pagare -->
                 <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/60 text-xs">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #16a34a !important; flex-shrink: 0;"></span>
                         Pagato: € {{ number_format($stats['partner_financials']['gia_pagato'] ?? 0, 2, ',', '.') }}
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold shadow-2xs" style="background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;">
+                        <span class="w-2 h-2 rounded-full" style="background-color: #ef4444 !important; flex-shrink: 0;"></span>
                         Da Pagare: € {{ number_format($stats['partner_financials']['da_pagare_residuo'] ?? 0, 2, ',', '.') }}
                     </span>
                 </div>
