@@ -68,6 +68,20 @@ class IngressiRelationManager extends RelationManager
                                 titleAttribute: 'nomePartner',
                                 modifyQueryUsing: fn ($query) => $query->orderBy('nomePartner')
                             )
+                            ->default(function ($livewire) {
+                                $locId = $livewire->getOwnerRecord()?->idLocation;
+                                if ($locId) {
+                                    $existing = \Illuminate\Support\Facades\DB::table('cross_partner_ingressi')
+                                        ->where('idLocation', $locId)
+                                        ->distinct()
+                                        ->pluck('idPartnerIngressi')
+                                        ->toArray();
+                                    if (!empty($existing)) {
+                                        return $existing;
+                                    }
+                                }
+                                return [5];
+                            })
                             ->pivotData(fn ($livewire) => [
                                 'idLocation' => $livewire->getOwnerRecord()->idLocation,
                                 'quantitaIngressi' => 0,
@@ -78,8 +92,7 @@ class IngressiRelationManager extends RelationManager
                             ->columns(3)
                             ->gridDirection('row'),
                     ])
-                    ->collapsible()
-                    ->collapsed(),
+                    ->collapsible(),
                 
                 // Commission fields in tabs... (rest of the file)
                 Forms\Components\Tabs::make('Commissioni')

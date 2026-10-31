@@ -36,6 +36,7 @@
     {{-- Filters Section --}}
     <div class="glass-panel filter-section mb-2 animate-fade-in">
         <form action="{{ route('home') }}" method="GET" class="filter-form">
+            <input type="hidden" name="idPartner" value="{{ $partnerId }}">
             @if($iframe)
                 <input type="hidden" name="iframe" value="1">
             @endif
@@ -61,7 +62,7 @@
                     </div>
                     <div class="filter-actions mt-0">
                         @if(request('search'))
-                            <a href="{{ route('home', ['iframe' => $iframe ? '1' : null]) }}" class="btn btn-outline" style="padding-top: 1rem; padding-bottom: 1rem;">
+                            <a href="{{ route('home', array_filter(['idPartner' => $partnerId, 'iframe' => $iframe ? '1' : null])) }}" class="btn btn-outline" style="padding-top: 1rem; padding-bottom: 1rem;">
                                 Reset
                             </a>
                         @endif
@@ -157,7 +158,7 @@
             </svg>
             <p class="empty-text">Nessuna location trovata.</p>
             @if(request()->hasAny(['search', 'categoria', 'tipologia']))
-                <a href="{{ route('home', ['iframe' => $iframe ? '1' : null]) }}" class="btn btn-outline mt-2">
+                <a href="{{ route('home', array_filter(['idPartner' => $partnerId, 'iframe' => $iframe ? '1' : null])) }}" class="btn btn-outline mt-2">
                     Rimuovi filtri
                 </a>
             @endif

@@ -166,14 +166,15 @@ class AppServiceProvider extends ServiceProvider
                 });
             }
 
-            if (!\Illuminate\Support\Facades\Cache::has('cross_partner_legacy_synced_v1')) {
-                \Illuminate\Support\Facades\Cache::forever('cross_partner_legacy_synced_v1', true);
+            if (!\Illuminate\Support\Facades\Cache::has('cross_partner_legacy_synced_v2')) {
+                \Illuminate\Support\Facades\Cache::forever('cross_partner_legacy_synced_v2', true);
                 if (Schema::hasTable('cross_partner_ingressi') && Schema::hasTable('tipologia_ingresso')) {
                     $orphans = DB::table('cross_partner_ingressi')
                         ->whereNotExists(function ($query) {
                             $query->select(DB::raw(1))
                                 ->from('tipologia_ingresso')
-                                ->whereColumn('tipologia_ingresso.idIngressoCont', 'cross_partner_ingressi.idTipologiaIngresso');
+                                ->whereColumn('tipologia_ingresso.idIngressoCont', 'cross_partner_ingressi.idTipologiaIngresso')
+                                ->whereColumn('tipologia_ingresso.idLocation', 'cross_partner_ingressi.idLocation');
                         })
                         ->get();
 
@@ -181,11 +182,19 @@ class AppServiceProvider extends ServiceProvider
                         $matched = DB::table('tipologia_ingresso')
                             ->where('idLocation', $orphan->idLocation)
                             ->where('idIngresso', $orphan->idTipologiaIngresso)
+                            ->orderByDesc('ingressoAttivo')
+                            ->orderByDesc('idIngressoCont')
                             ->first();
                         if ($matched) {
-                            DB::table('cross_partner_ingressi')
-                                ->where('idCrossPartnerIngressi', $orphan->idCrossPartnerIngressi)
-                                ->update(['idTipologiaIngresso' => $matched->idIngressoCont]);
+                            $alreadyExists = DB::table('cross_partner_ingressi')
+                                ->where('idTipologiaIngresso', $matched->idIngressoCont)
+                                ->where('idPartnerIngressi', $orphan->idPartnerIngressi)
+                                ->exists();
+                            if (!$alreadyExists) {
+                                DB::table('cross_partner_ingressi')
+                                    ->where('idCrossPartnerIngressi', $orphan->idCrossPartnerIngressi)
+                                    ->update(['idTipologiaIngresso' => $matched->idIngressoCont]);
+                            }
                         }
                     }
                 }

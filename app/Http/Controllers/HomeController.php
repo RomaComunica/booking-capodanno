@@ -6,14 +6,18 @@ use App\Models\Location;
 use App\Models\CategoriaLocation;
 use App\Models\TipologiaLocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // Get partner ID from session (set by TrackPartner middleware)
+        // Get partner ID from query string first (iframe-safe when 3rd-party cookies are blocked), fallback to session
         // Default is 5 = CRC
-        $partnerId = session('idPartner', 5);
+        $reqPartner = $request->query('partner') ?? $request->query('idPartner');
+        $partnerId = ($reqPartner && is_numeric($reqPartner))
+            ? (int) $reqPartner
+            : (int) session('idPartner', 5);
         
         // Get partner info for display
         $partner = \App\Models\Partner::find($partnerId);
@@ -21,17 +25,54 @@ class HomeController extends Controller
         // Check if iframe mode
         $iframe = $request->has('iframe') && $request->iframe == '1';
 
+        // If a specific location ID is passed in query string (e.g. ?partner=X&location=Y), redirect directly to it
+        $locationParam = $request->query('location') ?? $request->query('idLocation');
+        if ($locationParam && is_numeric($locationParam) && (int) $locationParam > 0) {
+            return redirect()->route('location.show', array_filter([
+                'id' => (int) $locationParam,
+                'idPartner' => $partnerId,
+                'iframe' => $iframe ? '1' : null,
+            ]));
+        }
+
+        $partnerTicketFilter = function ($q) use ($partnerId) {
+            $q->where('ingressoAttivo', true)
+              ->where(function ($subQuery) use ($partnerId) {
+                  $subQuery->whereHas('partners', function ($partnerQuery) use ($partnerId) {
+                      $partnerQuery->where('idPartnerIngressi', $partnerId);
+                  })->orWhereExists(function ($sub) use ($partnerId) {
+                      $sub->select(DB::raw(1))
+                          ->from('cross_partner_ingressi')
+                          ->where('cross_partner_ingressi.idPartnerIngressi', $partnerId)
+                          ->whereColumn('cross_partner_ingressi.idLocation', 'tipologia_ingresso.idLocation')
+                          ->whereColumn('cross_partner_ingressi.idTipologiaIngresso', 'tipologia_ingresso.idIngresso');
+                  })->orWhere(function ($unassignedQuery) use ($partnerId) {
+                      $unassignedQuery->whereNotExists(function ($noDirect) {
+                          $noDirect->select(DB::raw(1))
+                              ->from('cross_partner_ingressi')
+                              ->whereColumn('cross_partner_ingressi.idTipologiaIngresso', 'tipologia_ingresso.idIngressoCont');
+                      })->where(function ($locFallback) use ($partnerId) {
+                          $locFallback->whereExists(function ($locHasPartner) use ($partnerId) {
+                              $locHasPartner->select(DB::raw(1))
+                                  ->from('cross_partner_ingressi')
+                                  ->whereColumn('cross_partner_ingressi.idLocation', 'tipologia_ingresso.idLocation')
+                                  ->where('cross_partner_ingressi.idPartnerIngressi', $partnerId);
+                          })->orWhereNotExists(function ($locHasNoPartners) {
+                              $locHasNoPartners->select(DB::raw(1))
+                                  ->from('cross_partner_ingressi')
+                                  ->whereColumn('cross_partner_ingressi.idLocation', 'tipologia_ingresso.idLocation');
+                          });
+                      });
+                  });
+              });
+        };
+
         // Build query for locations
         $query = Location::with(['categorie', 'tipologie', 'ingressi'])
             ->where('attivaLocation', true);
 
         // Filter locations that have at least one active ticket associated with this partner
-        $query->whereHas('ingressi', function($q) use ($partnerId) {
-            $q->where('ingressoAttivo', true)
-              ->whereHas('partners', function($partnerQuery) use ($partnerId) {
-                  $partnerQuery->where('idPartnerIngressi', $partnerId);
-              });
-        });
+        $query->whereHas('ingressi', $partnerTicketFilter);
 
         // Filter by category
         if ($request->has('categoria') && $request->categoria) {
@@ -60,6 +101,7 @@ class HomeController extends Controller
             if ($exactMatch) {
                 return redirect()->route('location.show', array_filter([
                     'id' => $exactMatch->idLocation,
+                    'idPartner' => $partnerId,
                     'iframe' => $iframe ? '1' : null,
                 ]));
             }
@@ -68,6 +110,7 @@ class HomeController extends Controller
             if ($matchingLocations->count() === 1) {
                 return redirect()->route('location.show', array_filter([
                     'id' => $matchingLocations->first()->idLocation,
+                    'idPartner' => $partnerId,
                     'iframe' => $iframe ? '1' : null,
                 ]));
             }
@@ -77,12 +120,7 @@ class HomeController extends Controller
         $categorie = CategoriaLocation::all();
         $tipologie = TipologiaLocation::all();
         $availableLocations = Location::where('attivaLocation', true)
-            ->whereHas('ingressi', function($q) use ($partnerId) {
-                $q->where('ingressoAttivo', true)
-                  ->whereHas('partners', function($partnerQuery) use ($partnerId) {
-                      $partnerQuery->where('idPartnerIngressi', $partnerId);
-                  });
-            })
+            ->whereHas('ingressi', $partnerTicketFilter)
             ->orderBy('nomeLocation')
             ->get();
 
