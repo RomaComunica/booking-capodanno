@@ -43,6 +43,7 @@ class EntrataUscitaResource extends Resource
                         'Google ADS',
                         'Facebook ADS',
                         'TikTok ADS',
+                        'Provvigioni PR ',
                         'Rimborso Voucher #',
                         'Rimborso Cliente ',
                         'Straordinari ',
@@ -52,7 +53,7 @@ class EntrataUscitaResource extends Resource
                         'Rinnovo Dominio ',
                         'Rinnovo ',
                     ])
-                    ->helperText('Suggerimenti: Google ADS, Facebook ADS, TikTok ADS, Rimborso [Voucher/Cliente], Straordinari [Nome], Commissioni, Rinnovo Dominio')
+                    ->helperText('Suggerimenti: Google ADS, Facebook ADS, TikTok ADS, Provvigioni PR [Nome], Rimborso [Voucher/Cliente], Straordinari [Nome], Commissioni, Rinnovo Dominio')
                     ->maxLength(255)
                     ->required(),
                 Forms\Components\TextInput::make('importo')
@@ -91,6 +92,7 @@ class EntrataUscitaResource extends Resource
                         if (str_contains($c, 'google')) return 'Google ADS';
                         if (str_contains($c, 'facebook') || str_contains($c, 'meta') || str_contains($c, 'fb')) return 'Facebook ADS';
                         if (str_contains($c, 'tiktok') || str_contains($c, 'tik tok')) return 'TikTok ADS';
+                        if (str_contains($c, 'provvigion') || preg_match('/\bpr\b/', $c)) return 'Provvigioni PR';
                         if (str_contains($c, 'rimbors')) return 'Rimborso';
                         if (str_contains($c, 'straordinar')) return 'Straordinari';
                         if (str_contains($c, 'commission')) return 'Commissioni';
@@ -102,12 +104,17 @@ class EntrataUscitaResource extends Resource
                         'info' => fn ($state) => in_array($state, ['Google ADS', 'TikTok ADS', 'Rinnovi Domini']),
                         'primary' => 'Facebook ADS',
                         'danger' => 'Rimborso',
-                        'warning' => 'Straordinari',
+                        'warning' => fn ($state) => in_array($state, ['Straordinari', 'Provvigioni PR']),
                         'gray' => 'Altro',
                     ]),
                 Tables\Columns\TextColumn::make('causale')
                     ->label('Causale')
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(function ($state, $record) {
+                        $hasNote = !empty(trim((string) ($record->descrizione ?? '')));
+                        return $hasNote ? ($state . ' *') : $state;
+                    })
+                    ->tooltip(fn ($record) => !empty(trim((string) ($record->descrizione ?? ''))) ? $record->descrizione : null),
                 Tables\Columns\TextColumn::make('importo')
                     ->label('Importo')
                     ->money('eur')
@@ -146,6 +153,7 @@ class EntrataUscitaResource extends Resource
                         'google_ads' => '📢 Google ADS',
                         'facebook_ads' => '📱 Facebook ADS',
                         'tiktok_ads' => '🎵 TikTok ADS',
+                        'provvigioni_pr' => '🤝 Provvigioni PR',
                         'rimborsi' => '↩️ Rimborsi (Clienti / Voucher)',
                         'straordinari' => '⏱️ Straordinari (Staff)',
                         'commissioni' => '💳 Commissioni',
@@ -168,6 +176,13 @@ class EntrataUscitaResource extends Resource
                                 $q->where('causale', 'LIKE', '%tiktok%')
                                   ->orWhere('causale', 'LIKE', '%tik tok%');
                             });
+                        } elseif ($data['value'] === 'provvigioni_pr') {
+                            $query->where('tipoOperazione', 'U')->where(function ($q) {
+                                $q->where('causale', 'LIKE', '%provvigion%')
+                                  ->orWhere('causale', 'LIKE', 'pr %')
+                                  ->orWhere('causale', 'LIKE', '% pr %')
+                                  ->orWhere('causale', 'LIKE', '% pr');
+                            });
                         } elseif ($data['value'] === 'rimborsi') {
                             $query->where('tipoOperazione', 'U')->where('causale', 'LIKE', '%rimbors%');
                         } elseif ($data['value'] === 'straordinari') {
@@ -187,6 +202,10 @@ class EntrataUscitaResource extends Resource
                                 ->where('causale', 'NOT LIKE', '%fb%')
                                 ->where('causale', 'NOT LIKE', '%tiktok%')
                                 ->where('causale', 'NOT LIKE', '%tik tok%')
+                                ->where('causale', 'NOT LIKE', '%provvigion%')
+                                ->where('causale', 'NOT LIKE', 'pr %')
+                                ->where('causale', 'NOT LIKE', '% pr %')
+                                ->where('causale', 'NOT LIKE', '% pr')
                                 ->where('causale', 'NOT LIKE', '%rimbors%')
                                 ->where('causale', 'NOT LIKE', '%straordinar%')
                                 ->where('causale', 'NOT LIKE', '%commission%')

@@ -10,6 +10,9 @@ class Ordine extends Model
     protected $keyType = 'int';
     public $timestamps = false;
     protected $guarded = [];
+    protected $casts = [
+        'modificato_manualmente' => 'boolean',
+    ];
 
     protected static function booted()
     {

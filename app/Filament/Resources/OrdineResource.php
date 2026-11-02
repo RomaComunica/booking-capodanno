@@ -378,7 +378,7 @@ class OrdineResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('numeroOrdine')
-                    ->label('N. Ordine')
+                    ->label('# Ordine')
                     ->sortable()
                     ->searchable()
                     ->weight(FontWeight::Bold)
@@ -407,22 +407,30 @@ class OrdineResource extends Resource
                 
                 Tables\Columns\TextColumn::make('dataOrdine')
                     ->label('Data')
-                    ->dateTime('d/m/Y H:i')
+                    ->dateTime('d/m/y H:i')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('nomeClienteOrdine')
+                    ->label('Cliente')
+                    ->formatStateUsing(function ($record) {
+                        $fullName = trim(($record->nomeClienteOrdine ?? '') . ' ' . ($record->cognomeClienteOrdine ?? ''));
+                        $shortName = \Illuminate\Support\Str::limit($fullName, 22);
+                        return $shortName . ($record->modificato_manualmente ? ' *' : '');
+                    })
+                    ->tooltip(function ($record) {
+                        $fullName = trim(($record->nomeClienteOrdine ?? '') . ' ' . ($record->cognomeClienteOrdine ?? ''));
+                        return $record->modificato_manualmente
+                            ? ($fullName . ' — Ordine modificato manualmente')
+                            : ($fullName ?: null);
+                    })
+                    ->searchable(['nomeClienteOrdine', 'cognomeClienteOrdine']),
                 
                 Tables\Columns\TextColumn::make('location.nomeLocation')
                     ->label('Location')
                     ->searchable()
                     ->sortable()
-                    ->limit(30),
-                
-                Tables\Columns\TextColumn::make('nomeClienteOrdine')
-                    ->label('Cliente')
-                    ->formatStateUsing(fn ($record) => 
-                        $record->nomeClienteOrdine . ' ' . $record->cognomeClienteOrdine
-                    )
-                    ->searchable(['nomeClienteOrdine', 'cognomeClienteOrdine'])
-                    ->limit(25),
+                    ->limit(22)
+                    ->tooltip(fn ($record) => $record->location?->nomeLocation),
                 
                 Tables\Columns\TextColumn::make('emailClienteOrdine')
                     ->label('Email')
@@ -436,13 +444,54 @@ class OrdineResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('tipoPagamento.nomePagamento')
-                    ->label('Metodo Pagamento')
+                    ->label('Pagamento')
                     ->badge()
                     ->default('Bonifico Bancario')
+                    ->formatStateUsing(function (?string $state): string {
+                        if (!$state) {
+                            return 'Bonifico';
+                        }
+                        $s = strtolower($state);
+                        if (str_contains($s, 'carta') || str_contains($s, 'nexi')) return 'Carta / Nexi';
+                        if (str_contains($s, 'paypal')) return 'PayPal';
+                        if (str_contains($s, 'bonifico')) return 'Bonifico';
+                        if (str_contains($s, 'ricarica') || str_contains($s, 'postepay') || str_contains($s, 'poste pay')) return 'PostePay';
+                        if (str_contains($s, 'contanti') || str_contains($s, 'sede')) return 'Contanti';
+                        return \Illuminate\Support\Str::limit($state, 16);
+                    })
+                    ->tooltip(fn ($record) => $record->tipoPagamento?->nomePagamento ?? 'Bonifico Bancario')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('tavolo')
+                    ->label('Tavolo')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(12)
+                    ->tooltip(fn ($record) => $record->tavolo ? 'Tavolo: ' . $record->tavolo . ' (Clicca per modificare)' : 'Clicca per assegnare un tavolo')
+                    ->action(
+                        Tables\Actions\Action::make('modifica_tavolo')
+                            ->modalHeading(fn ($record) => 'Assegna / Modifica Tavolo (Ordine #' . $record->numeroOrdine . ')')
+                            ->modalDescription(fn ($record) => 'Cliente: ' . $record->nomeClienteOrdine . ' ' . $record->cognomeClienteOrdine . ' | ' . ($record->location?->nomeLocation ?? ''))
+                            ->form([
+                                Forms\Components\TextInput::make('tavolo')
+                                    ->label('Nome o Numero Tavolo')
+                                    ->placeholder('Es. Rossi, Tavolo 5, ecc.')
+                                    ->maxLength(100)
+                                    ->default(fn ($record) => $record->tavolo),
+                            ])
+                            ->action(function ($record, array $data) {
+                                $record->update(['tavolo' => trim($data['tavolo'] ?? '')]);
+                                Notification::make()
+                                    ->title('Tavolo aggiornato con successo')
+                                    ->success()
+                                    ->send();
+                            })
+                    ),
                 
                 Tables\Columns\IconColumn::make('dataPagamentoOrdineFornitore')
-                    ->label('Pagata Location')
+                    ->label('P. Location')
+                    ->alignCenter()
                     ->boolean()
                     ->getStateUsing(fn ($record) => 
                         $record->dataPagamentoOrdineFornitore && $record->dataPagamentoOrdineFornitore !== '0000-00-00 00:00:00'
@@ -464,7 +513,8 @@ class OrdineResource extends Resource
                     ->tooltip('Clicca per cambiare lo stato di pagamento alla location'),
 
                 Tables\Columns\IconColumn::make('dataPagamentoOrdinePartner')
-                    ->label('Pagato Partner')
+                    ->label('P. Partner')
+                    ->alignCenter()
                     ->boolean()
                     ->getStateUsing(fn ($record) => 
                         $record->dataPagamentoOrdinePartner && $record->dataPagamentoOrdinePartner !== '0000-00-00 00:00:00'
@@ -491,33 +541,6 @@ class OrdineResource extends Resource
                     ->placeholder('—')
                     ->tooltip(fn ($record) => $record->noteOrdine ?: null)
                     ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('tavolo')
-                    ->label('Tavolo')
-                    ->placeholder('—')
-                    ->searchable()
-                    ->sortable()
-                    ->limit(15)
-                    ->tooltip(fn ($record) => $record->tavolo ? 'Tavolo: ' . $record->tavolo . ' (Clicca per modificare)' : 'Clicca per assegnare un tavolo')
-                    ->action(
-                        Tables\Actions\Action::make('modifica_tavolo')
-                            ->modalHeading(fn ($record) => 'Assegna / Modifica Tavolo (Ordine #' . $record->numeroOrdine . ')')
-                            ->modalDescription(fn ($record) => 'Cliente: ' . $record->nomeClienteOrdine . ' ' . $record->cognomeClienteOrdine . ' | ' . ($record->location?->nomeLocation ?? ''))
-                            ->form([
-                                Forms\Components\TextInput::make('tavolo')
-                                    ->label('Nome o Numero Tavolo')
-                                    ->placeholder('Es. Rossi, Tavolo 5, ecc.')
-                                    ->maxLength(100)
-                                    ->default(fn ($record) => $record->tavolo),
-                            ])
-                            ->action(function ($record, array $data) {
-                                $record->update(['tavolo' => trim($data['tavolo'] ?? '')]);
-                                Notification::make()
-                                    ->title('Tavolo aggiornato con successo')
-                                    ->success()
-                                    ->send();
-                            })
-                    ),
             ])
             ->filters([
                 // Ricerca libera
@@ -741,7 +764,7 @@ class OrdineResource extends Resource
             ->actions([
                 // Invia email voucher
                 Tables\Actions\Action::make('invia_email_voucher')
-                    ->label('Invia Email')
+                    ->label('Email')
                     ->icon('heroicon-o-envelope')
                     ->color('success')
                     ->form([

@@ -1,11 +1,55 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div
+        class="space-y-6"
+        x-data="{
+            stampaReportLocale(modalita = 'completo') {
+                let titles = {
+                    completo: 'Report Vendite Location',
+                    riepilogo: 'Riepilogo Tipologie - Location',
+                    ordini: 'Lista Singoli Ordini - Location'
+                };
+                let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                printWindow.document.write('<html><head><title>' + (titles[modalita] || 'Report Vendite Location') + '</title>');
+                printWindow.document.write('<style>');
+                printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
+                printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
+                printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
+                printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                printWindow.document.write('.text-center { text-align: center; }');
+                printWindow.document.write('.text-right { text-align: right; }');
+                printWindow.document.write('.font-bold { font-weight: bold; }');
+                printWindow.document.write('.text-lg { font-size: 15px; }');
+                printWindow.document.write('.hidden-print { display: none !important; }');
+                printWindow.document.write('.visible-print { display: inline !important; }');
+                printWindow.document.write('</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.document.querySelectorAll('.report-locale-hide').forEach(el => el.remove());
+                printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
+                if (modalita === 'riepilogo') {
+                    printWindow.document.querySelectorAll('.print-sezione-ordini, .print-sezione-tavoli, .print-righe-badge').forEach(el => el.remove());
+                } else if (modalita === 'ordini') {
+                    printWindow.document.querySelectorAll('.print-sezione-riepilogo').forEach(el => el.remove());
+                }
+                printWindow.focus();
+                setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+            }
+        }"
+    >
         {{-- Form di Selezione --}}
         <div class="glossy-card bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60">
             <form wire:submit="calcola">
                 {{ $this->form }}
                 
-                <div class="mt-6 flex items-center gap-3">
+                <div class="mt-6 flex flex-wrap items-center gap-3">
                     <x-filament::button type="submit" size="lg" icon="heroicon-o-calculator" icon-position="before">
                         Calcola Report
                     </x-filament::button>
@@ -56,38 +100,36 @@
                         color="info"
                         icon="heroicon-o-building-storefront"
                         icon-position="before"
-                        x-on:click="
-                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
-                            printWindow.document.write('<html><head><title>Report Vendite Location</title>');
-                            printWindow.document.write('<style>');
-                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
-                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
-                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
-                            printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
-                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
-                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
-                            printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
-                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
-                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
-                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
-                            printWindow.document.write('.text-center { text-align: center; }');
-                            printWindow.document.write('.text-right { text-align: right; }');
-                            printWindow.document.write('.font-bold { font-weight: bold; }');
-                            printWindow.document.write('.text-lg { font-size: 15px; }');
-                            printWindow.document.write('.hidden-print { display: none !important; }');
-                            printWindow.document.write('.visible-print { display: inline !important; }');
-                            printWindow.document.write('</style>');
-                            printWindow.document.write('</head><body>');
-                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
-                            printWindow.document.write('</body></html>');
-                            printWindow.document.close();
-                            printWindow.document.querySelectorAll('.report-locale-hide').forEach(el => el.remove());
-                            printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
-                            printWindow.focus();
-                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-                        "
+                        x-on:click="stampaReportLocale('completo')"
                     >
                         Stampa Report Locale
+                    </x-filament::button>
+
+                    @php $hasIngressiAggregati = !empty($this->getIngressiAggregati()); @endphp
+                    @if($hasIngressiAggregati)
+                    <x-filament::button
+                        type="button"
+                        size="lg"
+                        color="info"
+                        outlined
+                        icon="heroicon-o-ticket"
+                        icon-position="before"
+                        x-on:click="stampaReportLocale('riepilogo')"
+                    >
+                        Stampa Riepilogo Locale
+                    </x-filament::button>
+                    @endif
+
+                    <x-filament::button
+                        type="button"
+                        size="lg"
+                        color="info"
+                        outlined
+                        icon="heroicon-o-list-bullet"
+                        icon-position="before"
+                        x-on:click="stampaReportLocale('ordini')"
+                    >
+                        Stampa Singoli Ordini Locale
                     </x-filament::button>
                     @endif
                 </div>
@@ -109,7 +151,7 @@
                         Periodo: <span class="font-bold text-gray-900 dark:text-white">{{ $risultati['periodo'] }}</span>
                     </p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 print-righe-badge">
                     <span class="px-3 py-1 bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 font-bold rounded-lg text-xs border border-primary-200 dark:border-primary-800">
                         {{ count($risultati['dettagli']) }} righe ordine trovate
                     </span>
@@ -167,7 +209,7 @@
             {{-- 1. Aggregatore per Tipologia Biglietto --}}
             @php $ingressiAggregati = $this->getIngressiAggregati(); @endphp
             @if(!empty($ingressiAggregati))
-            <div class="mt-6">
+            <div class="mt-6 print-sezione-riepilogo">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <x-heroicon-o-ticket class="h-5 w-5 text-primary-500" style="width: 20px; height: 20px;" />
@@ -281,7 +323,7 @@
             @endif
 
             {{-- 2. Dettaglio Singoli Ordini --}}
-            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6 print-sezione-ordini">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <x-heroicon-o-list-bullet class="h-5 w-5 text-primary-500" style="width: 20px; height: 20px;" />
@@ -453,7 +495,7 @@
             {{-- Tavoli Aggregati --}}
             @php $tavoliAggregati = $this->getTavoliAggregati(); @endphp
             @if(!empty($tavoliAggregati))
-            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6 print-sezione-tavoli">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <x-heroicon-o-user-group class="h-5 w-5 text-primary-500" style="width: 20px; height: 20px;" />
                     <span>Raggruppamento Tavoli Richiesti / Assegnati</span>

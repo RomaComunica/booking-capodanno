@@ -7,11 +7,14 @@ use App\Filament\Resources\ClienteResource\RelationManagers;
 use App\Models\Cliente;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ClienteResource extends Resource
 {
@@ -31,7 +34,7 @@ class ClienteResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        return true;
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
@@ -48,14 +51,29 @@ class ClienteResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nome')
-                    ->readonly(),
-                Forms\Components\TextInput::make('cognome')
-                    ->readonly(),
-                Forms\Components\TextInput::make('email')
-                    ->readonly(),
-                Forms\Components\TextInput::make('telefono')
-                    ->readonly(),
+                Forms\Components\Section::make('Dati Cliente')
+                    ->schema([
+                        Forms\Components\TextInput::make('nome')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('cognome')
+                            ->label('Cognome')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('telefono')
+                            ->label('Telefono')
+                            ->tel()
+                            ->maxLength(50),
+                        Forms\Components\TextInput::make('citta')
+                            ->label('Città')
+                            ->maxLength(255),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -94,7 +112,14 @@ class ClienteResource extends Resource
                 
                 Tables\Columns\TextColumn::make('ultimo_ordine')
                     ->label('Ultimo Ordine')
-                    ->dateTime('d/m/Y H:i')
+                    ->formatStateUsing(function ($state, Cliente $record): string {
+                        if ((int) $record->numero_ordini === 0 || !$state) {
+                            return '—';
+                        }
+                        return $state instanceof \Carbon\CarbonInterface
+                            ? $state->format('d/m/Y H:i')
+                            : date('d/m/Y H:i', strtotime((string) $state));
+                    })
                     ->sortable(),
             ])
             ->defaultSort('ultimo_ordine', 'desc')
@@ -124,8 +149,8 @@ class ClienteResource extends Resource
                                     $cliente->email,
                                     $cliente->telefono,
                                     $cliente->numero_ordini,
-                                    number_format($cliente->totale_speso, 2, ',', '.'),
-                                    $cliente->ultimo_ordine ? $cliente->ultimo_ordine->format('d/m/Y H:i') : '',
+                                    number_format((float) $cliente->totale_speso, 2, ',', '.'),
+                                    ((int) $cliente->numero_ordini > 0 && $cliente->ultimo_ordine) ? $cliente->ultimo_ordine->format('d/m/Y H:i') : '',
                                 ], ';');
                             }
                             
@@ -151,7 +176,65 @@ class ClienteResource extends Resource
                                 'search' => $record->email,
                             ],
                         ],
-                    ])),
+                    ]))
+                    ->visible(fn (Cliente $record): bool => (int) $record->numero_ordini > 0),
+
+                Tables\Actions\Action::make('modifica_manuale')
+                    ->label('Modifica')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->visible(fn (Cliente $record): bool => (int) $record->numero_ordini === 0)
+                    ->form(fn (Cliente $record): array => [
+                        Forms\Components\TextInput::make('nome')
+                            ->label('Nome')
+                            ->required()
+                            ->default($record->nome),
+                        Forms\Components\TextInput::make('cognome')
+                            ->label('Cognome')
+                            ->default($record->cognome),
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->default($record->email),
+                        Forms\Components\TextInput::make('telefono')
+                            ->label('Telefono')
+                            ->tel()
+                            ->default($record->telefono),
+                    ])
+                    ->action(function (Cliente $record, array $data): void {
+                        DB::table('clienti')
+                            ->whereRaw('LOWER(TRIM(emailCliente)) = ?', [strtolower(trim($record->email))])
+                            ->update([
+                                'nomeCliente' => trim((string) ($data['nome'] ?? '')),
+                                'cognomeCliente' => trim((string) ($data['cognome'] ?? '')),
+                                'emailCliente' => strtolower(trim((string) ($data['email'] ?? ''))),
+                                'telefonoCliente' => trim((string) ($data['telefono'] ?? '')),
+                                'updated_at' => now(),
+                            ]);
+
+                        Notification::make()
+                            ->title('Cliente aggiornato')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('elimina_manuale')
+                    ->label('Elimina')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (Cliente $record): bool => (int) $record->numero_ordini === 0)
+                    ->action(function (Cliente $record): void {
+                        DB::table('clienti')
+                            ->whereRaw('LOWER(TRIM(emailCliente)) = ?', [strtolower(trim($record->email))])
+                            ->delete();
+
+                        Notification::make()
+                            ->title('Cliente eliminato')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 // 
@@ -169,6 +252,7 @@ class ClienteResource extends Resource
     {
         return [
             'index' => Pages\ListClientes::route('/'),
+            'create' => Pages\CreateCliente::route('/create'),
         ];
     }
 }

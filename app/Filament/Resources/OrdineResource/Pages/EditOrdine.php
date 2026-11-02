@@ -10,11 +10,22 @@ class EditOrdine extends EditRecord
 {
     protected static string $resource = OrdineResource::class;
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['modificato_manualmente'] = 1;
+
+        return $data;
+    }
+
     protected function afterSave(): void
     {
         $record = $this->record;
         if (!$record) {
             return;
+        }
+
+        if (!$record->modificato_manualmente) {
+            $record->updateQuietly(['modificato_manualmente' => 1]);
         }
 
         $record->load('righe');
