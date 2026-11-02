@@ -111,10 +111,22 @@ class EntrataUscitaResource extends Resource
                     ->label('Causale')
                     ->searchable()
                     ->formatStateUsing(function ($state, $record) {
+                        $shortCausale = \Illuminate\Support\Str::limit((string) $state, 40);
                         $hasNote = !empty(trim((string) ($record->descrizione ?? '')));
-                        return $hasNote ? ($state . ' *') : $state;
+                        return $hasNote ? ($shortCausale . ' *') : $shortCausale;
                     })
-                    ->tooltip(fn ($record) => !empty(trim((string) ($record->descrizione ?? ''))) ? $record->descrizione : null),
+                    ->tooltip(function ($record) {
+                        $causale = trim((string) ($record->causale ?? ''));
+                        $nota = trim((string) ($record->descrizione ?? ''));
+                        $isTruncated = mb_strlen($causale) > 40;
+                        if ($isTruncated && $nota !== '') {
+                            return $causale . ' — Nota: ' . $nota;
+                        }
+                        if ($nota !== '') {
+                            return $nota;
+                        }
+                        return $isTruncated ? $causale : null;
+                    }),
                 Tables\Columns\TextColumn::make('importo')
                     ->label('Importo')
                     ->money('eur')

@@ -79,7 +79,17 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
         $rinnovi = (float)(clone $rinnoviQuery)->sum('importo');
         $rinnoviCount = (int)(clone $rinnoviQuery)->count();
 
-        // 8. Altre Uscite
+        // 8. Provvigioni PR
+        $provvigioniPrQuery = (clone $usciteQuery)->where(function ($q) {
+            $q->where('causale', 'LIKE', '%provvigion%')
+              ->orWhere('causale', 'LIKE', 'pr %')
+              ->orWhere('causale', 'LIKE', '% pr %')
+              ->orWhere('causale', 'LIKE', '% pr');
+        });
+        $provvigioniPr = (float)(clone $provvigioniPrQuery)->sum('importo');
+        $provvigioniPrCount = (int)(clone $provvigioniPrQuery)->count();
+
+        // 9. Altre Uscite
         $altreSpeseQuery = (clone $usciteQuery)
             ->where('causale', 'NOT LIKE', '%google%')
             ->where('causale', 'NOT LIKE', '%facebook%')
@@ -87,6 +97,10 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
             ->where('causale', 'NOT LIKE', '%fb%')
             ->where('causale', 'NOT LIKE', '%tiktok%')
             ->where('causale', 'NOT LIKE', '%tik tok%')
+            ->where('causale', 'NOT LIKE', '%provvigion%')
+            ->where('causale', 'NOT LIKE', 'pr %')
+            ->where('causale', 'NOT LIKE', '% pr %')
+            ->where('causale', 'NOT LIKE', '% pr')
             ->where('causale', 'NOT LIKE', '%rimbors%')
             ->where('causale', 'NOT LIKE', '%straordinar%')
             ->where('causale', 'NOT LIKE', '%commission%')
@@ -137,6 +151,11 @@ class EntrataUscitaRiepilogoSpese extends StatsOverviewWidget
                 ->description($calcDesc($rinnovi, $rinnoviCount, $totaleUscite))
                 ->descriptionIcon('heroicon-m-globe-americas')
                 ->color('info'),
+
+            Stat::make('Provvigioni PR', '€ ' . number_format($provvigioniPr, 2, ',', '.'))
+                ->description($calcDesc($provvigioniPr, $provvigioniPrCount, $totaleUscite))
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color('warning'),
 
             Stat::make('Altre Uscite', '€ ' . number_format($altreSpese, 2, ',', '.'))
                 ->description($calcDesc($altreSpese, $altreCount, $totaleUscite))
