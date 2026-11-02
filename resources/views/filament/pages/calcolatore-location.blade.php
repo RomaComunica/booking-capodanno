@@ -164,168 +164,10 @@
                 </div>
             </div>
 
-            {{-- Filtro Biglietto Attivo --}}
-            @if($filtroBiglietto)
-            <div class="mt-4 p-3 bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 rounded-xl flex items-center justify-between text-xs hidden-print">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-o-funnel class="h-4 w-4 text-primary-600 dark:text-primary-400" />
-                    <span class="font-bold text-gray-900 dark:text-white">Filtro applicato agli ordini:</span>
-                    <span class="px-2 py-0.5 rounded-full font-bold bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200">
-                        {{ $filtroBiglietto }}
-                    </span>
-                </div>
-                <button 
-                    type="button" 
-                    wire:click="resetFiltroBiglietto" 
-                    class="font-bold text-primary-700 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                    <span>Rimuovi filtro (mostra tutti gli ordini)</span>
-                    <span>&times;</span>
-                </button>
-            </div>
-            @endif
-
-            {{-- Tabella Dettagli --}}
-            <div class="overflow-x-auto mt-6">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
-                    <thead class="bg-gray-100 dark:bg-slate-900">
-                        <tr>
-                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Ordine / Cliente
-                            </th>
-                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Location
-                            </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase report-locale-hide">
-                                Metodo Pag.
-                            </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Tavolo
-                            </th>
-                            <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Biglietto
-                            </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Q.tà
-                            </th>
-                            <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Prezzo
-                            </th>
-                            <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
-                                Venduto
-                            </th>
-                            <th class="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 uppercase report-locale-hide">
-                                Provv.
-                            </th>
-                            <th class="px-3 py-3 text-right font-bold text-gray-900 dark:text-white uppercase report-locale-hide">
-                                Quota Loc.
-                            </th>
-                            <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase hidden-print report-locale-hide">
-                                Pagata Location
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @php
-                            $dettagliMostrati = $filtroBiglietto 
-                                ? array_filter($risultati['dettagli'], fn($d) => $d['biglietto'] === $filtroBiglietto) 
-                                : $risultati['dettagli'];
-                            $totQtaMostrati = array_sum(array_column($dettagliMostrati, 'quantita'));
-                            $totVendutoMostrati = array_sum(array_column($dettagliMostrati, 'venduto'));
-                            $totProvvMostrati = array_sum(array_column($dettagliMostrati, 'provvigione'));
-                            $totDareMostrati = array_sum(array_column($dettagliMostrati, 'dare'));
-                        @endphp
-                        @foreach($dettagliMostrati as $dettaglio)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-3 py-3 whitespace-nowrap text-gray-900 dark:text-white">
-                                <div class="font-bold">#{{ $dettaglio['numeroOrdine'] }}</div>
-                                <div class="text-[11px] text-gray-600 dark:text-gray-300">{{ $dettaglio['cliente'] }}</div>
-                            </td>
-                            <td class="px-3 py-3 text-gray-900 dark:text-white font-medium">
-                                {{ $dettaglio['location'] }}
-                            </td>
-                            <td class="px-3 py-3 text-center whitespace-nowrap report-locale-hide">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-slate-600">
-                                    {{ $dettaglio['metodo_pagamento'] }}
-                                </span>
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center">
-                                <span class="visible-print" style="display: none; font-weight: bold; color: #111;">
-                                    {{ $tavoli[$dettaglio['index']] ?: '—' }}
-                                </span>
-                                <input 
-                                    type="text" 
-                                    wire:model.live.debounce.500ms="tavoli.{{ $dettaglio['index'] }}" 
-                                    class="block w-full max-w-[100px] mx-auto rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs hidden-print"
-                                    placeholder="Tavolo..."
-                                >
-                            </td>
-                            <td class="px-3 py-3 text-gray-900 dark:text-white">
-                                {{ $dettaglio['biglietto'] }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white">
-                                {{ $dettaglio['quantita'] }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right text-gray-700 dark:text-gray-300">
-                                € {{ number_format($dettaglio['prezzo'], 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-gray-900 dark:text-white">
-                                € {{ number_format($dettaglio['venduto'], 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-primary-600 dark:text-primary-400 report-locale-hide">
-                                € {{ number_format($dettaglio['provvigione'], 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right font-extrabold text-gray-900 dark:text-white report-locale-hide">
-                                € {{ number_format($dettaglio['dare'], 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center hidden-print report-locale-hide">
-                                <button 
-                                    type="button" 
-                                    wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs transition-all cursor-pointer"
-                                    style="{{ $dettaglio['is_pagata_location'] ? 'background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;' : 'background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;' }}"
-                                    title="Clicca per cambiare lo stato di pagamento alla location"
-                                >
-                                    @if($dettaglio['is_pagata_location'])
-                                        <x-heroicon-s-check-circle class="h-4 w-4" style="color: #16a34a !important; flex-shrink: 0;" />
-                                        <span style="color: #15803d !important; font-weight: 700 !important;">Pagata</span>
-                                    @else
-                                        <x-heroicon-s-x-circle class="h-4 w-4" style="color: #dc2626 !important; flex-shrink: 0;" />
-                                        <span style="color: #b91c1c !important; font-weight: 700 !important;">Non Pagata</span>
-                                    @endif
-                                </button>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-100 dark:bg-slate-900 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700">
-                        <tr>
-                            <td colspan="5" data-locale-colspan="4" class="px-3 py-4 text-right">
-                                {{ $filtroBiglietto ? 'TOTALI FILTRATI (' . count($dettagliMostrati) . ' righe):' : 'TOTALI COMPLESSIVI:' }}
-                            </td>
-                            <td class="px-3 py-4 text-center font-extrabold">
-                                {{ $totQtaMostrati }}
-                            </td>
-                            <td class="px-3 py-4"></td>
-                            <td class="px-3 py-4 text-right font-extrabold">
-                                € {{ number_format($totVendutoMostrati, 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-4 text-right font-extrabold text-primary-600 dark:text-primary-400 report-locale-hide">
-                                € {{ number_format($totProvvMostrati, 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-4 text-right font-extrabold text-green-600 dark:text-green-400 text-sm report-locale-hide">
-                                € {{ number_format($totDareMostrati, 2, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-4 hidden-print report-locale-hide"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            {{-- Aggregatore per Tipologia Biglietto --}}
+            {{-- 1. Aggregatore per Tipologia Biglietto --}}
             @php $ingressiAggregati = $this->getIngressiAggregati(); @endphp
             @if(!empty($ingressiAggregati))
-            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+            <div class="mt-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <x-heroicon-o-ticket class="h-5 w-5 text-primary-500" style="width: 20px; height: 20px;" />
@@ -402,7 +244,7 @@
                                         type="button" 
                                         wire:click="filtraPerBiglietto('{{ addslashes($item['biglietto']) }}')"
                                         class="inline-flex items-center justify-center p-1.5 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-950/60 transition-all cursor-pointer {{ $isAttivo ? 'bg-primary-200 text-primary-800 ring-2 ring-primary-500' : '' }}"
-                                        title="{{ $isAttivo ? 'Rimuovi filtro ordini' : 'Filtra gli ordini sopra per questo biglietto' }}"
+                                        title="{{ $isAttivo ? 'Rimuovi filtro ordini' : 'Filtra gli ordini sotto per questo biglietto' }}"
                                     >
                                         <x-heroicon-o-magnifying-glass class="h-4 w-4" />
                                     </button>
@@ -437,6 +279,176 @@
                 </div>
             </div>
             @endif
+
+            {{-- 2. Dettaglio Singoli Ordini --}}
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <x-heroicon-o-list-bullet class="h-5 w-5 text-primary-500" style="width: 20px; height: 20px;" />
+                        <span>Dettaglio Singoli Ordini</span>
+                    </h3>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ count($risultati['dettagli']) }} righe ordine complessive
+                    </span>
+                </div>
+
+                {{-- Filtro Biglietto Attivo --}}
+                @if($filtroBiglietto)
+                <div class="mb-4 p-3 bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 rounded-xl flex items-center justify-between text-xs hidden-print">
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-o-funnel class="h-4 w-4 text-primary-600 dark:text-primary-400" />
+                        <span class="font-bold text-gray-900 dark:text-white">Filtro applicato agli ordini:</span>
+                        <span class="px-2 py-0.5 rounded-full font-bold bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200">
+                            {{ $filtroBiglietto }}
+                        </span>
+                    </div>
+                    <button 
+                        type="button" 
+                        wire:click="resetFiltroBiglietto" 
+                        class="font-bold text-primary-700 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                        <span>Rimuovi filtro (mostra tutti gli ordini)</span>
+                        <span>&times;</span>
+                    </button>
+                </div>
+                @endif
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
+                        <thead class="bg-gray-100 dark:bg-slate-900">
+                            <tr>
+                                <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Ordine / Cliente
+                                </th>
+                                <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Location
+                                </th>
+                                <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase report-locale-hide">
+                                    Metodo Pag.
+                                </th>
+                                <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Tavolo
+                                </th>
+                                <th class="px-3 py-3 text-left font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Biglietto
+                                </th>
+                                <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Q.tà
+                                </th>
+                                <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Prezzo
+                                </th>
+                                <th class="px-3 py-3 text-right font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Venduto
+                                </th>
+                                <th class="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 uppercase report-locale-hide">
+                                    Provv.
+                                </th>
+                                <th class="px-3 py-3 text-right font-bold text-gray-900 dark:text-white uppercase report-locale-hide">
+                                    Quota Loc.
+                                </th>
+                                <th class="px-3 py-3 text-center font-bold text-gray-700 dark:text-gray-300 uppercase hidden-print report-locale-hide">
+                                    Pagata Location
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @php
+                                $dettagliMostrati = $filtroBiglietto 
+                                    ? array_filter($risultati['dettagli'], fn($d) => $d['biglietto'] === $filtroBiglietto) 
+                                    : $risultati['dettagli'];
+                                $totQtaMostrati = array_sum(array_column($dettagliMostrati, 'quantita'));
+                                $totVendutoMostrati = array_sum(array_column($dettagliMostrati, 'venduto'));
+                                $totProvvMostrati = array_sum(array_column($dettagliMostrati, 'provvigione'));
+                                $totDareMostrati = array_sum(array_column($dettagliMostrati, 'dare'));
+                            @endphp
+                            @foreach($dettagliMostrati as $dettaglio)
+                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-3 py-3 whitespace-nowrap text-gray-900 dark:text-white">
+                                    <div class="font-bold">#{{ $dettaglio['numeroOrdine'] }}</div>
+                                    <div class="text-[11px] text-gray-600 dark:text-gray-300">{{ $dettaglio['cliente'] }}</div>
+                                </td>
+                                <td class="px-3 py-3 text-gray-900 dark:text-white font-medium">
+                                    {{ $dettaglio['location'] }}
+                                </td>
+                                <td class="px-3 py-3 text-center whitespace-nowrap report-locale-hide">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-slate-600">
+                                        {{ $dettaglio['metodo_pagamento'] }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-center">
+                                    <span class="visible-print" style="display: none; font-weight: bold; color: #111;">
+                                        {{ $tavoli[$dettaglio['index']] ?: '—' }}
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        wire:model.live.debounce.500ms="tavoli.{{ $dettaglio['index'] }}" 
+                                        class="block w-full max-w-[100px] mx-auto rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs hidden-print"
+                                        placeholder="Tavolo..."
+                                    >
+                                </td>
+                                <td class="px-3 py-3 text-gray-900 dark:text-white">
+                                    {{ $dettaglio['biglietto'] }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-center font-bold text-gray-900 dark:text-white">
+                                    {{ $dettaglio['quantita'] }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-right text-gray-700 dark:text-gray-300">
+                                    € {{ number_format($dettaglio['prezzo'], 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-gray-900 dark:text-white">
+                                    € {{ number_format($dettaglio['venduto'], 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-primary-600 dark:text-primary-400 report-locale-hide">
+                                    € {{ number_format($dettaglio['provvigione'], 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-right font-extrabold text-gray-900 dark:text-white report-locale-hide">
+                                    € {{ number_format($dettaglio['dare'], 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap text-center hidden-print report-locale-hide">
+                                    <button 
+                                        type="button" 
+                                        wire:click="togglePagamentoLocation({{ $dettaglio['numeroOrdine'] }})" 
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                        style="{{ $dettaglio['is_pagata_location'] ? 'background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac !important;' : 'background-color: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fca5a5 !important;' }}"
+                                        title="Clicca per cambiare lo stato di pagamento alla location"
+                                    >
+                                        @if($dettaglio['is_pagata_location'])
+                                            <x-heroicon-s-check-circle class="h-4 w-4" style="color: #16a34a !important; flex-shrink: 0;" />
+                                            <span style="color: #15803d !important; font-weight: 700 !important;">Pagata</span>
+                                        @else
+                                            <x-heroicon-s-x-circle class="h-4 w-4" style="color: #dc2626 !important; flex-shrink: 0;" />
+                                            <span style="color: #b91c1c !important; font-weight: 700 !important;">Non Pagata</span>
+                                        @endif
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-100 dark:bg-slate-900 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700">
+                            <tr>
+                                <td colspan="5" data-locale-colspan="4" class="px-3 py-4 text-right">
+                                    {{ $filtroBiglietto ? 'TOTALI FILTRATI (' . count($dettagliMostrati) . ' righe):' : 'TOTALI COMPLESSIVI:' }}
+                                </td>
+                                <td class="px-3 py-4 text-center font-extrabold">
+                                    {{ $totQtaMostrati }}
+                                </td>
+                                <td class="px-3 py-4"></td>
+                                <td class="px-3 py-4 text-right font-extrabold">
+                                    € {{ number_format($totVendutoMostrati, 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 text-right font-extrabold text-primary-600 dark:text-primary-400 report-locale-hide">
+                                    € {{ number_format($totProvvMostrati, 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 text-right font-extrabold text-green-600 dark:text-green-400 text-sm report-locale-hide">
+                                    € {{ number_format($totDareMostrati, 2, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 hidden-print report-locale-hide"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
 
             {{-- Tavoli Aggregati --}}
             @php $tavoliAggregati = $this->getTavoliAggregati(); @endphp
