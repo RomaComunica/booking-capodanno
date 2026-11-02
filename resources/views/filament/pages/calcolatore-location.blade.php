@@ -1,49 +1,5 @@
 <x-filament-panels::page>
-    <div
-        class="space-y-6"
-        x-data="{
-            stampaReportLocale(modalita = 'completo') {
-                let titles = {
-                    completo: 'Report Vendite Location',
-                    riepilogo: 'Riepilogo Tipologie - Location',
-                    ordini: 'Lista Singoli Ordini - Location'
-                };
-                let printWindow = window.open('', '_blank', 'width=1100,height=800');
-                printWindow.document.write('<html><head><title>' + (titles[modalita] || 'Report Vendite Location') + '</title>');
-                printWindow.document.write('<style>');
-                printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
-                printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
-                printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
-                printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
-                printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
-                printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
-                printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
-                printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
-                printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
-                printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
-                printWindow.document.write('.text-center { text-align: center; }');
-                printWindow.document.write('.text-right { text-align: right; }');
-                printWindow.document.write('.font-bold { font-weight: bold; }');
-                printWindow.document.write('.text-lg { font-size: 15px; }');
-                printWindow.document.write('.hidden-print { display: none !important; }');
-                printWindow.document.write('.visible-print { display: inline !important; }');
-                printWindow.document.write('</style>');
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
-                printWindow.document.write('</body></html>');
-                printWindow.document.close();
-                printWindow.document.querySelectorAll('.report-locale-hide').forEach(el => el.remove());
-                printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
-                if (modalita === 'riepilogo') {
-                    printWindow.document.querySelectorAll('.print-sezione-ordini, .print-sezione-tavoli, .print-righe-badge').forEach(el => el.remove());
-                } else if (modalita === 'ordini') {
-                    printWindow.document.querySelectorAll('.print-sezione-riepilogo').forEach(el => el.remove());
-                }
-                printWindow.focus();
-                setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-            }
-        }"
-    >
+    <div class="space-y-6">
         {{-- Form di Selezione --}}
         <div class="glossy-card bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60">
             <form wire:submit="calcola">
@@ -63,7 +19,7 @@
                         icon-position="before"
                         x-on:click="
                             let printWindow = window.open('', '_blank', 'width=1100,height=800');
-                            printWindow.document.write('<html><head><title>Stampa Calcolatore Location</title>');
+                            printWindow.document.write('<html><head><title>Stampa Calcolatore Location<' + '/title>');
                             printWindow.document.write('<style>');
                             printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
                             printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
@@ -82,10 +38,10 @@
                             printWindow.document.write('.bg-green-light { background-color: #f0fdf4; }');
                             printWindow.document.write('.hidden-print { display: none !important; }');
                             printWindow.document.write('.visible-print { display: inline !important; }');
-                            printWindow.document.write('</style>');
-                            printWindow.document.write('</head><body>');
+                            printWindow.document.write('<' + '/style>');
+                            printWindow.document.write('<' + '/head><body>');
                             printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
-                            printWindow.document.write('</body></html>');
+                            printWindow.document.write('<' + '/body><' + '/html>');
                             printWindow.document.close();
                             printWindow.focus();
                             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
@@ -100,7 +56,36 @@
                         color="info"
                         icon="heroicon-o-building-storefront"
                         icon-position="before"
-                        x-on:click="stampaReportLocale('completo')"
+                        x-on:click="
+                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                            printWindow.document.write('<html><head><title>Report Vendite Location<' + '/title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                            printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
+                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                            printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
+                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                            printWindow.document.write('.text-center { text-align: center; }');
+                            printWindow.document.write('.text-right { text-align: right; }');
+                            printWindow.document.write('.font-bold { font-weight: bold; }');
+                            printWindow.document.write('.text-lg { font-size: 15px; }');
+                            printWindow.document.write('.hidden-print { display: none !important; }');
+                            printWindow.document.write('.visible-print { display: inline !important; }');
+                            printWindow.document.write('<' + '/style>');
+                            printWindow.document.write('<' + '/head><body>');
+                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                            printWindow.document.write('<' + '/body><' + '/html>');
+                            printWindow.document.close();
+                            printWindow.document.querySelectorAll('.report-locale-hide').forEach(el => el.remove());
+                            printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
+                            printWindow.focus();
+                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                        "
                     >
                         Stampa Report Locale
                     </x-filament::button>
@@ -114,7 +99,36 @@
                         outlined
                         icon="heroicon-o-ticket"
                         icon-position="before"
-                        x-on:click="stampaReportLocale('riepilogo')"
+                        x-on:click="
+                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                            printWindow.document.write('<html><head><title>Riepilogo Tipologie Location<' + '/title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                            printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
+                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                            printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
+                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                            printWindow.document.write('.text-center { text-align: center; }');
+                            printWindow.document.write('.text-right { text-align: right; }');
+                            printWindow.document.write('.font-bold { font-weight: bold; }');
+                            printWindow.document.write('.text-lg { font-size: 15px; }');
+                            printWindow.document.write('.hidden-print { display: none !important; }');
+                            printWindow.document.write('.visible-print { display: inline !important; }');
+                            printWindow.document.write('<' + '/style>');
+                            printWindow.document.write('<' + '/head><body>');
+                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                            printWindow.document.write('<' + '/body><' + '/html>');
+                            printWindow.document.close();
+                            printWindow.document.querySelectorAll('.report-locale-hide, .print-sezione-ordini, .print-sezione-tavoli, .print-righe-badge').forEach(el => el.remove());
+                            printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
+                            printWindow.focus();
+                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                        "
                     >
                         Stampa Riepilogo Locale
                     </x-filament::button>
@@ -127,7 +141,36 @@
                         outlined
                         icon="heroicon-o-list-bullet"
                         icon-position="before"
-                        x-on:click="stampaReportLocale('ordini')"
+                        x-on:click="
+                            let printWindow = window.open('', '_blank', 'width=1100,height=800');
+                            printWindow.document.write('<html><head><title>Lista Singoli Ordini Location<' + '/title>');
+                            printWindow.document.write('<style>');
+                            printWindow.document.write('body { font-family: system-ui, sans-serif; padding: 20px; color: #111; }');
+                            printWindow.document.write('svg { width: 20px !important; height: 20px !important; max-width: 20px !important; max-height: 20px !important; display: inline-block; vertical-align: middle; margin-right: 6px; }');
+                            printWindow.document.write('h2 { margin-top: 0; margin-bottom: 5px; font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; }');
+                            printWindow.document.write('h3 { margin-top: 25px; margin-bottom: 12px; font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; display: flex; align-items: center; gap: 6px; }');
+                            printWindow.document.write('p { margin: 0 0 15px 0; color: #555; font-size: 13px; }');
+                            printWindow.document.write('.kpi-grid { display: flex; gap: 10px; margin: 14px 0 18px 0; }');
+                            printWindow.document.write('.kpi-card { flex: 0 0 auto; min-width: 200px; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; background: #fafafa; }');
+                            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }');
+                            printWindow.document.write('th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }');
+                            printWindow.document.write('th { background-color: #f5f5f5; font-weight: bold; text-transform: uppercase; font-size: 11px; color: #555; }');
+                            printWindow.document.write('.text-center { text-align: center; }');
+                            printWindow.document.write('.text-right { text-align: right; }');
+                            printWindow.document.write('.font-bold { font-weight: bold; }');
+                            printWindow.document.write('.text-lg { font-size: 15px; }');
+                            printWindow.document.write('.hidden-print { display: none !important; }');
+                            printWindow.document.write('.visible-print { display: inline !important; }');
+                            printWindow.document.write('<' + '/style>');
+                            printWindow.document.write('<' + '/head><body>');
+                            printWindow.document.write(document.getElementById('risultati-calcolatore-stampa').innerHTML);
+                            printWindow.document.write('<' + '/body><' + '/html>');
+                            printWindow.document.close();
+                            printWindow.document.querySelectorAll('.report-locale-hide, .print-sezione-riepilogo').forEach(el => el.remove());
+                            printWindow.document.querySelectorAll('[data-locale-colspan]').forEach(el => el.setAttribute('colspan', el.getAttribute('data-locale-colspan')));
+                            printWindow.focus();
+                            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                        "
                     >
                         Stampa Singoli Ordini Locale
                     </x-filament::button>
