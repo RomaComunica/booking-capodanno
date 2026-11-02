@@ -9,10 +9,12 @@ use App\Models\CategoriaLocation;
 use App\Models\TipologiaLocation;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class LocationResource extends Resource
@@ -230,6 +232,42 @@ class LocationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('attiva')
+                        ->label('Attiva selezionate')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Attiva location selezionate')
+                        ->modalDescription('Vuoi attivare tutte le location selezionate?')
+                        ->modalSubmitActionLabel('Sì, attiva')
+                        ->action(function (Collection $records): void {
+                            $records->each->update(['attivaLocation' => 1]);
+                            Notification::make()
+                                ->title('Location attivate')
+                                ->body(count($records) . ' location attivate con successo')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('disattiva')
+                        ->label('Disattiva selezionate')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Disattiva location selezionate')
+                        ->modalDescription('Vuoi disattivare tutte le location selezionate?')
+                        ->modalSubmitActionLabel('Sì, disattiva')
+                        ->action(function (Collection $records): void {
+                            $records->each->update(['attivaLocation' => 0]);
+                            Notification::make()
+                                ->title('Location disattivate')
+                                ->body(count($records) . ' location disattivate con successo')
+                                ->warning()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     Tables\Actions\BulkAction::make('configura_pagamenti')
                         ->label('Metodi di Pagamento')
                         ->icon('heroicon-o-credit-card')
@@ -250,7 +288,7 @@ class LocationResource extends Resource
                                 ->label('Contanti (Ritiro in Sede)')
                                 ->default(true),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                        ->action(function (Collection $records, array $data): void {
                             $states = [
                                 1 => (bool) ($data['pagamento_1'] ?? true),
                                 2 => (bool) ($data['pagamento_2'] ?? true),
@@ -261,7 +299,7 @@ class LocationResource extends Resource
                             foreach ($records as $record) {
                                 $record->syncPagamentiLocation($states);
                             }
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Metodi di pagamento aggiornati per le location selezionate')
                                 ->success()
                                 ->send();
