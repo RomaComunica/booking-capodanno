@@ -336,29 +336,29 @@
                     </span>
                 </div>
 
-                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-xs">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-xs w-full" style="width: 100%;">
+                    <table class="w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs" style="width: 100% !important; min-width: 100% !important; table-layout: auto;">
                         <thead style="background-color: #fef9c3;" class="dark:bg-slate-900">
                             <tr>
-                                <th class="px-3 py-3 text-left font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                                <th class="px-4 py-3 text-left font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider" style="width: auto;">
                                     Biglietto
                                 </th>
-                                <th class="px-3 py-3 text-center font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                                <th class="px-4 py-3 text-center font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap" style="width: 90px;">
                                     Q.tà
                                 </th>
-                                <th class="px-3 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                                <th class="px-4 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap" style="width: 110px;">
                                     Prezzo
                                 </th>
-                                <th class="px-3 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                                <th class="px-4 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap" style="width: 130px;">
                                     Venduto
                                 </th>
-                                <th class="px-3 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider report-locale-hide">
+                                <th class="px-4 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap report-locale-hide" style="width: 130px;">
                                     Location
                                 </th>
-                                <th class="px-3 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider report-locale-hide">
+                                <th class="px-4 py-3 text-right font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap report-locale-hide" style="width: 140px;">
                                     Utile
                                 </th>
-                                <th class="px-3 py-3 text-center font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider hidden-print">
+                                <th class="px-3 py-3 text-center font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider whitespace-nowrap hidden-print" style="width: 70px;">
                                     Vedi
                                 </th>
                             </tr>
@@ -367,7 +367,7 @@
                             @foreach($ingressiAggregati as $item)
                             @php $isAttivo = ($filtroBiglietto === $item['biglietto']); @endphp
                             <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/50 {{ $isAttivo ? 'bg-primary-50/70 dark:bg-primary-950/40 ring-1 ring-primary-500' : '' }}">
-                                <td class="px-3 py-3 text-gray-900 dark:text-white">
+                                <td class="px-4 py-3 text-gray-900 dark:text-white">
                                     <div class="font-bold text-sm">{{ $item['biglietto'] }}</div>
                                     @if($risultati['is_tutte_le_location'] && !empty($item['location']))
                                         <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
@@ -375,19 +375,19 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-center font-extrabold text-sm text-gray-900 dark:text-white">
+                                <td class="px-4 py-3 whitespace-nowrap text-center font-extrabold text-sm text-gray-900 dark:text-white">
                                     {{ $item['quantita'] }}
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-right font-semibold text-gray-700 dark:text-gray-300">
+                                <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-gray-700 dark:text-gray-300">
                                     € {{ number_format($item['prezzo'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">
+                                <td class="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white">
                                     € {{ number_format($item['venduto'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white report-locale-hide">
+                                <td class="px-4 py-3 whitespace-nowrap text-right font-bold text-gray-900 dark:text-white report-locale-hide">
                                     € {{ number_format($item['dare'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-right report-locale-hide">
+                                <td class="px-4 py-3 whitespace-nowrap text-right report-locale-hide">
                                     <div class="font-bold text-primary-600 dark:text-primary-400">
                                         € {{ number_format($item['provvigione'], 2, ',', '.') }}
                                     </div>
@@ -412,22 +412,22 @@
                         </tbody>
                         <tfoot style="background-color: #dcfce7;" class="dark:bg-green-950/60 font-extrabold text-gray-900 dark:text-white border-t-2 border-green-300 dark:border-green-800">
                             <tr>
-                                <td class="px-3 py-3 text-left font-extrabold text-green-950 dark:text-green-100">
+                                <td class="px-4 py-3 text-left font-extrabold text-green-950 dark:text-green-100">
                                     Totali
                                 </td>
-                                <td class="px-3 py-3 text-center font-extrabold text-green-950 dark:text-green-100 text-sm">
+                                <td class="px-4 py-3 text-center font-extrabold text-green-950 dark:text-green-100 text-sm">
                                     {{ $risultati['totaleQuantita'] }}
                                 </td>
-                                <td class="px-3 py-3 text-center text-gray-500 font-normal">
+                                <td class="px-4 py-3 text-center text-gray-500 font-normal">
                                     -
                                 </td>
-                                <td class="px-3 py-3 text-right font-extrabold text-green-950 dark:text-green-100">
+                                <td class="px-4 py-3 text-right font-extrabold text-green-950 dark:text-green-100">
                                     € {{ number_format($risultati['totaleVenduto'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-3 py-3 text-right font-extrabold text-green-950 dark:text-green-100 report-locale-hide">
+                                <td class="px-4 py-3 text-right font-extrabold text-green-950 dark:text-green-100 report-locale-hide">
                                     € {{ number_format($risultati['totaleDare'], 2, ',', '.') }}
                                 </td>
-                                <td class="px-3 py-3 text-right font-extrabold text-primary-700 dark:text-primary-300 report-locale-hide">
+                                <td class="px-4 py-3 text-right font-extrabold text-primary-700 dark:text-primary-300 report-locale-hide">
                                     € {{ number_format($risultati['totaleProvvigioni'], 2, ',', '.') }}
                                 </td>
                                 <td class="px-3 py-3 hidden-print"></td>
