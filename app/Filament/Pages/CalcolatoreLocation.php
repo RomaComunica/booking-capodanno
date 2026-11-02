@@ -33,6 +33,9 @@ class CalcolatoreLocation extends Page implements HasForms
     // Array matching row index to assigned table name
     public array $tavoli = [];
 
+    // Filtro per visualizzare gli ordini di un singolo biglietto
+    public ?string $filtroBiglietto = null;
+
     public function mount(): void
     {
         $this->form->fill([
@@ -109,6 +112,7 @@ class CalcolatoreLocation extends Page implements HasForms
 
     public function calcola()
     {
+        $this->filtroBiglietto = null;
         $data = $this->form->getState();
         
         $query = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
@@ -294,6 +298,74 @@ class CalcolatoreLocation extends Page implements HasForms
                 ->success()
                 ->send();
         }
+    }
+
+    public function filtraPerBiglietto(?string $biglietto): void
+    {
+        if ($this->filtroBiglietto === $biglietto) {
+            $this->filtroBiglietto = null;
+        } else {
+            $this->filtroBiglietto = $biglietto;
+        }
+    }
+
+    public function resetFiltroBiglietto(): void
+    {
+        $this->filtroBiglietto = null;
+    }
+
+    public function getIngressiAggregati(): array
+    {
+        if (!$this->risultati || empty($this->risultati['dettagli'])) {
+            return [];
+        }
+
+        $aggregati = [];
+        $isTutteLeLocation = (bool)($this->risultati['is_tutte_le_location'] ?? false);
+
+        foreach ($this->risultati['dettagli'] as $d) {
+            $loc = $d['location'] ?? '';
+            $nome = trim($d['biglietto'] ?? '');
+            $prezzo = (float)($d['prezzo'] ?? 0);
+
+            // Se sono selezionate tutte le location, discriminiamo per location; altrimenti solo per nome biglietto e prezzo
+            $key = ($isTutteLeLocation ? $loc . '|' : '') . $nome . '|' . number_format($prezzo, 2, '.', '');
+
+            if (!isset($aggregati[$key])) {
+                $aggregati[$key] = [
+                    'biglietto' => $nome,
+                    'location' => $loc,
+                    'prezzo' => $prezzo,
+                    'quantita' => 0,
+                    'venduto' => 0.0,
+                    'provvigione' => 0.0,
+                    'dare' => 0.0,
+                    'ordini_count' => 0,
+                ];
+            }
+
+            $aggregati[$key]['quantita'] += (int)($d['quantita'] ?? 0);
+            $aggregati[$key]['venduto'] += (float)($d['venduto'] ?? 0);
+            $aggregati[$key]['provvigione'] += (float)($d['provvigione'] ?? 0);
+            $aggregati[$key]['dare'] += (float)($d['dare'] ?? 0);
+            $aggregati[$key]['ordini_count']++;
+        }
+
+        foreach ($aggregati as &$item) {
+            $item['utile_unitario'] = $item['quantita'] > 0
+                ? ($item['provvigione'] / $item['quantita'])
+                : 0.0;
+        }
+        unset($item);
+
+        uasort($aggregati, function ($a, $b) {
+            if ($b['quantita'] === $a['quantita']) {
+                return $b['venduto'] <=> $a['venduto'];
+            }
+            return $b['quantita'] <=> $a['quantita'];
+        });
+
+        return array_values($aggregati);
     }
 
     private function isBlacklistedTableWord(string $word): bool
