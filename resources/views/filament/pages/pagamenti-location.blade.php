@@ -247,14 +247,14 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-slate-700/60">
             <!-- Ricerca & Filtri Stato -->
             <div class="flex flex-wrap items-center gap-3">
-                <div class="relative w-64">
+                <div style="width: 240px;">
                     <input
                         type="text"
                         wire:model.live.debounce.300ms="search"
                         placeholder="Cerca location..."
-                        class="w-full text-xs rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white pl-8 pr-3 py-2 shadow-xs focus:ring-primary-500 focus:border-primary-500"
+                        style="width: 100%; font-size: 13px; padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;"
+                        class="bg-white dark:bg-gray-700 text-gray-900 dark:text-white dark:border-gray-600 focus:border-primary-500"
                     />
-                    <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400 absolute left-2.5 top-2.5" />
                 </div>
 
                 <div class="inline-flex rounded-lg border border-gray-200 dark:border-slate-700 p-0.5 bg-gray-50 dark:bg-slate-900 text-xs">
