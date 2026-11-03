@@ -1,6 +1,5 @@
 <x-filament-panels::page>
     @php
-        $report = $this->getReportData();
         $selectedCount = count(array_filter($this->selectedLocations));
     @endphp
 
@@ -86,7 +85,7 @@
                     <input
                         type="text"
                         wire:model.live.debounce.300ms="search"
-                        placeholder="Cerca location o città..."
+                        placeholder="Cerca location..."
                         class="w-full text-xs rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white pl-8 pr-3 py-2 shadow-xs focus:ring-primary-500 focus:border-primary-500"
                     />
                     <x-heroicon-o-magnifying-glass class="h-4 w-4 text-gray-400 absolute left-2.5 top-2.5" />
@@ -193,11 +192,6 @@
                             <div class="font-bold text-sm text-gray-900 dark:text-white">
                                 {{ $loc['nomeLocation'] }}
                             </div>
-                            @if(!empty($loc['cittaLocation']))
-                            <div class="text-[11px] text-gray-500 dark:text-gray-400">
-                                📍 {{ $loc['cittaLocation'] }}
-                            </div>
-                            @endif
                         </td>
 
                         <!-- Ordini e Biglietti -->

@@ -149,7 +149,7 @@ class Comparatore extends Page implements HasForms
                     })
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'anno_contro_anno')
-                    ->columnSpan(2),
+                    ->columnSpan(['default' => 4, 'sm' => 2]),
 
                 Select::make('anno_2')
                     ->label('Anno 2 (Successivo)')
@@ -162,32 +162,32 @@ class Comparatore extends Page implements HasForms
                     })
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'anno_contro_anno')
-                    ->columnSpan(2),
+                    ->columnSpan(['default' => 4, 'sm' => 2]),
 
                 // Date per Periodo Personalizzato
                 DatePicker::make('periodo_1_da')
                     ->label('Periodo 1: Da')
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'periodo_personalizzato')
-                    ->columnSpan(1),
+                    ->columnSpan(['default' => 2, 'sm' => 1]),
 
                 DatePicker::make('periodo_1_a')
                     ->label('A')
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'periodo_personalizzato')
-                    ->columnSpan(1),
+                    ->columnSpan(['default' => 2, 'sm' => 1]),
 
                 DatePicker::make('periodo_2_da')
                     ->label('Periodo 2: Da')
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'periodo_personalizzato')
-                    ->columnSpan(1),
+                    ->columnSpan(['default' => 2, 'sm' => 1]),
 
                 DatePicker::make('periodo_2_a')
                     ->label('A')
                     ->required()
                     ->visible(fn ($get) => $get('tipo_confronto') === 'periodo_personalizzato')
-                    ->columnSpan(1),
+                    ->columnSpan(['default' => 2, 'sm' => 1]),
             ])
             ->columns(4)
             ->statePath('data');

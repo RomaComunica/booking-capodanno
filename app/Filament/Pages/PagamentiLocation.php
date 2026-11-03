@@ -56,6 +56,13 @@ class PagamentiLocation extends Page implements HasForms
         ]);
     }
 
+    public function getViewData(): array
+    {
+        return [
+            'report' => $this->getReportData(),
+        ];
+    }
+
     public function form(Form $form): Form
     {
         return $form
@@ -139,7 +146,6 @@ class PagamentiLocation extends Page implements HasForms
                 'ordini.idLocationOrdine',
                 'location.idLocation',
                 'location.nomeLocation',
-                'location.cittaLocation',
                 'tipo_pagamenti.nomePagamento',
             ])
             ->get();
@@ -219,7 +225,6 @@ class PagamentiLocation extends Page implements HasForms
                     'cliente' => trim(($riga->nomeClienteOrdine ?? '') . ' ' . ($riga->cognomeClienteOrdine ?? '')),
                     'idLocation' => $locId,
                     'nomeLocation' => $riga->nomeLocation ?: 'Location #' . $locId,
-                    'cittaLocation' => $riga->cittaLocation ?: '',
                     'metodoPagamento' => $riga->nomePagamento ?: 'Bonifico',
                     'venduto' => 0,
                     'provvigione' => 0,
@@ -250,7 +255,6 @@ class PagamentiLocation extends Page implements HasForms
                 $locationsMap[$locId] = [
                     'idLocation' => $locId,
                     'nomeLocation' => $ord['nomeLocation'],
-                    'cittaLocation' => $ord['cittaLocation'],
                     'totaleOrdini' => 0,
                     'ordiniPagati' => 0,
                     'ordiniDaPagare' => 0,
@@ -289,7 +293,7 @@ class PagamentiLocation extends Page implements HasForms
         $searchLower = mb_strtolower(trim($this->search));
         $filteredLocations = array_filter($locationsMap, function ($loc) use ($searchLower) {
             if ($searchLower !== '') {
-                $name = mb_strtolower($loc['nomeLocation'] . ' ' . $loc['cittaLocation']);
+                $name = mb_strtolower($loc['nomeLocation']);
                 if (!str_contains($name, $searchLower)) {
                     return false;
                 }
