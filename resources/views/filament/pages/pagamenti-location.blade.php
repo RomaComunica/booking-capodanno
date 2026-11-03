@@ -2,6 +2,16 @@
     <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
 
     <style>
+        .pl-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        @media (max-width: 640px) {
+            .pl-kpi-grid {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+            }
+        }
         .pl-kpi-card {
             border-radius: 12px;
             padding: 18px 20px;
@@ -9,7 +19,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 110px;
+            min-height: 105px;
         }
         .pl-kpi-red {
             background-color: #fef2f2 !important;
@@ -174,8 +184,8 @@
             {{ $this->form }}
         </div>
 
-        {{-- Panoramica Globale KPI Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {{-- Panoramica Globale KPI Cards (2 per riga) --}}
+        <div class="pl-kpi-grid">
             <!-- Residuo Totale da Saldare -->
             <div class="pl-kpi-card pl-kpi-red">
                 <div class="flex items-center justify-between">
