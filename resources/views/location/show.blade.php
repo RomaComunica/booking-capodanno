@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('meta_title', $location->nomeLocation . ' - Capodanno ' . date('Y'))
+@section('meta_title', $location->nomeLocation . ' - Capodanno ' . (date('Y') + 1))
 @section('meta_description', Str::limit(strip_tags($location->descrizioneLocation), 160))
 @section('og_image', $location->image_url ?? asset('loghi/' . $location->idLocation . '.jpg'))
 
