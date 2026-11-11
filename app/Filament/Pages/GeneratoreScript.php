@@ -77,7 +77,7 @@ class GeneratoreScript extends Page
                             
                         Forms\Components\ColorPicker::make('colore_sfondo')
                             ->label('Colore Sfondo')
-                            ->default('#000000')
+                            ->default('#16A34A')
                             ->live()
                             ->afterStateUpdated(fn ($state) => $this->generaCodice(['colore_sfondo' => $state])),
                             
@@ -156,7 +156,7 @@ class GeneratoreScript extends Page
             $code = $url;
         } elseif ($tipo === 'button') {
             $testo = trim($data['testo_pulsante'] ?? 'Prenota Ora');
-            $bg = $data['colore_sfondo'] ?? '#000000';
+            $bg = $data['colore_sfondo'] ?? '#16A34A';
             $color = $data['colore_testo'] ?? '#ffffff';
             
             $code = '<a href="#iframenew" style="display:inline-block; padding:12px 24px; background-color:' . $bg . '; color:' . $color . '; text-decoration:none; border-radius:30px; font-weight:bold; font-family:sans-serif;">' . $testo . '</a>';
