@@ -50,14 +50,20 @@
             padding-right: 2.25rem !important;
             box-sizing: border-box !important;
         }
-        body.iframe-body .container,
-        body.iframe-body .booking-container {
-            max-width: 100% !important;
-            padding: 1.75rem 2.25rem 2rem 2.25rem !important;
+        body.iframe-body {
+            padding: 1.25rem 1.75rem !important;
             box-sizing: border-box !important;
         }
         body.iframe-body .main-content {
-            padding: 0 !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 1rem !important;
+        }
+        body.iframe-body .container,
+        body.iframe-body .container.main-content,
+        body.iframe-body .booking-container {
+            max-width: 100% !important;
+            padding: 0.5rem 1.25rem 1rem 1.25rem !important;
+            box-sizing: border-box !important;
         }
         .detail-pad,
         body.iframe-body .detail-pad {

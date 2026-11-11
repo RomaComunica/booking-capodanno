@@ -1035,7 +1035,8 @@ a:hover {
 body.iframe-body {
     background-color: var(--bg-primary) !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 1.25rem 1.75rem !important;
+    box-sizing: border-box !important;
 }
 
 body.iframe-body .site-header,
@@ -1043,20 +1044,24 @@ body.iframe-body .site-footer {
     display: none !important;
 }
 
-body.iframe-body .container {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-}
-
 body.iframe-body .main-content {
-    padding: 1.5rem 0 2rem 0 !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 1rem !important;
 }
 
 body.iframe-body .main-content .main-content {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+}
+
+body.iframe-body .container,
+body.iframe-body .container.main-content,
+body.iframe-body .booking-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    box-sizing: border-box !important;
 }
 
 body.iframe-body .page-header {
@@ -1083,12 +1088,18 @@ body.iframe-body .detail-pad {
     .container {
         padding: 0 1rem;
     }
-    body.iframe-body .container {
-        padding-left: 0.85rem !important;
-        padding-right: 0.85rem !important;
+    body.iframe-body {
+        padding: 0.75rem 0.65rem !important;
     }
     body.iframe-body .main-content {
-        padding: 1rem 0 1.25rem 0 !important;
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+    body.iframe-body .container,
+    body.iframe-body .container.main-content,
+    body.iframe-body .booking-container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
     body.iframe-body .detail-pad {
         padding: 1rem 0.75rem !important;
