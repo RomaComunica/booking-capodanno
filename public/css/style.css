@@ -542,20 +542,26 @@ a:hover {
     }
     
     .page-title {
-        font-size: 1.4rem;
+        font-size: 1.15rem;
         margin-bottom: 0.1rem;
     }
 
     .page-subtitle {
-        font-size: 0.92rem;
+        font-size: 0.78rem;
     }
     
     .filter-grid {
         grid-template-columns: 1fr;
     }
 
+    .panel-heading {
+        font-size: 0.92rem;
+        margin-bottom: 0.65rem;
+        line-height: 1.25;
+    }
+
     .detail-pad {
-        padding: 0.75rem 0.25rem;
+        padding: 0.75rem 0.4rem;
     }
 
     .table-responsive {
@@ -567,9 +573,13 @@ a:hover {
         width: 100% !important;
     }
 
-    .modern-table th,
+    .modern-table th {
+        font-size: 0.7rem;
+        padding: 0.5rem 0.3rem;
+    }
+
     .modern-table td {
-        padding: 0.6rem 0.25rem;
+        padding: 0.55rem 0.3rem;
     }
 
     .col-datetime {
@@ -577,33 +587,37 @@ a:hover {
     }
 
     .col-price {
-        width: 68px !important;
+        width: 60px !important;
         white-space: nowrap !important;
-        font-size: 0.9rem !important;
+        font-size: 0.82rem !important;
         padding-left: 2px !important;
         padding-right: 2px !important;
         text-align: center !important;
     }
 
     .col-qty {
-        width: 54px !important;
+        width: 62px !important;
         padding-left: 2px !important;
         padding-right: 2px !important;
         text-align: center !important;
     }
 
-    .qty-input {
-        width: 48px !important;
-        height: 36px !important;
-        padding: 2px 2px !important;
-        font-size: 0.95rem !important;
-        margin: 0 auto !important;
-        box-sizing: border-box !important;
+    .qty-spinner {
+        width: 58px !important;
+        height: 34px !important;
+    }
+
+    .qty-spinner .qty-input {
+        font-size: 0.88rem !important;
+    }
+
+    .qty-arrows {
+        width: 20px !important;
     }
 
     .ticket-name {
-        font-size: 0.92rem !important;
-        line-height: 1.25 !important;
+        font-size: 0.82rem !important;
+        line-height: 1.22 !important;
         word-break: break-word !important;
     }
 
@@ -612,7 +626,7 @@ a:hover {
     }
 
     .refund-label {
-        font-size: 0.8rem !important;
+        font-size: 0.78rem !important;
         line-height: 1.25 !important;
     }
 }
@@ -712,6 +726,78 @@ a:hover {
 .qty-input:focus {
     border-color: #FFFFFF;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.qty-spinner {
+    display: inline-flex;
+    align-items: stretch;
+    width: 82px;
+    height: 40px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.qty-spinner .qty-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+    padding: 0 2px;
+    margin: 0;
+    box-shadow: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.qty-spinner .qty-input::-webkit-inner-spin-button,
+.qty-spinner .qty-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.qty-arrows {
+    display: flex;
+    flex-direction: column;
+    width: 24px;
+    flex-shrink: 0;
+    border-left: 1px solid #cbd5e1;
+    background: #f1f5f9;
+}
+
+.qty-arrow-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.qty-arrow-btn:first-child {
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.qty-arrow-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.qty-arrow-btn:active {
+    background: #cbd5e1;
 }
 
 .badge {
@@ -1086,10 +1172,10 @@ body.iframe-body .detail-pad {
 
 @media (max-width: 768px) {
     .container {
-        padding: 0 1rem;
+        padding: 0 0.5rem;
     }
     body.iframe-body {
-        padding: 0.75rem 0.65rem !important;
+        padding: 0.4rem 0.25rem !important;
     }
     body.iframe-body .main-content {
         padding-top: 0.25rem !important;
@@ -1098,16 +1184,16 @@ body.iframe-body .detail-pad {
     body.iframe-body .container,
     body.iframe-body .container.main-content,
     body.iframe-body .booking-container {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 0.2rem !important;
+        padding-right: 0.2rem !important;
     }
     body.iframe-body .detail-pad {
-        padding: 1rem 0.75rem !important;
+        padding: 0.75rem 0.45rem !important;
     }
     body.iframe-body .page-title {
-        font-size: 1.35rem !important;
+        font-size: 1.15rem !important;
     }
     body.iframe-body .page-subtitle {
-        font-size: 0.85rem !important;
+        font-size: 0.78rem !important;
     }
 }

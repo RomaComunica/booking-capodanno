@@ -107,15 +107,91 @@
                     background-color: #15803D !important;
                     color: #FFFFFF !important;
                 }
+                /* Quantity Spinner con frecce sempre visibili */
+                .qty-spinner {
+                    display: inline-flex !important;
+                    align-items: stretch !important;
+                    width: 82px !important;
+                    height: 40px !important;
+                    background: #ffffff !important;
+                    border: 1px solid #cbd5e1 !important;
+                    border-radius: 6px !important;
+                    overflow: hidden !important;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+                }
+                .qty-spinner .qty-input {
+                    flex: 1 1 auto !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    height: 100% !important;
+                    border: none !important;
+                    background: transparent !important;
+                    color: #0f172a !important;
+                    font-weight: 700 !important;
+                    font-size: 1rem !important;
+                    text-align: center !important;
+                    padding: 0 2px !important;
+                    margin: 0 !important;
+                    box-shadow: none !important;
+                    -moz-appearance: textfield !important;
+                    appearance: textfield !important;
+                }
+                .qty-spinner .qty-input::-webkit-inner-spin-button,
+                .qty-spinner .qty-input::-webkit-outer-spin-button {
+                    -webkit-appearance: none !important;
+                    margin: 0 !important;
+                }
+                .qty-arrows {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    width: 24px !important;
+                    flex-shrink: 0 !important;
+                    border-left: 1px solid #cbd5e1 !important;
+                    background: #f1f5f9 !important;
+                }
+                .qty-arrow-btn {
+                    flex: 1 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    border: none !important;
+                    background: transparent !important;
+                    color: #334155 !important;
+                    cursor: pointer !important;
+                    padding: 0 !important;
+                    line-height: 1 !important;
+                    transition: background-color 0.15s, color 0.15s !important;
+                }
+                .qty-arrow-btn:first-child {
+                    border-bottom: 1px solid #cbd5e1 !important;
+                }
+                .qty-arrow-btn:hover {
+                    background: #e2e8f0 !important;
+                    color: #0f172a !important;
+                }
+                .qty-arrow-btn:active {
+                    background: #cbd5e1 !important;
+                }
                 @media (max-width: 768px) {
                     .booking-container {
-                        padding: 1rem 1rem 1.25rem 1rem !important;
+                        padding: 0.25rem 0.2rem 0.75rem 0.2rem !important;
+                    }
+                    .page-title {
+                        font-size: 1.15rem !important;
+                    }
+                    .page-subtitle {
+                        font-size: 0.78rem !important;
+                    }
+                    .panel-heading {
+                        font-size: 0.92rem !important;
+                        margin-bottom: 0.65rem !important;
+                        line-height: 1.25 !important;
+                    }
+                    .detail-pad {
+                        padding: 0.75rem 0.4rem !important;
                     }
                     .col-datetime {
                         display: none !important;
-                    }
-                    .detail-pad {
-                        padding: 1rem 0.75rem !important;
                     }
                     .table-responsive {
                         overflow-x: hidden !important;
@@ -123,42 +199,53 @@
                     .modern-table {
                         width: 100% !important;
                     }
-                    .modern-table th,
+                    .modern-table th {
+                        font-size: 0.7rem !important;
+                        padding: 0.5rem 0.3rem !important;
+                    }
                     .modern-table td {
-                        padding: 0.6rem 0.25rem !important;
+                        padding: 0.55rem 0.3rem !important;
                     }
                     .col-price {
-                        width: 68px !important;
+                        width: 60px !important;
                         white-space: nowrap !important;
-                        font-size: 0.9rem !important;
+                        font-size: 0.82rem !important;
                         padding-left: 2px !important;
                         padding-right: 2px !important;
                         text-align: center !important;
                     }
                     .col-qty {
-                        width: 54px !important;
+                        width: 62px !important;
                         padding-left: 2px !important;
                         padding-right: 2px !important;
                         text-align: center !important;
                     }
-                    .qty-input {
-                        width: 48px !important;
-                        height: 36px !important;
-                        padding: 2px 2px !important;
-                        font-size: 0.95rem !important;
-                        margin: 0 auto !important;
-                        box-sizing: border-box !important;
+                    .qty-spinner {
+                        width: 58px !important;
+                        height: 34px !important;
+                    }
+                    .qty-spinner .qty-input {
+                        font-size: 0.88rem !important;
+                    }
+                    .qty-arrows {
+                        width: 20px !important;
                     }
                     .ticket-name {
-                        font-size: 0.92rem !important;
-                        line-height: 1.25 !important;
+                        font-size: 0.82rem !important;
+                        line-height: 1.22 !important;
                         word-break: break-word !important;
+                    }
+                    .total-bar {
+                        padding: 0.65rem 0.85rem !important;
+                    }
+                    #totale.total-price {
+                        font-size: 1rem !important;
                     }
                     .refund-wrapper {
                         gap: 0.5rem !important;
                     }
                     .refund-label {
-                        font-size: 0.8rem !important;
+                        font-size: 0.78rem !important;
                         line-height: 1.25 !important;
                     }
                 }
@@ -223,18 +310,28 @@
                                     <input type="hidden" name="etichettaIngresso_{{ $ingresso->idIngressoCont }}" value="{{ $ingresso->etichettaIngresso }}">
 
                                     @if($ingresso->giacenzaBiglietti > 0)
-                                        <input 
-                                            type="number" 
-                                            name="quantitaIngresso_{{ $ingresso->idIngressoCont }}" 
-                                            id="quantitaIngresso_{{ $ingresso->idIngressoCont }}"
-                                            class="form-input qty-input mx-auto"
-                                            placeholder="0"
-                                            min="0"
-                                            max="{{ $ingresso->giacenzaBiglietti }}"
-                                            data-id="{{ $ingresso->idIngressoCont }}"
-                                            data-prezzo="{{ $ingresso->prezzoIngresso }}"
-                                            data-max="{{ $ingresso->giacenzaBiglietti }}"
-                                        >
+                                        <div class="qty-spinner mx-auto">
+                                            <input 
+                                                type="number" 
+                                                name="quantitaIngresso_{{ $ingresso->idIngressoCont }}" 
+                                                id="quantitaIngresso_{{ $ingresso->idIngressoCont }}"
+                                                class="form-input qty-input mx-auto"
+                                                placeholder="0"
+                                                min="0"
+                                                max="{{ $ingresso->giacenzaBiglietti }}"
+                                                data-id="{{ $ingresso->idIngressoCont }}"
+                                                data-prezzo="{{ $ingresso->prezzoIngresso }}"
+                                                data-max="{{ $ingresso->giacenzaBiglietti }}"
+                                            >
+                                            <div class="qty-arrows">
+                                                <button type="button" class="qty-arrow-btn" onclick="stepQuantity('quantitaIngresso_{{ $ingresso->idIngressoCont }}', 1)" aria-label="Aumenta quantità">
+                                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 5L5 1L9 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                </button>
+                                                <button type="button" class="qty-arrow-btn" onclick="stepQuantity('quantitaIngresso_{{ $ingresso->idIngressoCont }}', -1)" aria-label="Diminuisci quantità">
+                                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                     @else
                                         <input type="hidden" name="quantitaIngresso_{{ $ingresso->idIngressoCont }}">
                                         <span class="badge badge-danger">Esaurito</span>
@@ -341,6 +438,23 @@
 
 @push('scripts')
 <script>
+// Step quantity up/down via always-visible arrow buttons
+function stepQuantity(inputId, delta) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const current = parseInt(input.value) || 0;
+    const max = parseInt(input.dataset.max) || 999;
+    let next = current + delta;
+    if (next < 0) next = 0;
+    if (next > max) {
+        alert('Attenzione quantità non disponibile');
+        return;
+    }
+    input.value = next > 0 ? next : '';
+    validateQuantity(input);
+    calcolaTotale();
+}
+
 // Calculate total price in real-time
 function calcolaTotale() {
     let totale = 0;

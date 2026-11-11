@@ -121,22 +121,45 @@
             background-color: #FFFFFF !important;
         }
         @media (max-width: 768px) {
+            body.iframe-body {
+                padding: 0.4rem 0.25rem !important;
+            }
             .container,
             .booking-container {
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
+                padding-left: 0.45rem !important;
+                padding-right: 0.45rem !important;
             }
             body.iframe-body .container,
+            body.iframe-body .container.main-content,
             body.iframe-body .booking-container {
-                padding: 1rem 1rem 1.25rem 1rem !important;
+                padding: 0.25rem 0.2rem 0.75rem 0.2rem !important;
             }
             .detail-pad,
             body.iframe-body .detail-pad {
-                padding: 1.15rem 0.85rem !important;
+                padding: 0.75rem 0.45rem !important;
+            }
+            .page-title,
+            body.iframe-body .page-title {
+                font-size: 1.15rem !important;
+            }
+            .page-subtitle,
+            body.iframe-body .page-subtitle {
+                font-size: 0.78rem !important;
+            }
+            .panel-heading,
+            .section-heading {
+                font-size: 0.92rem !important;
+                margin-bottom: 0.65rem !important;
             }
             .total-price,
-            #totale.total-price {
-                font-size: 1.15rem !important;
+            #totale.total-price,
+            .total-label,
+            .total-amount {
+                font-size: 1rem !important;
+            }
+            .btn {
+                padding: 0.6rem 1rem !important;
+                font-size: 0.9rem !important;
             }
         }
     </style>
