@@ -7,14 +7,16 @@
     --text-primary: #FFFFFF;
     --text-secondary: #A0A0A0;
     
-    --accent-gold: #FFD700;
-    --accent-gold-hover: #E5C100;
-    --accent-gold-light: rgba(255, 215, 0, 0.1);
+    --accent-gold: #FFFFFF;
+    --accent-gold-hover: #E2E8F0;
+    --accent-gold-light: rgba(255, 255, 255, 0.12);
     
-    --border-color: rgba(255, 255, 255, 0.1);
-    --border-color-hover: rgba(255, 215, 0, 0.4);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --border-color-hover: rgba(255, 255, 255, 0.35);
     
     --success: #22C55E;
+    --btn-green: #16A34A;
+    --btn-green-hover: #15803D;
     --danger: #EF4444;
 
     /* Transitions & Shadows */
@@ -23,7 +25,7 @@
     
     --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.2);
-    --shadow-glow: 0 0 15px rgba(255, 215, 0, 0.15);
+    --shadow-glow: 0 6px 16px rgba(22, 163, 74, 0.35);
 }
 
 * {
@@ -69,16 +71,17 @@ a:hover {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 2rem;
 }
 
 .main-content {
     flex: 1;
-    padding: 1rem 0 2rem 0;
+    padding: 1.5rem 0 2.5rem 0;
 }
 
 .main-content .main-content {
-    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 /* Utilities */
@@ -108,12 +111,13 @@ a:hover {
 }
 
 .btn-primary {
-    background-color: var(--accent-gold);
-    color: var(--bg-primary);
+    background-color: var(--btn-green);
+    color: #FFFFFF;
 }
 
 .btn-primary:hover {
-    background-color: var(--accent-gold-hover);
+    background-color: var(--btn-green-hover);
+    color: #FFFFFF;
     transform: translateY(-2px);
     box-shadow: var(--shadow-glow);
 }
@@ -438,11 +442,11 @@ a:hover {
 
 .card-image-placeholder {
     height: 200px;
-    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.02));
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 215, 0, 0.4);
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .card-body {
@@ -643,14 +647,14 @@ a:hover {
 }
 
 .modern-table th {
-    background-color: #1a1a2e;
-    color: var(--accent-gold);
+    background-color: #0a0a0a;
+    color: #FFFFFF;
     padding: 1rem;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--accent-gold);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .modern-table td {
@@ -706,8 +710,8 @@ a:hover {
 }
 
 .qty-input:focus {
-    border-color: var(--accent-gold);
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4);
+    border-color: #FFFFFF;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
 .badge {
@@ -794,17 +798,19 @@ a:hover {
 .total-bar {
     display: flex;
     justify-content: flex-end;
-    padding: 1.5rem;
-    background: var(--bg-primary);
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: #0a0a0a;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    border-left: 4px solid var(--accent-gold);
+    border-left: 4px solid #FFFFFF;
 }
 
 .total-price {
-    font-size: 1.75rem;
-    color: var(--accent-gold);
-    font-weight: 800;
+    font-size: 1.25rem;
+    color: #FFFFFF;
+    font-weight: 700;
+    margin-bottom: 0;
 }
 
 .nav-actions {
@@ -817,10 +823,10 @@ a:hover {
 
 @media (max-width: 768px) {
     .detail-pad {
-        padding: 1.5rem 1rem;
+        padding: 1.25rem 0.85rem;
     }
     .total-price {
-        font-size: 1.5rem;
+        font-size: 1.15rem;
     }
     .modern-table th, .modern-table td {
         padding: 0.75rem 0.5rem;
@@ -901,14 +907,14 @@ a:hover {
 }
 
 .radio-card:hover .radio-content {
-    border-color: rgba(255, 215, 0, 0.3);
-    background-color: rgba(255, 215, 0, 0.02);
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(255, 255, 255, 0.04);
 }
 
 .radio-input:checked + .radio-content {
-    border-color: var(--accent-gold);
-    background-color: rgba(255, 215, 0, 0.05);
-    box-shadow: 0 0 0 1px var(--accent-gold);
+    border-color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 0 1px #FFFFFF;
 }
 
 .radio-circle {
@@ -984,7 +990,13 @@ a:hover {
 }
 
 .total-label {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.total-amount {
+    font-size: 1.25rem;
+    color: #FFFFFF;
+    font-weight: 700;
 }
 
 .my-2 {
@@ -1034,12 +1046,17 @@ body.iframe-body .site-footer {
 body.iframe-body .container {
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 body.iframe-body .main-content {
-    padding: 0.75rem 0 !important;
+    padding: 1.5rem 0 2rem 0 !important;
+}
+
+body.iframe-body .main-content .main-content {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 body.iframe-body .page-header {
@@ -1047,11 +1064,11 @@ body.iframe-body .page-header {
 }
 
 body.iframe-body .divider {
-    margin: 0.75rem 0 !important;
+    margin: 1rem 0 !important;
 }
 
 body.iframe-body .step-indicator {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 1rem !important;
 }
 
 body.iframe-body .glass-panel {
@@ -1059,19 +1076,22 @@ body.iframe-body .glass-panel {
 }
 
 body.iframe-body .detail-pad {
-    padding: 1.25rem 1rem !important;
+    padding: 1.75rem 1.75rem !important;
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
     body.iframe-body .container {
-        padding-left: 0.25rem !important;
-        padding-right: 0.25rem !important;
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
     }
     body.iframe-body .main-content {
-        padding: 0.25rem 0 !important;
+        padding: 1rem 0 1.25rem 0 !important;
     }
     body.iframe-body .detail-pad {
-        padding: 0.6rem 0.25rem !important;
+        padding: 1rem 0.75rem !important;
     }
     body.iframe-body .page-title {
         font-size: 1.35rem !important;

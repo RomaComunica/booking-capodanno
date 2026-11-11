@@ -188,7 +188,7 @@
             </div>
 
             {{-- Next Steps --}}
-            <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.02)); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
                 <h3 style="font-size: 1rem; color: var(--accent-gold); margin-bottom: 1rem;">📧 Prossimi Passi</h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; color: var(--text-secondary); font-size: 0.95rem;">
                     <li>✓ Riceverai un'email di riepilogo all'indirizzo: <strong style="color: var(--text-primary);">{{ $order->emailClienteOrdine }}</strong></li>

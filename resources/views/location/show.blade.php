@@ -79,7 +79,7 @@
                         display: none !important;
                     }
                     .detail-pad {
-                        padding: 0.75rem 0.25rem !important;
+                        padding: 1rem 0.75rem !important;
                     }
                     .table-responsive {
                         overflow-x: hidden !important;
