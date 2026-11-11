@@ -431,6 +431,15 @@ class OrdineResource extends Resource
                     ->sortable()
                     ->limit(22)
                     ->tooltip(fn ($record) => $record->location?->nomeLocation),
+
+                Tables\Columns\TextColumn::make('location.cittaLocation')
+                    ->label('Città')
+                    ->badge()
+                    ->default('Roma')
+                    ->color(fn (?string $state): string => strtolower(trim($state ?? 'roma')) === 'roma' ? 'info' : 'warning')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
                 
                 Tables\Columns\TextColumn::make('emailClienteOrdine')
                     ->label('Email')
@@ -656,6 +665,33 @@ class OrdineResource extends Resource
                         };
                     }),
                 
+                // Città Location
+                Filter::make('citta_location')
+                    ->form([
+                        Forms\Components\Select::make('citta')
+                            ->label('Città Location')
+                            ->placeholder('Tutte le Città')
+                            ->options(fn () => \App\Models\Location::getAvailableCities()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $citta = $data['citta'] ?? null;
+                        if (!$citta) {
+                            return $query;
+                        }
+                        return $query->whereHas('location', function (Builder $q) use ($citta) {
+                            if (strtolower($citta) === 'roma') {
+                                $q->where(function ($sub) {
+                                    $sub->where('cittaLocation', 'Roma')
+                                        ->orWhereNull('cittaLocation')
+                                        ->orWhere('cittaLocation', '');
+                                });
+                            } else {
+                                $q->where('cittaLocation', $citta);
+                            }
+                        });
+                    })
+                    ->indicateUsing(fn (array $data): ?string => !empty($data['citta']) ? 'Città: ' . $data['citta'] : null),
+
                 // Location
                 SelectFilter::make('idLocationOrdine')
                     ->label('Location')

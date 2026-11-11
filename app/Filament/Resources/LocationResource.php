@@ -50,8 +50,16 @@ class LocationResource extends Resource
                         
                         Forms\Components\TextInput::make('indirizzoLocation')
                             ->label('Indirizzo')
-                            ->maxLength(255)
-                            ->columnSpan(2),
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('cittaLocation')
+                            ->label('Città di Riferimento')
+                            ->placeholder('Es. Roma, Milano, Firenze...')
+                            ->default('Roma')
+                            ->required()
+                            ->maxLength(100)
+                            ->datalist(fn () => Location::getCitySuggestions())
+                            ->helperText('Per paesini o località limitrofe inserisci la città principale più vicina.'),
                         
                         Forms\Components\TextInput::make('telefonoLocation')
                             ->label('Telefono')
@@ -200,6 +208,14 @@ class LocationResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->wrap(),
+
+                Tables\Columns\TextColumn::make('cittaLocation')
+                    ->label('Città')
+                    ->badge()
+                    ->default('Roma')
+                    ->color(fn (?string $state): string => strtolower(trim($state ?? 'roma')) === 'roma' ? 'info' : 'warning')
+                    ->searchable()
+                    ->sortable(),
                 
                 Tables\Columns\TextColumn::make('indirizzoLocation')
                     ->label('Indirizzo')
@@ -223,6 +239,10 @@ class LocationResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('cittaLocation')
+                    ->label('Città')
+                    ->options(fn () => Location::getAvailableCities()),
+
                 Tables\Filters\TernaryFilter::make('attivaLocation')
                     ->label('Attiva')
                     ->boolean(),
@@ -264,6 +284,28 @@ class LocationResource extends Resource
                                 ->title('Location disattivate')
                                 ->body(count($records) . ' location disattivate con successo')
                                 ->warning()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('imposta_citta')
+                        ->label('Imposta Città')
+                        ->icon('heroicon-o-map-pin')
+                        ->form([
+                            Forms\Components\TextInput::make('cittaLocation')
+                                ->label('Città di Riferimento')
+                                ->default('Roma')
+                                ->required()
+                                ->maxLength(100)
+                                ->datalist(fn () => Location::getCitySuggestions()),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $citta = ucwords(strtolower(trim($data['cittaLocation'] ?? 'Roma'))) ?: 'Roma';
+                            $records->each->update(['cittaLocation' => $citta]);
+                            Notification::make()
+                                ->title('Città aggiornata')
+                                ->body(count($records) . ' location impostate su ' . $citta)
+                                ->success()
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),

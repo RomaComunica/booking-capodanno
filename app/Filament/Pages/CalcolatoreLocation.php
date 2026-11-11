@@ -49,10 +49,32 @@ class CalcolatoreLocation extends Page implements HasForms
     {
         return $form
             ->schema([
+                Select::make('citta')
+                    ->label('Città')
+                    ->placeholder('Tutte le Città')
+                    ->options(fn () => Location::getAvailableCities())
+                    ->live()
+                    ->afterStateUpdated(fn (\Filament\Forms\Set $set) => $set('idLocation', null)),
+
                 Select::make('idLocation')
                     ->label('Location')
                     ->placeholder('Tutte le Location')
-                    ->options(Location::orderBy('nomeLocation')->pluck('nomeLocation', 'idLocation'))
+                    ->options(function (\Filament\Forms\Get $get) {
+                        $citta = $get('citta');
+                        $query = Location::orderBy('nomeLocation');
+                        if (!empty($citta)) {
+                            if (strtolower($citta) === 'roma') {
+                                $query->where(function ($q) {
+                                    $q->where('cittaLocation', 'Roma')
+                                      ->orWhereNull('cittaLocation')
+                                      ->orWhere('cittaLocation', '');
+                                });
+                            } else {
+                                $query->where('cittaLocation', $citta);
+                            }
+                        }
+                        return $query->pluck('nomeLocation', 'idLocation');
+                    })
                     ->searchable(),
                 
                 Select::make('periodo_speciale')
@@ -106,7 +128,7 @@ class CalcolatoreLocation extends Page implements HasForms
                     ])
                     ->default('tutti'),
             ])
-            ->columns(5)
+            ->columns(6)
             ->statePath('data');
     }
 
@@ -121,6 +143,19 @@ class CalcolatoreLocation extends Page implements HasForms
             ->where('ordini.statoOrdine', 2)
             ->whereDate('ordini.dataOrdine', '>=', $data['data_da'])
             ->whereDate('ordini.dataOrdine', '<=', $data['data_a']);
+
+        if (!empty($data['citta'])) {
+            $citta = $data['citta'];
+            if (strtolower($citta) === 'roma') {
+                $query->where(function ($q) {
+                    $q->where('location.cittaLocation', 'Roma')
+                      ->orWhereNull('location.cittaLocation')
+                      ->orWhere('location.cittaLocation', '');
+                });
+            } else {
+                $query->where('location.cittaLocation', $citta);
+            }
+        }
 
         if (!empty($data['idLocation'])) {
             $query->where('ordini.idLocationOrdine', $data['idLocation']);

@@ -13,6 +13,71 @@ class Location extends Model
         'attivaLocation' => 'boolean',
     ];
 
+    public const SUGGESTED_CITIES = [
+        'Roma',
+        'Milano',
+        'Firenze',
+        'Napoli',
+        'Torino',
+        'Bologna',
+        'Venezia',
+        'Verona',
+        'Rimini',
+        'Genova',
+        'Bari',
+        'Palermo',
+        'Catania',
+        'Padova',
+        'Brescia',
+        'Bergamo',
+        'Perugia',
+        'Pisa',
+        'Siena',
+    ];
+
+    /**
+     * Restituisce l'elenco delle città presenti a database (chiave => valore) per i filtri.
+     */
+    public static function getAvailableCities(): array
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('location', 'cittaLocation')) {
+                return ['Roma' => 'Roma'];
+            }
+
+            $cities = static::query()
+                ->whereNotNull('cittaLocation')
+                ->where('cittaLocation', '!=', '')
+                ->select('cittaLocation')
+                ->distinct()
+                ->orderBy('cittaLocation')
+                ->pluck('cittaLocation')
+                ->map(fn ($c) => ucwords(strtolower(trim((string) $c))))
+                ->filter()
+                ->unique()
+                ->values();
+
+            $options = ['Roma' => 'Roma'];
+            foreach ($cities as $city) {
+                $options[$city] = $city;
+            }
+            return $options;
+        } catch (\Throwable $e) {
+            return ['Roma' => 'Roma'];
+        }
+    }
+
+    /**
+     * Restituisce i suggerimenti per il datalist del campo Città (città già a DB + principali città italiane).
+     */
+    public static function getCitySuggestions(): array
+    {
+        return array_values(array_unique(array_merge(
+            array_values(static::getAvailableCities()),
+            self::SUGGESTED_CITIES
+        )));
+    }
+
     public array $pendingPagamentiStato = [];
 
     public function attributesToArray()
@@ -149,7 +214,15 @@ class Location extends Model
                         $table->string('intestatarioLocation', 255)->nullable()->default('');
                     });
                 }
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('location', 'cittaLocation')) {
+                    \Illuminate\Support\Facades\Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('cittaLocation', 100)->nullable()->default('Roma')->after('indirizzoLocation');
+                    });
+                }
             } catch (\Throwable $e) {}
+
+            $citta = trim((string) ($location->cittaLocation ?? ''));
+            $location->cittaLocation = $citta !== '' ? ucwords(strtolower($citta)) : 'Roma';
         });
 
         static::saved(function ($location) {

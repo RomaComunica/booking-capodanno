@@ -430,6 +430,70 @@
             </div>
         </div>
 
+        <!-- Riepilogo per Città -->
+        @if(!empty($risultati['cityBreakdown']))
+            <x-filament::section class="mt-6">
+                <x-slot name="heading">Riepilogo Vendite per Città</x-slot>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
+                        <thead class="bg-gray-100 dark:bg-slate-800">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Città</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Biglietti</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Fatturato ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
+                                <th class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Fatturato</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-slate-800">
+                            @foreach($risultati['cityBreakdown'] as $cRow)
+                                <tr class="glossy-table-row transition-colors">
+                                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-white">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-100 text-primary-800 dark:bg-primary-900/50 dark:text-primary-300">
+                                            {{ $cRow['citta'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">
+                                        {{ number_format($cRow['tickets_1'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">
+                                        {{ number_format($cRow['tickets_2'], 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($cRow['tickets_diff'] > 0)
+                                            <span class="text-green-600 dark:text-green-400 font-bold">+{{ $cRow['tickets_diff'] }} ({{ $cRow['tickets_diff_pct'] }}%)</span>
+                                        @elseif($cRow['tickets_diff'] < 0)
+                                            <span class="text-danger-600 dark:text-danger-400 font-bold">{{ $cRow['tickets_diff'] }} ({{ $cRow['tickets_diff_pct'] }}%)</span>
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">=</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-medium text-gray-700 dark:text-gray-200">
+                                        € {{ number_format($cRow['revenue_1'], 2, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">
+                                        € {{ number_format($cRow['revenue_2'], 2, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        @if($cRow['revenue_diff'] > 0)
+                                            <span class="text-green-600 dark:text-green-400 font-bold">+€{{ number_format($cRow['revenue_diff'], 2, ',', '.') }} ({{ $cRow['revenue_diff_pct'] }}%)</span>
+                                        @elseif($cRow['revenue_diff'] < 0)
+                                            <span class="text-danger-600 dark:text-danger-400 font-bold">-€{{ number_format(abs($cRow['revenue_diff']), 2, ',', '.') }} ({{ $cRow['revenue_diff_pct'] }}%)</span>
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">=</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @endif
+
         <!-- Dettaglio Location -->
         <x-filament::section class="mt-6">
             <x-slot name="heading">Dettaglio Vendite per Location</x-slot>
@@ -439,6 +503,7 @@
                     <thead class="bg-gray-100 dark:bg-slate-800">
                         <tr>
                             <th class="px-4 py-3 text-left font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Location</th>
+                            <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Città</th>
                             <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_1_short'] ?? 'P1' }})</th>
                             <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Biglietti ({{ $risultati['periodo_2_short'] ?? 'P2' }})</th>
                             <th class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800">Delta Biglietti</th>
@@ -452,6 +517,11 @@
                             <tr class="glossy-table-row transition-colors">
                                 <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                                     {{ $loc['nomeLocation'] }}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-200">
+                                        {{ $loc['cittaLocation'] ?? 'Roma' }}
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-200">
                                     {{ number_format($loc['tickets_1'], 0, ',', '.') }}
@@ -486,7 +556,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                     Nessuna vendita registrata nei periodi selezionati.
                                 </td>
                             </tr>

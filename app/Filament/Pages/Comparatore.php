@@ -46,6 +46,7 @@ class Comparatore extends Page implements HasForms
     {
         $this->form->fill([
             'tipo_confronto' => 'questo_mese',
+            'citta' => null,
             'data_riferimento' => date('Y-m-d'),
             'anno_1' => date('Y') - 1,
             'anno_2' => date('Y'),
@@ -127,7 +128,13 @@ class Comparatore extends Page implements HasForms
                     ])
                     ->required()
                     ->live()
-                    ->columnSpan(4),
+                    ->columnSpan(['default' => 4, 'md' => 3]),
+
+                Select::make('citta')
+                    ->label('Città')
+                    ->placeholder('Tutte le Città')
+                    ->options(fn () => Location::getAvailableCities())
+                    ->columnSpan(['default' => 4, 'md' => 1]),
 
                 // Data di riferimento per oggi, mese, anno in corso, festività
                 DatePicker::make('data_riferimento')
@@ -305,15 +312,29 @@ class Comparatore extends Page implements HasForms
         }
 
         // Fetch aggregate stats
-        $stats1 = $service->getPeriodStats($from1, $to1);
-        $stats2 = $service->getPeriodStats($from2, $to2);
+        $cityFilter = !empty($data['citta']) ? (string) $data['citta'] : null;
+        $stats1 = $service->getPeriodStats($from1, $to1, $cityFilter);
+        $stats2 = $service->getPeriodStats($from2, $to2, $cityFilter);
 
         // Fetch location breakdowns
-        $locStats1 = $service->getPeriodLocationStats($from1, $to1);
-        $locStats2 = $service->getPeriodLocationStats($from2, $to2);
+        $locStats1 = $service->getPeriodLocationStats($from1, $to1, $cityFilter);
+        $locStats2 = $service->getPeriodLocationStats($from2, $to2, $cityFilter);
 
-        $allLocations = Location::all();
+        $allLocationsQuery = Location::query();
+        if ($cityFilter) {
+            if (strtolower($cityFilter) === 'roma') {
+                $allLocationsQuery->where(function ($q) {
+                    $q->where('cittaLocation', 'Roma')
+                      ->orWhereNull('cittaLocation')
+                      ->orWhere('cittaLocation', '');
+                });
+            } else {
+                $allLocationsQuery->where('cittaLocation', $cityFilter);
+            }
+        }
+        $allLocations = $allLocationsQuery->get();
         $locationBreakdown = [];
+        $cityGroups = [];
 
         foreach ($allLocations as $loc) {
             $l1 = $locStats1->get($loc->idLocation);
@@ -323,10 +344,12 @@ class Comparatore extends Page implements HasForms
             $t2 = $l2 ? (int)$l2->total_tickets : 0;
             $r1 = $l1 ? (float)$l1->total_revenue : 0.0;
             $r2 = $l2 ? (float)$l2->total_revenue : 0.0;
+            $cittaLoc = ucwords(strtolower(trim((string) ($loc->cittaLocation ?: 'Roma')))) ?: 'Roma';
 
             if ($t1 > 0 || $t2 > 0 || $r1 > 0 || $r2 > 0) {
                 $locationBreakdown[] = [
                     'nomeLocation' => $loc->nomeLocation,
+                    'cittaLocation' => $cittaLoc,
                     'tickets_1' => $t1,
                     'tickets_2' => $t2,
                     'tickets_diff' => $t2 - $t1,
@@ -336,15 +359,47 @@ class Comparatore extends Page implements HasForms
                     'revenue_diff' => $r2 - $r1,
                     'revenue_diff_pct' => $r1 > 0 ? round((($r2 - $r1) / $r1) * 100, 1) : null,
                 ];
+
+                if (!isset($cityGroups[$cittaLoc])) {
+                    $cityGroups[$cittaLoc] = [
+                        'citta' => $cittaLoc,
+                        'tickets_1' => 0,
+                        'tickets_2' => 0,
+                        'revenue_1' => 0.0,
+                        'revenue_2' => 0.0,
+                    ];
+                }
+                $cityGroups[$cittaLoc]['tickets_1'] += $t1;
+                $cityGroups[$cittaLoc]['tickets_2'] += $t2;
+                $cityGroups[$cittaLoc]['revenue_1'] += $r1;
+                $cityGroups[$cittaLoc]['revenue_2'] += $r2;
             }
         }
+
+        $cityBreakdown = [];
+        foreach ($cityGroups as $cg) {
+            $tDiff = $cg['tickets_2'] - $cg['tickets_1'];
+            $rDiff = $cg['revenue_2'] - $cg['revenue_1'];
+            $cityBreakdown[] = [
+                'citta' => $cg['citta'],
+                'tickets_1' => $cg['tickets_1'],
+                'tickets_2' => $cg['tickets_2'],
+                'tickets_diff' => $tDiff,
+                'tickets_diff_pct' => $cg['tickets_1'] > 0 ? round(($tDiff / $cg['tickets_1']) * 100, 1) : null,
+                'revenue_1' => $cg['revenue_1'],
+                'revenue_2' => $cg['revenue_2'],
+                'revenue_diff' => $rDiff,
+                'revenue_diff_pct' => $cg['revenue_1'] > 0 ? round(($rDiff / $cg['revenue_1']) * 100, 1) : null,
+            ];
+        }
+        usort($cityBreakdown, fn($a, $b) => $b['revenue_2'] <=> $a['revenue_2']);
 
         // Sort locations by highest revenue in period 2
         usort($locationBreakdown, fn($a, $b) => $b['revenue_2'] <=> $a['revenue_2']);
 
         // Prepare chart data
         if ($isMonthlyChart) {
-            $monthlyDetails = $service->compareYearsDetailed($year1, $year2);
+            $monthlyDetails = $service->compareYearsDetailed($year1, $year2, $cityFilter);
             foreach ($monthlyDetails as $m) {
                 $chartLabels[] = $m['month'];
                 $chartData1[] = [
@@ -357,8 +412,8 @@ class Comparatore extends Page implements HasForms
                 ];
             }
         } else {
-            $daily1 = $service->getPeriodDailyStats($from1, $to1);
-            $daily2 = $service->getPeriodDailyStats($from2, $to2);
+            $daily1 = $service->getPeriodDailyStats($from1, $to1, $cityFilter);
+            $daily2 = $service->getPeriodDailyStats($from2, $to2, $cityFilter);
 
             $count = max(count($daily1), count($daily2));
             $keys1 = array_keys($daily1);
@@ -411,6 +466,8 @@ class Comparatore extends Page implements HasForms
             'orders_2' => $stats2['orders'],
             'orders_diff' => $ordersDiff,
             'orders_diff_pct' => $ordersDiffPct,
+            'citta_filtro' => $cityFilter,
+            'cityBreakdown' => $cityBreakdown,
             'locationBreakdown' => $locationBreakdown,
             'chartLabels' => $chartLabels,
             'chartData1' => $chartData1,

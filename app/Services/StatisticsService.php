@@ -909,22 +909,50 @@ class StatisticsService
     }
 
     /**
+     * Helper to apply city filter on queries joining or starting from ordini
+     */
+    protected function applyCityFilter($query, ?string $city, string $ordiniTable = 'ordini'): void
+    {
+        if (empty($city)) {
+            return;
+        }
+
+        $locationIds = Location::query()
+            ->when(strtolower($city) === 'roma', function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('cittaLocation', 'Roma')
+                        ->orWhereNull('cittaLocation')
+                        ->orWhere('cittaLocation', '');
+                });
+            }, function ($q) use ($city) {
+                $q->where('cittaLocation', $city);
+            })
+            ->pluck('idLocation')
+            ->toArray();
+
+        $query->whereIn("{$ordiniTable}.idLocationOrdine", $locationIds);
+    }
+
+    /**
      * Get stats for a custom date range period
      */
-    public function getPeriodStats($from, $to)
+    public function getPeriodStats($from, $to, ?string $city = null)
     {
-        $revenue = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('statoOrdine', 2)
-            ->sum('totaleOrdine');
+        $revQuery = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2);
+        $this->applyCityFilter($revQuery, $city, 'ordini');
+        $revenue = $revQuery->sum('totaleOrdine');
 
-        $orders = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('statoOrdine', 2)
-            ->count();
+        $ordQuery = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2);
+        $this->applyCityFilter($ordQuery, $city, 'ordini');
+        $orders = $ordQuery->count();
 
-        $tickets = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+        $tktQuery = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
             ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('ordini.statoOrdine', 2)
-            ->sum('righe_ordine.quantitaIngressoOrdine');
+            ->where('ordini.statoOrdine', 2);
+        $this->applyCityFilter($tktQuery, $city, 'ordini');
+        $tickets = $tktQuery->sum('righe_ordine.quantitaIngressoOrdine');
 
         return [
             'revenue' => round($revenue, 2),
@@ -936,7 +964,7 @@ class StatisticsService
     /**
      * Get daily stats for a date range period
      */
-    public function getPeriodDailyStats($from, $to)
+    public function getPeriodDailyStats($from, $to, ?string $city = null)
     {
         $dates = [];
         $current = strtotime($from);
@@ -947,9 +975,11 @@ class StatisticsService
             $current = strtotime('+1 day', $current);
         }
 
-        $orders = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('statoOrdine', 2)
-            ->select([
+        $ordersQuery = Ordine::whereBetween('dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->where('statoOrdine', 2);
+        $this->applyCityFilter($ordersQuery, $city, 'ordini');
+
+        $orders = $ordersQuery->select([
                 DB::raw('DATE(dataOrdine) as date'),
                 DB::raw('SUM(totaleOrdine) as revenue'),
                 DB::raw('COUNT(*) as orders_count')
@@ -958,10 +988,12 @@ class StatisticsService
             ->get()
             ->keyBy('date');
 
-        $tickets = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+        $ticketsQuery = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
             ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('ordini.statoOrdine', 2)
-            ->select([
+            ->where('ordini.statoOrdine', 2);
+        $this->applyCityFilter($ticketsQuery, $city, 'ordini');
+
+        $tickets = $ticketsQuery->select([
                 DB::raw('DATE(ordini.dataOrdine) as date'),
                 DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as tickets_count')
             ])
@@ -987,13 +1019,16 @@ class StatisticsService
     /**
      * Get location sales breakdown for a custom period
      */
-    public function getPeriodLocationStats($from, $to)
+    public function getPeriodLocationStats($from, $to, ?string $city = null)
     {
-        return RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+        $query = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
             ->join('location', 'ordini.idLocationOrdine', '=', 'location.idLocation')
             ->whereBetween('ordini.dataOrdine', [$from . ' 00:00:00', $to . ' 23:59:59'])
-            ->where('ordini.statoOrdine', 2)
-            ->select([
+            ->where('ordini.statoOrdine', 2);
+
+        $this->applyCityFilter($query, $city, 'ordini');
+
+        return $query->select([
                 'location.idLocation',
                 'location.nomeLocation',
                 DB::raw('SUM(righe_ordine.quantitaIngressoOrdine) as total_tickets'),
@@ -1007,31 +1042,35 @@ class StatisticsService
     /**
      * Get detailed monthly revenue and ticket count comparison for two years
      */
-    public function compareYearsDetailed($year1, $year2)
+    public function compareYearsDetailed($year1, $year2, ?string $city = null)
     {
         $data = [];
         for ($month = 1; $month <= 12; $month++) {
-            $revenue1 = Ordine::whereYear('dataOrdine', $year1)
+            $rev1Q = Ordine::whereYear('dataOrdine', $year1)
                 ->whereMonth('dataOrdine', $month)
-                ->where('statoOrdine', 2)
-                ->sum('totaleOrdine');
+                ->where('statoOrdine', 2);
+            $this->applyCityFilter($rev1Q, $city, 'ordini');
+            $revenue1 = $rev1Q->sum('totaleOrdine');
                 
-            $tickets1 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            $tkt1Q = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
                 ->whereYear('ordini.dataOrdine', $year1)
-                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
-                ->where('ordini.statoOrdine', 2)
-                ->sum('righe_ordine.quantitaIngressoOrdine');
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2);
+            $this->applyCityFilter($tkt1Q, $city, 'ordini');
+            $tickets1 = $tkt1Q->sum('righe_ordine.quantitaIngressoOrdine');
 
-            $revenue2 = Ordine::whereYear('dataOrdine', $year2)
+            $rev2Q = Ordine::whereYear('dataOrdine', $year2)
                 ->whereMonth('dataOrdine', $month)
-                ->where('statoOrdine', 2)
-                ->sum('totaleOrdine');
+                ->where('statoOrdine', 2);
+            $this->applyCityFilter($rev2Q, $city, 'ordini');
+            $revenue2 = $rev2Q->sum('totaleOrdine');
                 
-            $tickets2 = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
+            $tkt2Q = RigaOrdine::join('ordini', 'righe_ordine.numeroOrdine', '=', 'ordini.numeroOrdine')
                 ->whereYear('ordini.dataOrdine', $year2)
-                ->whereYear('ordini.dataOrdine', $year)->whereMonth('ordini.dataOrdine', $month)
-                ->where('ordini.statoOrdine', 2)
-                ->sum('righe_ordine.quantitaIngressoOrdine');
+                ->whereMonth('ordini.dataOrdine', $month)
+                ->where('ordini.statoOrdine', 2);
+            $this->applyCityFilter($tkt2Q, $city, 'ordini');
+            $tickets2 = $tkt2Q->sum('righe_ordine.quantitaIngressoOrdine');
 
             $data[] = [
                 'month' => self::MONTHS_IT[$month],

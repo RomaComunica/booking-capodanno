@@ -218,6 +218,25 @@ class AppServiceProvider extends ServiceProvider
             // Ignore during setup/migrations
         }
 
+        // Auto-ensure location table has 'cittaLocation' column (default 'Roma')
+        try {
+            if (Schema::hasTable('location') && !Schema::hasColumn('location', 'cittaLocation')) {
+                Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('cittaLocation', 100)->nullable()->default('Roma')->after('indirizzoLocation');
+                });
+                try {
+                    DB::table('location')
+                        ->whereNull('cittaLocation')
+                        ->orWhere('cittaLocation', '')
+                        ->update(['cittaLocation' => 'Roma']);
+                } catch (\Throwable $e) {
+                    // Ignore
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore during setup/migrations
+        }
+
         // Auto-ensure ordini has 'modificato_manualmente' column & clienti_view unions ordini + manual clienti
         try {
             if (Schema::hasTable('ordini') && !Schema::hasColumn('ordini', 'modificato_manualmente')) {
