@@ -431,15 +431,6 @@ class OrdineResource extends Resource
                     ->sortable()
                     ->limit(22)
                     ->tooltip(fn ($record) => $record->location?->nomeLocation),
-
-                Tables\Columns\TextColumn::make('location.cittaLocation')
-                    ->label('Città')
-                    ->badge()
-                    ->default('Roma')
-                    ->color(fn (?string $state): string => strtolower(trim($state ?? 'roma')) === 'roma' ? 'info' : 'warning')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
                 
                 Tables\Columns\TextColumn::make('emailClienteOrdine')
                     ->label('Email')
