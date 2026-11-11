@@ -30,6 +30,110 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
+    <style>
+        :root {
+            --accent-gold: #FFFFFF !important;
+            --accent-gold-hover: #E2E8F0 !important;
+            --accent-gold-light: rgba(255, 255, 255, 0.12) !important;
+            --border-color: rgba(255, 255, 255, 0.12) !important;
+            --border-color-hover: rgba(255, 255, 255, 0.35) !important;
+            --btn-green: #16A34A !important;
+            --btn-green-hover: #15803D !important;
+            --shadow-glow: 0 6px 16px rgba(22, 163, 74, 0.35) !important;
+        }
+        .container,
+        .booking-container {
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            padding-left: 2.25rem !important;
+            padding-right: 2.25rem !important;
+            box-sizing: border-box !important;
+        }
+        body.iframe-body .container,
+        body.iframe-body .booking-container {
+            max-width: 100% !important;
+            padding: 1.75rem 2.25rem 2rem 2.25rem !important;
+            box-sizing: border-box !important;
+        }
+        body.iframe-body .main-content {
+            padding: 0 !important;
+        }
+        .detail-pad,
+        body.iframe-body .detail-pad {
+            padding: 1.75rem 1.75rem !important;
+        }
+        .modern-table th {
+            background-color: #0a0a0a !important;
+            color: #FFFFFF !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
+        }
+        .total-bar {
+            padding: 1rem 1.25rem !important;
+            background: #0a0a0a !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-left: 4px solid #FFFFFF !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+        }
+        .total-price,
+        #totale.total-price {
+            font-size: 1.25rem !important;
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+        }
+        .btn-primary {
+            background-color: #16A34A !important;
+            color: #FFFFFF !important;
+        }
+        .btn-primary:hover {
+            background-color: #15803D !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35) !important;
+        }
+        .btn-outline:hover {
+            border-color: #FFFFFF !important;
+            color: #FFFFFF !important;
+        }
+        .text-gold,
+        .card-highlight,
+        .radio-price {
+            color: #FFFFFF !important;
+        }
+        .radio-input:checked + .radio-content {
+            border-color: #FFFFFF !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
+            box-shadow: 0 0 0 1px #FFFFFF !important;
+        }
+        .radio-input:checked + .radio-content .radio-circle {
+            border-color: #FFFFFF !important;
+        }
+        .radio-input:checked + .radio-content .radio-circle::after {
+            background-color: #FFFFFF !important;
+        }
+        @media (max-width: 768px) {
+            .container,
+            .booking-container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            body.iframe-body .container,
+            body.iframe-body .booking-container {
+                padding: 1rem 1rem 1.25rem 1rem !important;
+            }
+            .detail-pad,
+            body.iframe-body .detail-pad {
+                padding: 1.15rem 0.85rem !important;
+            }
+            .total-price,
+            #totale.total-price {
+                font-size: 1.15rem !important;
+            }
+        }
+    </style>
     
     <!-- Google Analytics -->
     @php

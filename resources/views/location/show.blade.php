@@ -40,7 +40,7 @@
   }
 }
 </script>
-<div class="container main-content">
+<div class="container booking-container">
     
     @if(!$iframe)
     {{-- Header --}}
@@ -74,7 +74,43 @@
         <div class="detail-pad">
             
             <style>
+                .booking-container {
+                    padding: 1.75rem 2.25rem 2rem 2.25rem !important;
+                    box-sizing: border-box !important;
+                }
+                .detail-pad {
+                    padding: 1.75rem 1.75rem !important;
+                }
+                .modern-table th {
+                    background-color: #0a0a0a !important;
+                    color: #FFFFFF !important;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.22) !important;
+                }
+                .total-bar {
+                    padding: 1rem 1.25rem !important;
+                    background: #0a0a0a !important;
+                    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                    border-left: 4px solid #FFFFFF !important;
+                    border-radius: 8px !important;
+                }
+                #totale.total-price {
+                    font-size: 1.25rem !important;
+                    color: #FFFFFF !important;
+                    font-weight: 700 !important;
+                    margin: 0 !important;
+                }
+                .btn-primary {
+                    background-color: #16A34A !important;
+                    color: #FFFFFF !important;
+                }
+                .btn-primary:hover {
+                    background-color: #15803D !important;
+                    color: #FFFFFF !important;
+                }
                 @media (max-width: 768px) {
+                    .booking-container {
+                        padding: 1rem 1rem 1.25rem 1rem !important;
+                    }
                     .col-datetime {
                         display: none !important;
                     }

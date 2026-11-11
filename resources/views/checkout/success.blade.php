@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container main-content">
+<div class="container booking-container">
     
     <div class="max-w-3xl mx-auto">
         

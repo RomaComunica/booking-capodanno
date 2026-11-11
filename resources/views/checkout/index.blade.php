@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container main-content">
+<div class="container booking-container">
     
     @if(!$iframe)
     {{-- Header --}}

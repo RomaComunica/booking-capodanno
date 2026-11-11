@@ -4,7 +4,7 @@
 @section('meta_description', 'Scegli la location perfetta e prenota il tuo Capodanno online in pochi click.')
 
 @section('content')
-<div class="container main-content">
+<div class="container booking-container">
     
     @if(!$iframe)
     {{-- Header --}}

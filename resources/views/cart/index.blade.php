@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container main-content">
+<div class="container booking-container">
     <div class="page-header mb-3">
         <h1 class="page-title text-gold">Il tuo Carrello</h1>
     </div>

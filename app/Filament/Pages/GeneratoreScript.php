@@ -162,7 +162,7 @@ class GeneratoreScript extends Page
             $code = '<a href="#iframenew" style="display:inline-block; padding:12px 24px; background-color:' . $bg . '; color:' . $color . '; text-decoration:none; border-radius:30px; font-weight:bold; font-family:sans-serif;">' . $testo . '</a>';
         } elseif ($tipo === 'iframe') {
             $code = <<<HTML
-<iframe id="iframenew" src="{$url}" width="100%" height="800" frameborder="0" style="border:none; width:100%; min-height:800px;"></iframe>
+<iframe id="iframenew" src="{$url}" width="100%" height="800" frameborder="0" style="border:none; width:100%; min-height:800px; border-radius:12px;"></iframe>
 HTML;
         }
         
