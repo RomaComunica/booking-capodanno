@@ -1,0 +1,120 @@
+name: Deploy Booking to SiteGround Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.repository == 'Evilgian/booking_new'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH to SiteGround
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: 34.90.62.165
+          port: 18765
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          envs: GH_TOKEN
+          script: |
+            echo "============================================="
+            echo "   DEPLOY BOOKING SU SITEGROUND CLOUD        "
+            echo "============================================="
+
+            echo "Ricerca automatica della cartella di booking.capodannoinroma.it..."
+            TARGET_DIR=""
+
+            # 1. Cerca percorsi contenenti booking
+            FOUND_SPECIFIC=$(find "$HOME" -maxdepth 5 -path "*booking*" -name "artisan" -not -path "*/vendor/*" 2>/dev/null | head -n 1)
+            if [ -n "$FOUND_SPECIFIC" ]; then
+                TARGET_DIR=$(dirname "$FOUND_SPECIFIC")
+            fi
+
+            # 2. Controlla le cartelle tipiche di SiteGround per il sottodominio booking
+            if [ -z "$TARGET_DIR" ]; then
+                for candidate in "$HOME/www/booking.capodannoinroma.it/public_html" "$HOME/www/booking.capodannoinroma.it" "$HOME/www/capodannoinroma.it/public_html/booking" "$HOME/www/capodannoinroma.it/booking" "$HOME/booking.capodannoinroma.it/public_html"; do
+                    if [ -f "$candidate/artisan" ]; then
+                        TARGET_DIR="$candidate"
+                        break
+                    fi
+                done
+            fi
+
+            # 3. Controlla nei file .env se c'e' riferimento a booking
+            if [ -z "$TARGET_DIR" ]; then
+                for artisan_file in $(find "$HOME" -maxdepth 5 -name "artisan" -not -path "*/vendor/*" 2>/dev/null); do
+                    dir=$(dirname "$artisan_file")
+                    if [ -f "$dir/.env" ] && grep -qi "booking" "$dir/.env" 2>/dev/null; then
+                        TARGET_DIR="$dir"
+                        break
+                    fi
+                done
+            fi
+
+            # 4. Fallback se c'e' una sola app Laravel nel profilo
+            if [ -z "$TARGET_DIR" ]; then
+                ALL_ARTISANS=$(find "$HOME" -maxdepth 5 -name "artisan" -not -path "*/vendor/*" 2>/dev/null)
+                COUNT=$(echo "$ALL_ARTISANS" | grep -c "artisan" || true)
+                if [ "$COUNT" -eq 1 ]; then
+                    TARGET_DIR=$(dirname "$ALL_ARTISANS")
+                elif [ -f "$HOME/public_html/artisan" ]; then
+                    TARGET_DIR="$HOME/public_html"
+                fi
+            fi
+
+            if [ -z "$TARGET_DIR" ]; then
+                echo "ERRORE: Impossibile individuare la cartella del progetto Booking in $HOME"
+                ls -la "$HOME" || true
+                ls -la "$HOME/www" 2>/dev/null || true
+                exit 1
+            fi
+
+            echo "Cartella individuata: $TARGET_DIR"
+
+            # Da qui in poi interrompi subito in caso di errore
+            set -e
+            cd "$TARGET_DIR"
+
+            # Configurazione git locale sul server
+            git config --global --add safe.directory "$TARGET_DIR"
+
+            REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/Evilgian/booking_new.git"
+            CLEAN_URL="https://github.com/Evilgian/booking_new.git"
+
+            if [ ! -d ".git" ]; then
+                echo "Inizializzazione repository git sul server..."
+                git init
+                git remote add origin "$REPO_URL"
+            else
+                git remote set-url origin "$REPO_URL"
+            fi
+
+            echo "Scaricamento delle ultime modifiche da GitHub (branch main)..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Rimuove il token temporaneo da .git/config
+            git remote set-url origin "$CLEAN_URL"
+
+            # Migrazioni database e pulizia cache
+            if [ -f "artisan" ]; then
+                php -v
+                echo "Esecuzione migrazioni database..."
+                php artisan migrate --force
+
+                echo "Pulizia cache Laravel e Filament..."
+                php artisan optimize:clear
+            fi
+
+            echo "============================================="
+            echo "       DEPLOY COMPLETATO CON SUCCESSO!       "
+            echo "============================================="
