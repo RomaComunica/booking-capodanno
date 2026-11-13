@@ -232,18 +232,18 @@ class Comparatore extends Page implements HasForms
             $short1 = date('d/m/y', strtotime($from1));
             $short2 = date('d/m/y', strtotime($from2));
         } elseif ($tipo === 'questo_mese') {
-            $from1 = date('Y-m-d', mktime(0,0,0, $refMonth, 1, $refYear - 1));
-            $to1 = date('Y-m-d', mktime(0,0,0, $refMonth, $refDay, $refYear - 1));
-            $from2 = date('Y-m-d', mktime(0,0,0, $refMonth, 1, $refYear));
-            $to2 = $refDate;
-            
+            $from1 = date('Y-m-01', mktime(0, 0, 0, $refMonth, 1, $refYear - 1));
+            $to1 = date('Y-m-t', mktime(0, 0, 0, $refMonth, 1, $refYear - 1));
+            $from2 = date('Y-m-01', mktime(0, 0, 0, $refMonth, 1, $refYear));
+            $to2 = date('Y-m-t', mktime(0, 0, 0, $refMonth, 1, $refYear));
+
             $m1 = (int)date('m', strtotime($from1));
             $y1 = date('Y', strtotime($from1));
             $m2 = (int)date('m', strtotime($from2));
             $y2 = date('Y', strtotime($from2));
 
-            $label1 = self::MONTHS_IT_FULL[$m1] . " " . $y1 . " (fino a " . $refDay . ")";
-            $label2 = self::MONTHS_IT_FULL[$m2] . " " . $y2 . " (fino a " . $refDay . ")";
+            $label1 = self::MONTHS_IT_FULL[$m1] . " " . $y1;
+            $label2 = self::MONTHS_IT_FULL[$m2] . " " . $y2;
             $short1 = self::MONTHS_IT[$m1] . " " . date('y', strtotime($from1));
             $short2 = self::MONTHS_IT[$m2] . " " . date('y', strtotime($from2));
         } elseif ($tipo === 'anno_in_corso') {

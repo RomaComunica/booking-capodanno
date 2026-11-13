@@ -70,11 +70,16 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot(): void
     {
-        // Register custom glossy design system stylesheet once with cache-busting based on filemtime
+        // Register custom glossy design system stylesheet with cache-busting based on filemtime
         $glossyPath = public_path('css/filament-theme-glossy.css');
         $glossyVersion = file_exists($glossyPath) ? filemtime($glossyPath) : '1';
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::head.done',
+            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . $glossyVersion . '">',
+        );
+
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::body.end',
             fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . $glossyVersion . '">',
         );
 
