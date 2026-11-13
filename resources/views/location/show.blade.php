@@ -254,8 +254,8 @@
                 @csrf
                 
                 @if(!$iframe && $location->image_url)
-                <div class="location-banner" style="margin-bottom: 1.75rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, rgba(255,255,255,0.1));">
-                    <img src="{{ $location->image_url }}" alt="{{ $location->nomeLocation }}" style="width: 100%; height: auto; display: block;" onerror="this.parentElement.style.display='none'">
+                <div class="location-banner" style="margin-bottom: 1.75rem; padding: 0.5rem; background: rgba(0, 0, 0, 0.25); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); text-align: center;">
+                    <img src="{{ $location->image_url }}" alt="{{ $location->nomeLocation }}" style="max-height: 260px; width: auto; max-width: 100%; height: auto; object-fit: contain; margin: 0 auto; display: block; border-radius: 6px;" onerror="this.parentElement.style.display='none'">
                 </div>
                 @endif
 
