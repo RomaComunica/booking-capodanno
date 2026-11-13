@@ -254,7 +254,7 @@
                 @csrf
                 
                 @if(!$iframe && $location->image_url)
-                <div class="location-banner mb-4" style="border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, rgba(255,255,255,0.1));">
+                <div class="location-banner" style="margin-bottom: 1.75rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, rgba(255,255,255,0.1));">
                     <img src="{{ $location->image_url }}" alt="{{ $location->nomeLocation }}" style="width: 100%; height: auto; display: block;" onerror="this.parentElement.style.display='none'">
                 </div>
                 @endif
