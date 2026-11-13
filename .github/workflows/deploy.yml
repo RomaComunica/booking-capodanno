@@ -30,7 +30,7 @@ jobs:
             echo "   DEPLOY BOOKING SU SITEGROUND CLOUD        "
             echo "============================================="
 
-            echo "Ricerca automatica della cartella di booking.capodannoinroma.it..."
+            echo "Ricerca automatica della cartella di booking (booking.capodannoromacentro.it / booking.capodannoinroma.it)..."
             TARGET_DIR=""
 
             # 1. Cerca percorsi contenenti booking
@@ -41,7 +41,15 @@ jobs:
 
             # 2. Controlla le cartelle tipiche di SiteGround per il sottodominio booking
             if [ -z "$TARGET_DIR" ]; then
-                for candidate in "$HOME/www/booking.capodannoinroma.it/public_html" "$HOME/www/booking.capodannoinroma.it" "$HOME/www/capodannoinroma.it/public_html/booking" "$HOME/www/capodannoinroma.it/booking" "$HOME/booking.capodannoinroma.it/public_html"; do
+                for candidate in \
+                    "$HOME/www/booking.capodannoromacentro.it/public_html" \
+                    "$HOME/www/booking.capodannoromacentro.it" \
+                    "$HOME/booking.capodannoromacentro.it/public_html" \
+                    "$HOME/www/booking.capodannoinroma.it/public_html" \
+                    "$HOME/www/booking.capodannoinroma.it" \
+                    "$HOME/www/capodannoinroma.it/public_html/booking" \
+                    "$HOME/www/capodannoinroma.it/booking" \
+                    "$HOME/booking.capodannoinroma.it/public_html"; do
                     if [ -f "$candidate/artisan" ]; then
                         TARGET_DIR="$candidate"
                         break

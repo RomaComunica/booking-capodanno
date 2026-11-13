@@ -6,7 +6,7 @@
  * ISTRUZIONI:
  * 1. Configura correttamente il file .env con i dati di MySQL di SiteGround.
  * 2. Esegui 'composer install' sul server SiteGround.
- * 3. Richiama questo file via browser (es: https://booking.capodannoinroma.it/migrate_sqlite_to_mysql.php)
+ * 3. Richiama questo file via browser (es: https://booking.capodannoromacentro.it/migrate_sqlite_to_mysql.php)
  *    oppure via terminale (ssh): php migrate_sqlite_to_mysql.php
  * 4. IMPORTANTE: Cancella questo file dal server dopo l'uso!
  */
