@@ -33,15 +33,24 @@ class CalcolatorePartner extends Page implements HasForms
 
     public function mount(): void
     {
+        $defaultYear = \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $defaultPeriod = \App\Services\StatisticsService::getDefaultDashboardPeriod();
+        $range = \App\Services\StatisticsService::resolvePeriodRange($defaultYear, $defaultPeriod);
+
         $this->form->fill([
-            'data_da' => now()->startOfYear(),
-            'data_a' => now(),
+            'anno' => (string) $defaultYear,
+            'periodo_speciale' => $defaultPeriod,
+            'data_da' => $range['from_date'],
+            'data_a' => $range['to_date'],
             'stato_pagamento' => 'tutti',
         ]);
     }
 
     public function form(Form $form): Form
     {
+        $defaultYear = \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+        $defaultPeriod = \App\Services\StatisticsService::getDefaultDashboardPeriod();
+
         return $form
             ->schema([
                 Select::make('idPartner')
@@ -54,49 +63,7 @@ class CalcolatorePartner extends Page implements HasForms
                     ->label('Location (opzionale)')
                     ->options(Location::pluck('nomeLocation', 'idLocation'))
                     ->searchable(),
-                
-                Select::make('periodo_speciale')
-                    ->label('Periodo Festività')
-                    ->placeholder('Seleziona periodo...')
-                    ->options([
-                        'tutto_anno' => "Tutto l'anno",
-                        'capodanno' => 'Capodanno (1 Nov - 31 Dic)',
-                        'halloween' => 'Halloween (1 Ott - 1 Nov)',
-                        'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
-                        'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
-                    ])
-                    ->live()
-                    ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
-                        if (!$state) return;
-                        $currentFrom = $get('data_da');
-                        $year = $currentFrom ? date('Y', strtotime($currentFrom)) : date('Y');
-                        
-                        if ($state === 'tutto_anno') {
-                            $set('data_da', "{$year}-01-01");
-                            $set('data_a', "{$year}-12-31");
-                        } elseif ($state === 'capodanno') {
-                            $set('data_da', "{$year}-11-01");
-                            $set('data_a', "{$year}-12-31");
-                        } elseif ($state === 'halloween') {
-                            $set('data_da', "{$year}-10-01");
-                            $set('data_a', "{$year}-11-01");
-                        } elseif ($state === 'san_valentino') {
-                            $set('data_da', "{$year}-01-14");
-                            $set('data_a', "{$year}-02-14");
-                        } elseif ($state === 'festa_donna') {
-                            $set('data_da', "{$year}-02-08");
-                            $set('data_a', "{$year}-03-08");
-                        }
-                    }),
 
-                DatePicker::make('data_da')
-                    ->label('Dal')
-                    ->required(),
-                
-                DatePicker::make('data_a')
-                    ->label('Al')
-                    ->required(),
-                    
                 Select::make('stato_pagamento')
                     ->label('Stato Pagamento Partner')
                     ->options([
@@ -105,14 +72,80 @@ class CalcolatorePartner extends Page implements HasForms
                         'pagati' => 'Già Pagati',
                     ])
                     ->default('tutti'),
+
+                Select::make('anno')
+                    ->label('Anno')
+                    ->options(function () {
+                        $years = [];
+                        for ($y = date('Y') + 1; $y >= 2017; $y--) {
+                            $years[(string) $y] = $y;
+                        }
+                        return $years;
+                    })
+                    ->default((string) $defaultYear)
+                    ->selectablePlaceholder(false)
+                    ->live()
+                    ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
+                        $period = $get('periodo_speciale') ?: 'tutto_anno';
+                        if ($period !== 'personalizzato') {
+                            $range = \App\Services\StatisticsService::resolvePeriodRange($state, $period);
+                            $set('data_da', $range['from_date']);
+                            $set('data_a', $range['to_date']);
+                        }
+                    }),
+                
+                Select::make('periodo_speciale')
+                    ->label('Periodo Festività')
+                    ->options([
+                        'tutto_anno' => "Tutto l'anno (1 Gen - 31 Dic)",
+                        'capodanno' => 'Capodanno (1 Nov - 31 Dic)',
+                        'halloween' => 'Halloween (1 Ott - 1 Nov)',
+                        'san_valentino' => 'San Valentino (14 Gen - 14 Feb)',
+                        'festa_donna' => 'Festa della Donna (8 Feb - 8 Mar)',
+                        'personalizzato' => 'Periodo personalizzato (Dal / Al)',
+                    ])
+                    ->default($defaultPeriod)
+                    ->selectablePlaceholder(false)
+                    ->live()
+                    ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
+                        $year = $get('anno') ?: \App\Models\Setting::getVal('anno_riferimento', date('Y'));
+                        if ($state !== 'personalizzato') {
+                            $range = \App\Services\StatisticsService::resolvePeriodRange($year, $state);
+                            $set('data_da', $range['from_date']);
+                            $set('data_a', $range['to_date']);
+                        }
+                    }),
+
+                DatePicker::make('data_da')
+                    ->label('Dal')
+                    ->visible(fn (\Filament\Forms\Get $get): bool => $get('periodo_speciale') === 'personalizzato')
+                    ->required(fn (\Filament\Forms\Get $get): bool => $get('periodo_speciale') === 'personalizzato'),
+                
+                DatePicker::make('data_a')
+                    ->label('Al')
+                    ->visible(fn (\Filament\Forms\Get $get): bool => $get('periodo_speciale') === 'personalizzato')
+                    ->required(fn (\Filament\Forms\Get $get): bool => $get('periodo_speciale') === 'personalizzato'),
             ])
-            ->columns(6)
+            ->columns([
+                'default' => 1,
+                'sm' => 2,
+                'lg' => 3,
+            ])
             ->statePath('data');
     }
 
     public function calcola()
     {
         $data = $this->form->getState();
+
+        $range = \App\Services\StatisticsService::resolvePeriodRange(
+            $data['anno'] ?? \App\Models\Setting::getVal('anno_riferimento', date('Y')),
+            $data['periodo_speciale'] ?? 'tutto_anno',
+            $data['data_da'] ?? null,
+            $data['data_a'] ?? null
+        );
+        $dataDa = $range['from_date'];
+        $dataA = $range['to_date'];
         
         // Query per recuperare righe ordine con provvigioni partner
         // LEFT JOIN: many old tipologia_ingresso records were deleted in the legacy system
@@ -124,8 +157,8 @@ class CalcolatorePartner extends Page implements HasForms
             ->leftJoin('tipo_pagamenti', 'ordini.tipoPagamentoOrdine', '=', 'tipo_pagamenti.idTipoPagamento')
             ->where('ordini.idPartnerOrdine', $data['idPartner'])
             ->where('ordini.statoOrdine', 2)
-            ->whereDate('ordini.dataOrdine', '>=', $data['data_da'])
-            ->whereDate('ordini.dataOrdine', '<=', $data['data_a']);
+            ->whereDate('ordini.dataOrdine', '>=', $dataDa)
+            ->whereDate('ordini.dataOrdine', '<=', $dataA);
         
         // Filtro location opzionale
         if (!empty($data['idLocation'])) {
@@ -222,7 +255,7 @@ class CalcolatorePartner extends Page implements HasForms
             'tipo_partner' => Partner::labelTipo($tipoPartner),
             'prende_provvigione' => $partnerPrendeProvvigione,
             'location' => !empty($data['idLocation']) ? (Location::find($data['idLocation'])->nomeLocation ?? 'Tutte') : 'Tutte',
-            'periodo' => date('d/m/Y', strtotime($data['data_da'])) . ' - ' . date('d/m/Y', strtotime($data['data_a'])),
+            'periodo' => date('d/m/Y', strtotime($dataDa)) . ' - ' . date('d/m/Y', strtotime($dataA)),
             'dettagli' => $dettagli,
             'totaleQuantita' => $totaleQuantita,
             'totaleVenduto' => $totaleVenduto,
