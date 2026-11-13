@@ -24,7 +24,10 @@
 
     <hr class="divider">
 
-    {{-- Step Indicator --}}\r\n    <x-booking-steps :step="3" />\r\n\r\n    {{-- Main Panel --}}
+    {{-- Step Indicator --}}
+    <x-booking-steps :step="3" />
+
+    {{-- Main Panel --}}
     <div class="glass-panel detail-panel animate-fade-in">
         <div class="detail-pad">
             
