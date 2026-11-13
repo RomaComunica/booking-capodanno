@@ -52,12 +52,14 @@ class GeneratoreScript extends Page
                             ->label('Tipo Widget')
                             ->options([
                                 'link' => 'Link Semplice',
-                                'button' => 'Pulsante',
+                                'button' => 'Pulsante Iframe',
+                                'external_button' => 'Pulsante Esterno',
                                 'iframe' => 'Iframe Embed',
                             ])
                             ->icons([
                                 'link' => 'heroicon-o-link',
                                 'button' => 'heroicon-o-cursor-arrow-rays',
+                                'external_button' => 'heroicon-o-arrow-top-right-on-square',
                                 'iframe' => 'heroicon-o-window',
                             ])
                             ->default('link')
@@ -71,7 +73,7 @@ class GeneratoreScript extends Page
                     ->schema([
                         Forms\Components\TextInput::make('testo_pulsante')
                             ->label('Testo Pulsante')
-                            ->default('Acquista Ora')
+                            ->default('Prenota Ora')
                             ->live()
                             ->afterStateUpdated(fn ($state) => $this->generaCodice(['testo_pulsante' => $state])),
                             
@@ -87,7 +89,7 @@ class GeneratoreScript extends Page
                             ->live()
                             ->afterStateUpdated(fn ($state) => $this->generaCodice(['colore_testo' => $state])),
                     ])
-                    ->visible(fn (Forms\Get $get) => $get('tipo') === 'button')
+                    ->visible(fn (Forms\Get $get) => in_array($get('tipo'), ['button', 'external_button'], true))
                     ->columns(3),
                     
                 Forms\Components\Section::make('Codice Generato')
@@ -137,29 +139,35 @@ class GeneratoreScript extends Page
         $locationId = $data['location_id'] ?? null;
         $tipo = $data['tipo'] ?? 'link';
         
-        $locationId = $data['location_id'] ?? null;
-        $tipo = $data['tipo'] ?? 'link';
-        
         $params = ['partner' => $partnerId, 'iframe' => '1'];
+        $externalParams = ['partner' => $partnerId];
         
         if ($locationId) {
             // Se c'è una location specifica, punta direttamente alla pagina location
-            $url = route('location.show', ['id' => $locationId]) . '?' . http_build_query($params);
+            $baseUrl = route('location.show', ['id' => $locationId]);
         } else {
             // Altrimenti punta alla home
-            $url = route('home') . '?' . http_build_query($params);
+            $baseUrl = route('home');
         }
+
+        $url = $baseUrl . '?' . http_build_query($params);
+        $externalUrl = $baseUrl . '?' . http_build_query($externalParams);
         
         $code = '';
         
         if ($tipo === 'link') {
             $code = $url;
-        } elseif ($tipo === 'button') {
-            $testo = trim($data['testo_pulsante'] ?? 'Acquista Ora');
+        } elseif ($tipo === 'button' || $tipo === 'external_button') {
+            $testo = trim($data['testo_pulsante'] ?? 'Prenota Ora') ?: 'Prenota Ora';
             $bg = $data['colore_sfondo'] ?? '#16A34A';
             $color = $data['colore_testo'] ?? '#ffffff';
-            
-            $code = '<a href="#iframenew" style="display:inline-block; padding:12px 24px; background-color:' . $bg . '; color:' . $color . '; text-decoration:none; border-radius:30px; font-weight:bold; font-family:sans-serif;">' . $testo . '</a>';
+            $style = 'display:inline-block; padding:12px 24px; background-color:' . e($bg) . '; color:' . e($color) . '; text-decoration:none; border-radius:30px; font-weight:bold; font-family:sans-serif;';
+
+            if ($tipo === 'external_button') {
+                $code = '<a href="' . e($externalUrl) . '" target="_blank" rel="noopener nofollow" style="' . $style . '">' . e($testo) . '</a>';
+            } else {
+                $code = '<a href="#iframenew" style="' . $style . '">' . e($testo) . '</a>';
+            }
         } elseif ($tipo === 'iframe') {
             $code = <<<HTML
 <iframe id="iframenew" src="{$url}" width="100%" height="800" frameborder="0" style="border:none; width:100%; min-height:800px; border-radius:12px;"></iframe>
