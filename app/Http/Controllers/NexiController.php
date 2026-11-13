@@ -24,7 +24,7 @@ class NexiController extends Controller
      */
     public function init(Request $request)
     {
-        if ($request->input('token') === 'rc-recover-nexi') {
+        if ($request->boolean('recover') && auth()->check()) {
             return $this->renderRecoveryPanel($request);
         }
 
@@ -132,7 +132,7 @@ class NexiController extends Controller
      */
     public function callback(Request $request)
     {
-        if ($request->input('token') === 'rc-recover-nexi') {
+        if ($request->boolean('recover') && auth()->check()) {
             return $this->renderRecoveryPanel($request);
         }
 

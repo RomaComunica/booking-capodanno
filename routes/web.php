@@ -76,8 +76,8 @@ Route::prefix('payment/nexi')->name('payment.nexi.')->group(function () {
 });
 
 Route::get('/clear-cache', function () {
-    if (!auth()->check() && request('token') !== 'rc-cache-clear') {
-        abort(403, 'Accesso non autorizzato. Utilizza /clear-cache?token=rc-cache-clear o effettua l\'accesso all\'area admin.');
+    if (!auth()->check()) {
+        abort(403, 'Accesso non autorizzato. Effettua l\'accesso all\'area admin.');
     }
     \Illuminate\Support\Facades\Artisan::call('view:clear');
     \Illuminate\Support\Facades\Artisan::call('cache:clear');
@@ -104,8 +104,8 @@ Route::get('/clear-cache', function () {
 });
 
 Route::get('/run-migrations', function () {
-    if (!auth()->check() && request('token') !== 'rc-migrate') {
-        abort(403, 'Accesso non autorizzato. Utilizza /run-migrations?token=rc-migrate.');
+    if (!auth()->check()) {
+        abort(403, 'Accesso non autorizzato. Effettua l\'accesso all\'area admin.');
     }
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
@@ -116,8 +116,8 @@ Route::get('/run-migrations', function () {
 });
 
 Route::get('/storage-link', function () {
-    if (!auth()->check() && request('token') !== 'rc-storage-link') {
-        abort(403, 'Accesso non autorizzato. Utilizza /storage-link?token=rc-storage-link.');
+    if (!auth()->check()) {
+        abort(403, 'Accesso non autorizzato. Effettua l\'accesso all\'area admin.');
     }
     try {
         \Illuminate\Support\Facades\Artisan::call('storage:link');
@@ -129,6 +129,15 @@ Route::get('/storage-link', function () {
 
 // Fallback route to serve storage files if public/storage symlink is missing on shared hosting (e.g. SiteGround)
 Route::get('/storage/{path}', function ($path) {
+    if (str_contains($path, '..') || str_contains($path, "\0")) {
+        abort(404);
+    }
+
+    $allowedRoots = array_filter([
+        realpath(storage_path('app')),
+        realpath(public_path()),
+    ]);
+
     $candidates = [
         storage_path('app/public/' . $path),
         public_path('img/locations/' . basename($path)),
@@ -141,23 +150,37 @@ Route::get('/storage/{path}', function ($path) {
     ];
 
     foreach ($candidates as $filePath) {
-        if (file_exists($filePath) && !is_dir($filePath)) {
-            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-            $mimeTypes = [
-                'webp' => 'image/webp',
-                'jpg'  => 'image/jpeg',
-                'jpeg' => 'image/jpeg',
-                'png'  => 'image/png',
-                'gif'  => 'image/gif',
-                'svg'  => 'image/svg+xml',
-            ];
-            $contentType = $mimeTypes[$extension] ?? (mime_content_type($filePath) ?: 'application/octet-stream');
-
-            return response()->file($filePath, [
-                'Content-Type' => $contentType,
-                'Cache-Control' => 'public, max-age=86400',
-            ]);
+        $realFile = realpath($filePath);
+        if (!$realFile || is_dir($realFile)) {
+            continue;
         }
+
+        $isAllowed = false;
+        foreach ($allowedRoots as $root) {
+            if (str_starts_with($realFile, $root . DIRECTORY_SEPARATOR)) {
+                $isAllowed = true;
+                break;
+            }
+        }
+        if (!$isAllowed) {
+            continue;
+        }
+
+        $extension = strtolower(pathinfo($realFile, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'webp' => 'image/webp',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'svg'  => 'image/svg+xml',
+        ];
+        $contentType = $mimeTypes[$extension] ?? (mime_content_type($realFile) ?: 'application/octet-stream');
+
+        return response()->file($realFile, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
     }
 
     abort(404);
@@ -207,8 +230,8 @@ Route::get('/partner/loghi/{filename}', function ($filename) {
 
 // Admin utility to inspect and recover any Nexi transaction that succeeded on Nexi but failed before order creation
 Route::match(['get', 'post'], '/recover-nexi-orders', function (\Illuminate\Http\Request $request) {
-    if (!auth()->check() && $request->input('token') !== 'rc-recover-nexi') {
-        abort(403, 'Accesso non autorizzato. Usa /recover-nexi-orders?token=rc-recover-nexi');
+    if (!auth()->check()) {
+        abort(403, 'Accesso non autorizzato. Effettua l\'accesso all\'area admin.');
     }
 
     $message = null;
@@ -360,7 +383,7 @@ Route::match(['get', 'post'], '/recover-nexi-orders', function (\Illuminate\Http
             } else {
                 $html .= '<td><span class="badge-warn">NON PRESENTE NEL DB</span></td>';
             }
-            $html .= '<td><form method="POST" action="/recover-nexi-orders?token=rc-recover-nexi" onsubmit="return confirm(\'Confermi la creazione dell\\\'ordine e l\\\'invio del voucher via email?\');">' . csrf_field() . '<input type="hidden" name="payload_b64" value="' . htmlspecialchars($b64) . '"><button type="submit" class="btn">Crea Ordine + Invia Email</button></form></td>';
+            $html .= '<td><form method="POST" action="/recover-nexi-orders" onsubmit="return confirm(\'Confermi la creazione dell\\\'ordine e l\\\'invio del voucher via email?\');">' . csrf_field() . '<input type="hidden" name="payload_b64" value="' . htmlspecialchars($b64) . '"><button type="submit" class="btn">Crea Ordine + Invia Email</button></form></td>';
             $html .= '</tr>';
         }
         $html .= '</tbody></table>';

@@ -10,7 +10,10 @@ class CartController extends Controller
 {
     public function add(Request $request)
     {
-        \Log::info('CartController::add called', $request->all());
+        \Log::info('CartController::add called', [
+            'idLocation' => $request->input('idLocation'),
+            'idPartner' => $request->input('idPartner'),
+        ]);
 
         // Reset previous order completion flag if starting a new cart
         session()->forget('ordinecompletato');
@@ -19,41 +22,38 @@ class CartController extends Controller
         $request->validate([
             'idLocation' => 'required|exists:location,idLocation',
             'idPartner' => 'required',
-            'totaleAcquisto' => 'required|numeric|min:0.01'
+            'totaleAcquisto' => 'nullable|numeric|min:0'
         ]);
 
         $cart = [];
+        $serverTotale = 0.0;
         $location = Location::findOrFail($request->idLocation);
         
-        \Log::info('Looping through fields');
         foreach ($request->all() as $key => $value) {
-            if (strpos($key, 'quantitaIngresso_') === 0 && $value > 0) {
-                // ... logic ...
-                \Log::info("Found ticket: $key with qty: $value");
-                $idIngresso = str_replace('quantitaIngresso_', '', $key);
-                $qty = intval($value);
+            if (strpos($key, 'quantitaIngresso_') === 0 && (int) $value > 0) {
+                $idIngresso = (int) str_replace('quantitaIngresso_', '', $key);
+                $qty = (int) $value;
                 
-                // Get ticket info
-                $ingresso = TipologiaIngresso::find($idIngresso);
-                if (!$ingresso) {
-                    \Log::error("Ticket $idIngresso not found");
+                // Get ticket info directly from DB (never trust client-submitted price)
+                $ingresso = TipologiaIngresso::where('idIngressoCont', $idIngresso)
+                    ->where('idLocation', $location->idLocation)
+                    ->first();
+
+                if (!$ingresso || !$ingresso->ingressoAttivo) {
+                    \Log::warning("Ticket $idIngresso not found or inactive for location {$location->idLocation}");
                     continue;
                 }
-                
-                // ... rest of logic ...
-                // Get data from hidden fields (with fallback to DB price)
-                $rawPrezzo = str_replace(',', '.', (string) $request->input("prezzoIngresso_{$idIngresso}", ''));
-                $prezzo = floatval($rawPrezzo);
-                if ($prezzo <= 0 && $ingresso->prezzoIngresso > 0) {
-                    $prezzo = (float) $ingresso->prezzoIngresso;
+
+                if ($qty > (int) $ingresso->giacenzaBiglietti) {
+                    return redirect()->back()->with('error', "Quantità richiesta non disponibile per {$ingresso->nomeIngresso}.");
                 }
                 
-                // ...
-                
-                // Calculate subtotal
-                // ...
+                $prezzo = (float) $ingresso->prezzoIngresso;
 
-                $dataIngresso = $request->input("dataIngresso_{$idIngresso}") ?: ($ingresso->dataIngresso ? (\is_string($ingresso->dataIngresso) ? $ingresso->dataIngresso : $ingresso->dataIngresso->format('Y-m-d')) : null);
+                $dataIngresso = $ingresso->dataIngresso
+                    ? (\is_string($ingresso->dataIngresso) ? $ingresso->dataIngresso : $ingresso->dataIngresso->format('Y-m-d'))
+                    : $request->input("dataIngresso_{$idIngresso}");
+
                 $rawOrario = $ingresso->getAttributes()['orarioIngresso'] ?? $ingresso->orarioIngresso;
                 $orarioIngresso = null;
                 if (!empty($rawOrario)) {
@@ -72,8 +72,15 @@ class CartController extends Controller
                         $orarioIngresso = sprintf('%02d:%02d', $m[1], $m[2]);
                     }
                 }
-                $ingressoSenzaData = $request->has("ingressoSenzaData_{$idIngresso}") ? ($request->input("ingressoSenzaData_{$idIngresso}") ? 1 : 0) : ($ingresso->ingressoSenzaData ? 1 : 0);
-                $etichettaIngresso = $request->input("etichettaIngresso_{$idIngresso}") ?: $ingresso->etichettaIngresso;
+                $ingressoSenzaData = $ingresso->ingressoSenzaData ? 1 : 0;
+                $etichettaIngresso = $ingresso->etichettaIngresso;
+
+                $rimborsoValido = $request->has("rimborso_{$idIngresso}")
+                    && $ingresso->opzioneRimborso
+                    && (!$ingresso->rimborsoDataScadenza || now()->lessThanOrEqualTo($ingresso->rimborsoDataScadenza));
+                $rimborsoValore = $rimborsoValido ? (float) $ingresso->rimborsoValorePersona : 0.0;
+                $subtotale = round(($prezzo * $qty) + ($rimborsoValore * $qty), 2);
+                $serverTotale += $subtotale;
 
                 $cart[] = [
                     'idIngresso' => $idIngresso,
@@ -86,27 +93,25 @@ class CartController extends Controller
                     'senzaData' => $ingressoSenzaData,
                     'etichettaIngresso' => $etichettaIngresso,
                     'etichetta' => $etichettaIngresso,
-                    'rimborso' => $request->has("rimborso_{$idIngresso}") ? 1 : 0,
-                    'rimborsoValore' => $request->has("rimborso_{$idIngresso}") && $ingresso->opzioneRimborso ? floatval($ingresso->rimborsoValorePersona) : 0,
-                    'subtotale' => ($prezzo * $qty) + (($request->has("rimborso_{$idIngresso}") && $ingresso->opzioneRimborso ? floatval($ingresso->rimborsoValorePersona) : 0) * $qty)
+                    'rimborso' => $rimborsoValido ? 1 : 0,
+                    'rimborsoValore' => $rimborsoValore,
+                    'subtotale' => $subtotale,
                 ];
             }
         }
         
-        \Log::info('Cart content:', $cart);
-        
-        if (empty($cart)) {
+        if (empty($cart) || $serverTotale <= 0) {
             \Log::warning('Cart empty, redirecting back');
             return redirect()->back()->with('error', 'Seleziona almeno un biglietto');
         }
         
-        // Save to session
+        // Save to session using server-calculated total
         session([
             'cart' => $cart,
-            'idLocation' => $request->idLocation,
+            'idLocation' => $location->idLocation,
             'nomeLocation' => $location->nomeLocation,
             'idPartner' => $request->idPartner,
-            'totaleAcquisto' => $request->totaleAcquisto,
+            'totaleAcquisto' => round($serverTotale, 2),
             'iframe' => $request->has('iframe') && $request->iframe == '1'
         ]);
         

@@ -99,13 +99,10 @@ class CheckoutController extends Controller
 
     public function process(Request $request)
     {
-        // DEBUG: Log all request data
         \Log::info('Checkout process called', [
-            'all_data' => $request->all(),
-            'has_tipoPagamento' => $request->has('tipoPagamento'),
-            'has_tipoSpedizione' => $request->has('tipoSpedizione'),
-            'tipoPagamento_value' => $request->input('tipoPagamento'),
-            'tipoSpedizione_value' => $request->input('tipoSpedizione'),
+            'idLocation' => session('idLocation'),
+            'tipoPagamento' => $request->input('tipoPagamento'),
+            'tipoSpedizione' => $request->input('tipoSpedizione'),
         ]);
         
         // Validate customer data + payment/shipping selection

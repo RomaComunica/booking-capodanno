@@ -41,6 +41,17 @@ class OrderController extends Controller
             return redirect()->route('home')->with('error', 'Ordine già completato');
         }
 
+        // Security check: online payments (PayPal = 1, Nexi = 5) cannot bypass payment gateway via /order/create
+        $cachedState = ($tx && Cache::has('checkout_tx_' . $tx)) ? Cache::get('checkout_tx_' . $tx) : [];
+        $customer = is_array($cachedState) && !empty($cachedState['customer']) ? $cachedState['customer'] : session('customer', []);
+        $paymentType = (int) ($customer['tipoPagamento'] ?? 0);
+        if ($paymentType === 1 && empty(session('paypal_transaction_id')) && empty($cachedState['paypal_transaction_id'])) {
+            return redirect()->route('checkout.index')->with('error', 'Pagamento PayPal non completato.');
+        }
+        if ($paymentType === 5 && empty(session('nexi_transaction_id')) && empty($cachedState['nexi_transaction_id'])) {
+            return redirect()->route('checkout.index')->with('error', 'Pagamento con carta non completato.');
+        }
+
         $result = $this->finalizeOrderFromSessionOrCache($tx);
 
         if ($result['success']) {
@@ -237,9 +248,12 @@ class OrderController extends Controller
 
     private function calculateTotal($tipoSpedizione, $tipoPagamento = null, $cart = [], $subtotalOverride = null, $idLocationOverride = null)
     {
-        $subtotal = $subtotalOverride !== null ? (float) $subtotalOverride : (float) session('totaleAcquisto', 0);
-        if ($subtotal <= 0 && !empty($cart)) {
+        $subtotal = 0.0;
+        if (!empty($cart)) {
             $subtotal = (float) collect($cart)->sum(fn ($item) => (float) ($item['subtotale'] ?? ((float) ($item['prezzoIngresso'] ?? 0) * (int) ($item['quantita'] ?? 1))));
+        }
+        if ($subtotal <= 0) {
+            $subtotal = $subtotalOverride !== null ? (float) $subtotalOverride : (float) session('totaleAcquisto', 0);
         }
 
         $idLocation = $idLocationOverride ?? session('idLocation');

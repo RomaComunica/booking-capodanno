@@ -202,50 +202,60 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Ignore during setup/migrations
         }
-        // Auto-ensure partner table has 'ordine' column
-        try {
-            if (Schema::hasTable('partner') && !Schema::hasColumn('partner', 'ordine')) {
-                Schema::table('partner', function (\Illuminate\Database\Schema\Blueprint $table) {
-                    $table->integer('ordine')->default(0);
-                });
-                try {
-                    DB::statement('UPDATE partner SET ordine = idPartner WHERE ordine = 0 OR ordine IS NULL');
-                } catch (\Throwable $e) {
-                    // Ignore
+        // Auto-ensure schema columns exist once without querying information_schema on every request
+        if (!\Illuminate\Support\Facades\Cache::has('schema_columns_synced_v1')) {
+            // Auto-ensure partner table has 'ordine' column
+            try {
+                if (Schema::hasTable('partner') && !Schema::hasColumn('partner', 'ordine')) {
+                    Schema::table('partner', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->integer('ordine')->default(0);
+                    });
+                    try {
+                        DB::statement('UPDATE partner SET ordine = idPartner WHERE ordine = 0 OR ordine IS NULL');
+                    } catch (\Throwable $e) {
+                        // Ignore
+                    }
                 }
+            } catch (\Exception $e) {
+                // Ignore during setup/migrations
             }
-        } catch (\Exception $e) {
-            // Ignore during setup/migrations
+
+            // Auto-ensure location table has 'cittaLocation' column (default 'Roma')
+            try {
+                if (Schema::hasTable('location') && !Schema::hasColumn('location', 'cittaLocation')) {
+                    Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->string('cittaLocation', 100)->nullable()->default('Roma')->after('indirizzoLocation');
+                    });
+                    try {
+                        DB::table('location')
+                            ->whereNull('cittaLocation')
+                            ->orWhere('cittaLocation', '')
+                            ->update(['cittaLocation' => 'Roma']);
+                    } catch (\Throwable $e) {
+                        // Ignore
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore during setup/migrations
+            }
+
+            // Auto-ensure ordini has 'modificato_manualmente' column
+            try {
+                if (Schema::hasTable('ordini') && !Schema::hasColumn('ordini', 'modificato_manualmente')) {
+                    Schema::table('ordini', function (\Illuminate\Database\Schema\Blueprint $table) {
+                        $table->boolean('modificato_manualmente')->default(false);
+                    });
+                }
+            } catch (\Throwable $e) {
+                // Ignore during setup/migrations
+            }
+
+            \Illuminate\Support\Facades\Cache::forever('schema_columns_synced_v1', true);
         }
 
-        // Auto-ensure location table has 'cittaLocation' column (default 'Roma')
+        // Auto-ensure clienti_view unions ordini + manual clienti
         try {
-            if (Schema::hasTable('location') && !Schema::hasColumn('location', 'cittaLocation')) {
-                Schema::table('location', function (\Illuminate\Database\Schema\Blueprint $table) {
-                    $table->string('cittaLocation', 100)->nullable()->default('Roma')->after('indirizzoLocation');
-                });
-                try {
-                    DB::table('location')
-                        ->whereNull('cittaLocation')
-                        ->orWhere('cittaLocation', '')
-                        ->update(['cittaLocation' => 'Roma']);
-                } catch (\Throwable $e) {
-                    // Ignore
-                }
-            }
-        } catch (\Throwable $e) {
-            // Ignore during setup/migrations
-        }
-
-        // Auto-ensure ordini has 'modificato_manualmente' column & clienti_view unions ordini + manual clienti
-        try {
-            if (Schema::hasTable('ordini') && !Schema::hasColumn('ordini', 'modificato_manualmente')) {
-                Schema::table('ordini', function (\Illuminate\Database\Schema\Blueprint $table) {
-                    $table->boolean('modificato_manualmente')->default(false);
-                });
-            }
-
-            if (Schema::hasTable('ordini') && !\Illuminate\Support\Facades\Cache::has('clienti_view_union_v1')) {
+            if (!\Illuminate\Support\Facades\Cache::has('clienti_view_union_v1') && Schema::hasTable('ordini')) {
                 if (!Schema::hasTable('clienti')) {
                     Schema::create('clienti', function (\Illuminate\Database\Schema\Blueprint $table) {
                         $table->id('idCliente');

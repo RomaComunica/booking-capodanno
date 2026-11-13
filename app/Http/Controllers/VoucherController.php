@@ -6,6 +6,7 @@ use App\Models\Ordine;
 use App\Models\Voucher;
 use App\Models\RigaOrdine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\SvgWriter;
 
@@ -73,7 +74,7 @@ class VoucherController extends Controller
         $location = $order->location;
 
         // Check if device is authenticated as staff
-        $isStaff = $request->cookie('staff_device') === 'authenticated_staff_member';
+        $isStaff = $this->isValidStaffCookie($request);
 
         return view('voucher.validate', compact('order', 'voucher', 'orderLines', 'location', 'isStaff'));
     }
@@ -81,7 +82,7 @@ class VoucherController extends Controller
     public function confirmCheckin($numeroOrdine, $numeroVoucher, Request $request)
     {
         // Security check: must be staff
-        if ($request->cookie('staff_device') !== 'authenticated_staff_member') {
+        if (!$this->isValidStaffCookie($request)) {
             abort(403, 'Azione non autorizzata. Questo dispositivo non è registrato come Staff.');
         }
 
@@ -114,19 +115,74 @@ class VoucherController extends Controller
             'password' => 'required|string',
         ]);
 
-        $staffPassword = \App\Models\Setting::getVal('password_staff', 'staff2026');
+        $throttleKey = 'staff-login:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return redirect()->back()->withInput()->withErrors([
+                'password' => "Troppi tentativi falliti. Riprova tra {$seconds} secondi.",
+            ]);
+        }
 
-        if ($request->input('password') === $staffPassword) {
-            $cookie = cookie('staff_device', 'authenticated_staff_member', 60 * 24 * 30);
-            
-            $redirectUrl = $request->input('redirect_url');
+        $staffPassword = (string) \App\Models\Setting::getVal('password_staff', 'staff2026');
+
+        if (hash_equals($staffPassword, (string) $request->input('password'))) {
+            RateLimiter::clear($throttleKey);
+
+            $cookie = cookie(
+                'staff_device',
+                $this->getStaffCookieToken(),
+                60 * 24 * 30,
+                '/',
+                null,
+                $request->isSecure(),
+                true,
+                false,
+                'lax'
+            );
+
+            $redirectUrl = $this->sanitizeInternalRedirect($request->input('redirect_url'), $request);
             if ($redirectUrl) {
                 return redirect()->to($redirectUrl)->withCookie($cookie)->with('success', 'Dispositivo Staff abilitato con successo!');
             }
-            
+
             return redirect()->route('home')->withCookie($cookie)->with('success', 'Dispositivo Staff abilitato con successo!');
         }
 
+        RateLimiter::hit($throttleKey, 60);
+
         return redirect()->back()->withInput()->withErrors(['password' => 'Password non corretta.']);
+    }
+
+    private function getStaffCookieToken(): string
+    {
+        return hash_hmac('sha256', 'staff_authenticated', (string) config('app.key'));
+    }
+
+    private function isValidStaffCookie(Request $request): bool
+    {
+        $cookieVal = $request->cookie('staff_device');
+        if (!is_string($cookieVal) || $cookieVal === '') {
+            return false;
+        }
+
+        return hash_equals($this->getStaffCookieToken(), $cookieVal);
+    }
+
+    private function sanitizeInternalRedirect(?string $url, Request $request): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        $parsed = parse_url($url);
+        if (is_array($parsed) && ($parsed['host'] ?? null) === $request->getHost()) {
+            return $url;
+        }
+
+        return null;
     }
 }
