@@ -70,7 +70,8 @@ class LocationResource extends Resource
                             ->label('Email Notifiche')
                             ->placeholder('es: info@locale.it, prenotazioni@locale.it')
                             ->helperText('Puoi inserire più email separate da virgola.')
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
                     ])
                     ->columns(3),
 
@@ -239,13 +240,13 @@ class LocationResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('cittaLocation')
-                    ->label('Città')
-                    ->options(fn () => Location::getAvailableCities()),
-
                 Tables\Filters\TernaryFilter::make('attivaLocation')
                     ->label('Attiva')
                     ->boolean(),
+
+                Tables\Filters\SelectFilter::make('cittaLocation')
+                    ->label('Città')
+                    ->options(fn () => Location::getAvailableCities()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
