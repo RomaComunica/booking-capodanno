@@ -64,6 +64,7 @@ class GeneratoreScript extends Page
                             ])
                             ->default('link')
                             ->inline()
+                            ->columnSpanFull()
                             ->live()
                             ->afterStateUpdated(fn ($state) => $this->generaCodice(['tipo' => $state])),
                     ])
