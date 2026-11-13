@@ -127,6 +127,7 @@ class CalcolatoreLocation extends Page implements HasForms
                         'pagati' => 'Già Pagati',
                     ])
                     ->default('tutti'),
+            ])
             ->columns([
                 'default' => 1,
                 'sm' => 2,
