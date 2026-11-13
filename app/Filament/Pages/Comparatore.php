@@ -118,7 +118,7 @@ class Comparatore extends Page implements HasForms
                 Select::make('tipo_confronto')
                     ->label('Tipo di Confronto')
                     ->options([
-                        'questo_mese' => 'Questo mese (fino a oggi) vs Anno scorso (stesso periodo)',
+                        'questo_mese' => 'Questo mese (intero mese) vs Anno scorso (intero mese)',
                         'anno_in_corso' => 'Anno in corso (fino a oggi) vs Anno scorso (stesso periodo)',
                         'anno_contro_anno' => 'Anno intero contro Anno intero',
                         'halloween' => 'Halloween (1 Ott - 1 Nov) vs Anno scorso',
