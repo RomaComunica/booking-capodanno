@@ -71,7 +71,7 @@ class GeneratoreScript extends Page
                     ->schema([
                         Forms\Components\TextInput::make('testo_pulsante')
                             ->label('Testo Pulsante')
-                            ->default('Prenota Ora')
+                            ->default('Acquista Ora')
                             ->live()
                             ->afterStateUpdated(fn ($state) => $this->generaCodice(['testo_pulsante' => $state])),
                             
@@ -155,7 +155,7 @@ class GeneratoreScript extends Page
         if ($tipo === 'link') {
             $code = $url;
         } elseif ($tipo === 'button') {
-            $testo = trim($data['testo_pulsante'] ?? 'Prenota Ora');
+            $testo = trim($data['testo_pulsante'] ?? 'Acquista Ora');
             $bg = $data['colore_sfondo'] ?? '#16A34A';
             $color = $data['colore_testo'] ?? '#ffffff';
             
