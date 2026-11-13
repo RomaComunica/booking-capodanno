@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::hex('#0c5289'),
-                'success' => Color::hex('#29f48f'),
+                'success' => Color::hex('#10b981'),
                 'info' => Color::hex('#DD076D'),
                 'gray' => Color::Slate,
             ])
@@ -41,9 +41,6 @@ class AdminPanelProvider extends PanelProvider
                 </div>
             '))
             ->brandLogoHeight('2.5rem')
-            ->assets([
-                \Filament\Support\Assets\Css::make('filament-theme-glossy', asset('css/filament-theme-glossy.css')),
-            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -73,15 +70,12 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot(): void
     {
-        // Register custom glossy design system stylesheet
+        // Register custom glossy design system stylesheet once with cache-busting based on filemtime
+        $glossyPath = public_path('css/filament-theme-glossy.css');
+        $glossyVersion = file_exists($glossyPath) ? filemtime($glossyPath) : '1';
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::head.done',
-            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
-        );
-
-        \Filament\Support\Facades\FilamentView::registerRenderHook(
-            'panels::body.end',
-            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . time() . '">',
+            fn (): string => '<link rel="stylesheet" href="' . asset('css/filament-theme-glossy.css') . '?v=' . $glossyVersion . '">',
         );
 
         // Register topbar glossy action buttons with brighter frosted glass background fallbacks

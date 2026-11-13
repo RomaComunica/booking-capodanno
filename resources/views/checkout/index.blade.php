@@ -24,13 +24,7 @@
 
     <hr class="divider">
 
-    {{-- Step Indicator --}}
-    <div class="step-indicator mb-2">
-        <img src="{{ asset('img/step_3.jpg') }}" alt="Step 3" class="step-img desktop-only" onerror="this.style.display='none'">
-        <img src="{{ asset('img/step_3m.jpg') }}" alt="Step 3" class="step-img mobile-only" onerror="this.style.display='none'">
-    </div>
-
-    {{-- Main Panel --}}
+    {{-- Step Indicator --}}\r\n    <x-booking-steps :step="3" />\r\n\r\n    {{-- Main Panel --}}
     <div class="glass-panel detail-panel animate-fade-in">
         <div class="detail-pad">
             

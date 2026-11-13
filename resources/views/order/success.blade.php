@@ -2,6 +2,22 @@
 
 @section('content')
 <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 1.5rem;">
+    <style>
+        .success-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .success-grid-2 p,
+        .success-grid-2 strong {
+            overflow-wrap: anywhere;
+        }
+        @media (max-width: 640px) {
+            .success-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
     
     {{-- Success Icon & Title --}}
     <div style="text-align: center; margin-bottom: 2.5rem;">
@@ -25,7 +41,7 @@
         <div style="padding: 2rem;">
 
             {{-- Order & Voucher Numbers --}}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <div class="success-grid-2" style="margin-bottom: 2rem;">
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.25rem;">Numero Ordine</p>
                     <p style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">#{{ $numeroOrdine }}</p>
@@ -40,7 +56,7 @@
             <div style="margin-bottom: 2rem;">
                 <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold); margin-bottom: 1rem;">I tuoi Dati</h3>
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="success-grid-2">
                         <div>
                             <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.15rem;">Nome e Cognome</p>
                             <p style="font-weight: 600;">{{ $order->nomeClienteOrdine }} {{ $order->cognomeClienteOrdine }}</p>
@@ -171,7 +187,7 @@
             </div>
 
             {{-- Payment & Shipping Info --}}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <div class="success-grid-2" style="margin-bottom: 2rem;">
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem;">
                     <h4 style="font-size: 0.9rem; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 0.75rem;">Pagamento</h4>
                     <p style="color: var(--text-primary); margin-bottom: 0.5rem;">{{ $order->tipoPagamento->nomePagamento ?? 'N/D' }}</p>

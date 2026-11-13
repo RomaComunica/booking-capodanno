@@ -64,10 +64,7 @@
     <hr class="divider">
 
     {{-- Step Indicator --}}
-    <div class="step-indicator mb-2">
-        <img src="{{ asset('img/step_2.jpg') }}" alt="Step 2" class="step-img desktop-only" onerror="this.style.display='none'">
-        <img src="{{ asset('img/step_2m.jpg') }}" alt="Step 2" class="step-img mobile-only" onerror="this.style.display='none'">
-    </div>
+    <x-booking-steps :step="2" />
 
     {{-- Main Panel --}}
     <div class="glass-panel detail-panel animate-fade-in">

@@ -1,6 +1,4 @@
 <x-filament-panels::page>
-    <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
-
     <style>
         .pl-kpi-grid {
             display: grid;

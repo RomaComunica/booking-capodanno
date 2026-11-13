@@ -1,7 +1,6 @@
 <x-filament-panels::page>
     <!-- Chart.js CDN Loaded in Header -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="{{ asset('css/filament-theme-glossy.css') }}?v={{ time() }}">
     
     <style>
         /* Responsive High Contrast Overrides */

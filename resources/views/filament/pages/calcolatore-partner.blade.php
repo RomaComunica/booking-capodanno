@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="space-y-6">
         {{-- Form --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="glossy-card bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60">
             <form wire:submit="calcola">
                 {{ $this->form }}
                 
@@ -58,7 +58,7 @@
 
         {{-- Risultati --}}
         @if($risultati)
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6" id="risultati-calcolatore-stampa">
+        <div class="glossy-card bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-200 dark:border-slate-700/60" id="risultati-calcolatore-stampa">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
